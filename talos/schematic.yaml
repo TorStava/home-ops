@@ -1,0 +1,20 @@
+customization:
+    extraKernelArgs:
+        - talos.platform=metal
+        - apparmor=0
+        - security=none
+        - init_on_alloc=0
+        - init_on_free=0
+        - talos.auditd.disabled=1
+        - -selinux
+        - cpufreq.default_governor=performance
+        - -talos.halt_if_installed
+    systemExtensions:
+        officialExtensions:
+            - siderolabs/intel-ice-firmware
+            - siderolabs/intel-ucode
+            - siderolabs/nvidia-container-toolkit-production
+            - siderolabs/nvidia-open-gpu-kernel-modules-production
+            - siderolabs/nvme-cli
+            - siderolabs/util-linux-tools
+            - siderolabs/zfs
