@@ -5,7 +5,7 @@ metadata:
 provisioner: zfs.csi.openebs.io
 parameters:
   fstype: zfs
-  poolname: speed
+  poolname: zfspv-pool
   recordsize: "16k"
   compression: lz4
   dedup: off
@@ -22,7 +22,7 @@ metadata:
 provisioner: zfs.csi.openebs.io
 parameters:
   fstype: zfs
-  poolname: speed
+  poolname: zfspv-pool
   recordsize: "64k"
   compression: lz4
   dedup: off
@@ -39,7 +39,7 @@ metadata:
 provisioner: zfs.csi.openebs.io
 parameters:
   fstype: zfs
-  poolname: speed
+  poolname: zfspv-pool
   recordsize: "128k"
   compression: lz4
   dedup: off
@@ -56,7 +56,7 @@ metadata:
 provisioner: zfs.csi.openebs.io
 parameters:
   fstype: zfs
-  poolname: speed
+  poolname: zfspv-pool
   recordsize: "256k"
   compression: lz4
   dedup: off
@@ -73,7 +73,7 @@ metadata:
 provisioner: zfs.csi.openebs.io
 parameters:
   fstype: zfs
-  poolname: speed
+  poolname: zfspv-pool
   recordsize: "1m"
   compression: lz4
   dedup: off
