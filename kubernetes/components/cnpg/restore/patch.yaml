@@ -3,7 +3,7 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
-  name: &name postgres-${APP}
+  name: postgres-${APP}
 spec:
   bootstrap:
     recovery:
@@ -13,5 +13,5 @@ spec:
       plugin:
         name: barman-cloud.cloudnative-pg.io
         parameters:
-          barmanObjectName: *name
-          serverName: *name
+          barmanObjectName: postgres-${APP}
+          serverName: postgres-${APP}
