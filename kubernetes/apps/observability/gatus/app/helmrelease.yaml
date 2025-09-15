@@ -112,7 +112,7 @@ spec:
       gatus: {}
     persistence:
       config:
-        existingClaim: *app
+        existingClaim: ${APP}
       config-file:
         type: configMap
         name: gatus-configmap
