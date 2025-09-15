@@ -1,0 +1,24 @@
+---
+# yaml-language-server: $schema=https://flux.tholinka.dev/helmrelease/v2/github/external-secrets/external-secrets/main/deploy/charts/external-secrets
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-secrets
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: external-secrets
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: external-secrets-helm-values
