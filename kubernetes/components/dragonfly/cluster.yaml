@@ -22,11 +22,4 @@ spec:
       cpu: ${DRAGONFLY_REQUESTS_CPU:=100m}
       memory: ${DRAGONFLY_REQUESTS_MEMORY:-${DRAGONFLY_LIMITS_MEMORY:=512Mi}}
     limits:
-      memory: ${DRAGONFLY_LIMITS_MEMORY:=512Mi}
-  topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: 'kubernetes.io/hostname'
-      whenUnsatisfiable: 'DoNotSchedule'
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/part-of: dragonfly
+      memory: ${DRAGONFLY_LIMITS_MEMORY:=5Gi}
