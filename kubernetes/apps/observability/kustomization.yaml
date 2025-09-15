@@ -7,4 +7,5 @@ components:
   - ../../components/common
 resources:
   - ./gatus/ks.yaml
+  - ./keda/ks.yaml
   - ./kube-prometheus-stack/ks.yaml
