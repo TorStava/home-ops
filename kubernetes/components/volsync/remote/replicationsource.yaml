@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/volsync.backube/replicationsource_v1alpha1.json
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: "${APP}-remote"
+spec:
+  sourcePVC: "${APP}"
+  trigger:
+    schedule: '30 3 * * *'
+  restic:
+    repository: "${APP}-volsync-remote-secret"
+    copyMethod: "${VOLSYNC_COPYMETHOD:-Snapshot}"
+    pruneIntervalDays: 7
+    volumeSnapshotClassName: "${VOLSYNC_SNAPSHOTCLASS:=openebs-zfs}"
+    cacheCapacity: "${VOLSYNC_CACHE_CAPACITY:=8Gi}"
+    cacheStorageClassName: "openebs-zfs-${VOLSYNC_RECORD_SIZE:-128k}"
+    cacheAccessModes: ["${VOLSYNC_CACHE_ACCESSMODES:=ReadWriteOnce}"]
+    storageClassName: "openebs-zfs-${VOLSYNC_RECORD_SIZE:-128k}"
+    accessModes: ["${VOLSYNC_SNAPSHOT_ACCESSMODES:=ReadWriteOnce}"]
+    moverSecurityContext:
+      runAsUser: "${VOLSYNC_PUID:=568}"
+      runAsGroup: "${VOLSYNC_PGID:=568}"
+      fsGroup: "${VOLSYNC_PGID:=568}"
+      fsGroupChangePolicy: "${VOLSYNC_GROUP_CHANGE_POLICY:=Always}"
+    retain:
+      daily: 14
