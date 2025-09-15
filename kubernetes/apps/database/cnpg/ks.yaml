@@ -5,7 +5,7 @@ kind: GitRepository
 metadata:
   name: cnpg-barman-cloud-crds
 spec:
-  interval: 30m
+  interval: 1h
   url: https://github.com/cloudnative-pg/plugin-barman-cloud.git
   ref:
     tag: v0.6.0
