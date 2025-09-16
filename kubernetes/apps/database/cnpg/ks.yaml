@@ -154,18 +154,18 @@ spec:
       failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
       current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   # Use this to restore from a specific time
-  patches:
-    - target:
-        kind: *postgresKind
-      patch: |-
-        kind: Cluster
-        metadata:
-          name: not-used
-        spec:
-          bootstrap:
-            recovery:
-              recoveryTarget:
-                targetTime: "2025-09-12 02:00:25.000000+02:00"
+  # patches:
+  #   - target:
+  #       kind: *postgresKind
+  #     patch: |-
+  #       kind: Cluster
+  #       metadata:
+  #         name: not-used
+  #       spec:
+  #         bootstrap:
+  #           recovery:
+  #             recoveryTarget:
+  #               targetTime: "2025-09-12 02:00:25.000000+02:00"
 
 ---
 # yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
