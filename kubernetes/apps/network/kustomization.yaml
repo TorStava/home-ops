@@ -9,5 +9,5 @@ resources:
   - ./cloudflare-dns/ks.yaml
   - ./cloudflare-tunnel/ks.yaml
   - ./dnscrypt-proxy/ks.yaml
-  - ./k8s-gateway/ks.yaml
   - ./pihole/ks.yaml
+  - ./pihole-external-dns/ks.yaml
