@@ -26,7 +26,7 @@ spec:
       hugepages-2Mi: ${CNPG_LIMITS_MEMORY_HUGEPAGES:=1Gi} # Requires sysctl set on the host
       memory: ${CNPG_LIMITS_MEMORY:=1Gi}
   affinity:
-    enablePodAntiAffinity: true
+    enablePodAntiAffinity: false
     topologyKey: kubernetes.io/hostname
     podAntiAffinityType: preferred
     nodeSelector:
