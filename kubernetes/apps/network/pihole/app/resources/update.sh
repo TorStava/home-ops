@@ -73,6 +73,19 @@ echo;
 pihole -g
 
 echo;
+echo "Updating pihole.toml"
+
+pihole-FTL --config misc.etc_dnsmasq_d true
+pihole-FTL --config dns.blockESNI false
+pihole-FTL --config webserver.domain "pihole.${SECRET_DOMAIN}"
+pihole-FTL --config misc.nice -999
+pihole-FTL --config misc.check.load false
+pihole-FTL --config dns.ignoreLocalhost true
+pihole-FTL --config ntp.ipv4.active false
+pihole-FTL --config ntp.ipv6.active false
+pihole-FTL --config ntp.sync.active false
+
+echo;
 if [ -L /etc/pihole ]; then
 	echo "skipping copying of config, as /etc/pihole is a symlink"
 else
