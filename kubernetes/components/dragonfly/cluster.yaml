@@ -16,6 +16,7 @@ spec:
   args:
     - --maxmemory=$(MAX_MEMORY)Mi
     - --proactor_threads=${DRAGONFLY_ARGS_THREADS:=2}
+    - --proactor_affinity_mode=auto
     - --cluster_mode=emulated
   resources:
     requests:
