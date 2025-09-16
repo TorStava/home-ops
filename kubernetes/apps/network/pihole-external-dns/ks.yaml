@@ -12,6 +12,9 @@ spec:
       app.kubernetes.io/name: *app
   path: ./kubernetes/apps/network/pihole-external-dns/app
   prune: true
+  dependsOn:
+    - name: pihole
+      namespace: network
   postBuild:
     substitute:
       APP: *app
