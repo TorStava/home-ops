@@ -1,0 +1,159 @@
+---
+# yaml-language-server: $schema=http://192.168.1.249:5000/api/config/schema.json
+logger:
+  default: info
+
+mqtt:
+  client_id: frigate
+  host: "{FRIGATE_MQTT_HOST}"
+  topic_prefix: frigate
+  user: "{FRIGATE_MQTT_USERNAME}"
+  password: "{FRIGATE_MQTT_PASSWORD}"
+
+database:
+  path: /data/frigate.db
+
+birdseye:
+  enabled: true
+
+detectors:
+  cpu1:
+    type: cpu
+    num_threads: 3
+    model:
+      path: /cpu_model.tflite
+  # coral1:
+  #   type: edgetpu
+  #   device: pci:0
+  # coral2:
+  #   type: edgetpu
+  #   device: pci:1
+
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: large
+
+genai:
+  enabled: false
+  provider: openai
+  api_key: "{FRIGATE_FRIGATE_OPENAI_API_KEY}"
+  model: gpt-4o-mini
+
+model:
+  # https://docs.frigate.video/configuration/objects
+  labelmap:
+    2: vehicle # car
+    3: vehicle # motorcycle
+    4: vehicle # airplane
+    5: vehicle # bus
+    6: vehicle # train
+    7: vehicle # car
+    8: vehicle # boat
+    15: animal # bird
+    16: animal # cat
+    17: animal # dog
+    18: animal # horse
+    19: animal # sheep
+    20: animal # cow
+    21: animal # elephant
+    22: animal # bear
+    23: animal # zebra
+    24: animal # giraffe
+    26: package # backpack
+    30: package # handbag
+    32: package # suitcase
+
+ffmpeg:
+  global_args: ["-hide_banner", "-loglevel", "warning"]
+  # hwaccel_args: preset-intel-qsv-h264
+
+snapshots:
+  enabled: true
+  timestamp: true
+  bounding_box: true
+  retain:
+    default: 2
+
+record:
+  enabled: true
+  retain:
+    days: 14
+    mode: all
+  alerts:
+    retain:
+      days: 90
+      mode: active_objects
+  detections:
+    retain:
+      days: 90
+      mode: active_objects
+
+objects:
+  track:
+    - person
+    - vehicle
+    - animal
+    - bike
+    - package
+  filters:
+    person:
+      min_area: 5000
+      max_area: 100000
+      threshold: 0.7
+
+audio:
+  enabled: true
+  listen:
+    - alarm
+    - ambulance
+    - bang
+    - break
+    - breaking
+    - emergency_vehicle
+    - fire_alarm
+    - glass
+    - knock
+    - noise
+    - police_car
+    - scream
+    - siren
+    - smash
+    - speech
+    - tap
+    - yell
+
+go2rtc:
+  streams:
+    garage_lq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
+    garage_hq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
+
+cameras:
+  garage:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://localhost:8554/garage_lq
+          roles:
+            - detect
+            - audio
+        - path: rtsp://localhost:8554/garage_hq
+          roles:
+            - record
+    motion:
+      mask:
+        - 0.025,0.039,0.263,0.039,0.265,0.087,0.023,0.086
+    live:
+      streams:
+        Main: garage_lq
+        Sub: garage_hq
+
+auth:
+  enabled: false
+
+proxy:
+  header_map:
+    user: remote-user
+
+tls:
+  enabled: false

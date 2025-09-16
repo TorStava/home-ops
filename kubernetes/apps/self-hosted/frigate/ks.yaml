@@ -1,0 +1,33 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app frigate
+  namespace: &namespace self-hosted
+spec:
+  targetNamespace: *namespace
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  components:
+    - ../../../../components/gatus/guarded
+    - ../../../../components/volsync
+  dependsOn:
+    - name: openebs
+      namespace: openebs-system
+    - name: bitwarden
+      namespace: external-secrets
+  interval: 1h
+  retryInterval: 2m
+  timeout: 5m
+  path: './kubernetes/apps/self-hosted/frigate/app'
+  postBuild:
+    substitute:
+      APP: *app
+      VOLSYNC_CAPACITY: 5Gi
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system

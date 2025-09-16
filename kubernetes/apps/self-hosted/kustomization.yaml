@@ -6,5 +6,6 @@ namespace: self-hosted
 components:
   - ../../components/common
 resources:
+  - ./frigate/ks.yaml
   - ./homepage/ks.yaml
   - ./it-tools/ks.yaml
