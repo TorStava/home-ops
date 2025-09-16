@@ -12,3 +12,4 @@ resources:
   - ./homepage/ks.yaml
   - ./it-tools/ks.yaml
   - ./outline/ks.yaml
+  - ./paperless/ks.yaml
