@@ -25,8 +25,6 @@ spec:
     limits:
       hugepages-2Mi: ${CNPG_LIMITS_MEMORY_HUGEPAGES:=1Gi} # Requires sysctl set on the host
       memory: ${CNPG_LIMITS_MEMORY:=1Gi}
-  affinity:
-    enablePodAntiAffinity: false
   postgresql:
     parameters:
       max_connections: '${CNPG_MAX_CONNECTIONS:="600"}'
