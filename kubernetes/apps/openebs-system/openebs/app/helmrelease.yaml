@@ -32,8 +32,8 @@ spec:
     openebs-crds:
       csi:
         volumeSnapshots:
-          enabled: true
-          keep: true
+          enabled: false
+          keep: false
     localpv-provisioner:
       localpv:
         image:
@@ -53,10 +53,10 @@ spec:
         encrKeysDir: /var/openebs/keys
       crds:
         zfsLocalPv:
-          enabled: true
+          enabled: false
         csi:
           volumeSnapshots:
-            enabled: true
+            enabled: false
     loki:
       enabled: false
     alloy:
