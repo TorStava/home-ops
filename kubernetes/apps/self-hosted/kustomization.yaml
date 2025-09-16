@@ -11,5 +11,6 @@ resources:
   - ./frigate/ks.yaml
   - ./homepage/ks.yaml
   - ./it-tools/ks.yaml
+  - ./n8n/ks.yaml
   - ./outline/ks.yaml
   - ./paperless/ks.yaml
