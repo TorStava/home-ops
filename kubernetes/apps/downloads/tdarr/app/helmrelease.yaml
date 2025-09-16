@@ -1,0 +1,92 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app tdarr
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    controllers:
+      tdarr:
+        containers:
+          app:
+            image:
+              repository: haveagitgat/tdarr
+              tag: 2.45.01@sha256:69d28aff66318ecc1c9496717c1731fbdbbfb8c0c4664a90bbb36747fbf279fe
+            env:
+              TZ: "${TZ}"
+              PUID: "568"
+              PGID: "1234"
+              ffmpegPath: "/usr/local/bin/ffmpeg"
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+              fsGroup: 1234
+              fsGroupChangePolicy: OnRootMismatch
+              capabilities:
+                add:
+                  - CHOWN
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: &port 8265
+      server:
+        controller: *app
+        type: LoadBalancer
+        loadBalancerIP: ${CLUSTER_LB_TDARR}
+        externalTrafficPolicy: Cluster
+        ports:
+          server:
+            enabled: true
+            protocol: TCP
+            port: 8266
+    route:
+      app:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Tdarr
+          gethomepage.dev/group: Downloads
+          gethomepage.dev/icon: tdarr.png
+          gethomepage.dev/app: tdarr
+        rules:
+          - backendRefs:
+              - name: "tdarr-app"
+                port: *port
+    persistence:
+      config:
+        enabled: true
+        existingClaim: *app
+        advancedMounts:
+          tdarr:
+            app:
+              - path: /app/configs
+                subPath: config
+              - path: /app/server
+                subPath: server
+      data:
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data

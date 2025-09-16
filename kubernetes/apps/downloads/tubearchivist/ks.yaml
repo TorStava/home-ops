@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app dragonfly-tubearchivist
+  namespace: &namespace downloads
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/downloads/tubearchivist/cluster
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: dragonfly
+      namespace: database
+  postBuild:
+    substitute:
+      APP: tubearchivist
+      DRAGONFLY_REQUESTS_MEMORY: 256Mi
+  components:
+    - ../../../../components/dragonfly
+  healthChecks:
+    - apiVersion: &dragonflyVersion dragonflydb.io/v1alpha1
+      kind: &dragonflyKind Dragonfly
+      name: *app
+      namespace: *namespace
+  healthCheckExprs:
+    - apiVersion: *dragonflyVersion
+      kind: *dragonflyKind
+      failed: status.phase != 'ready'
+      current: status.phase == 'ready'
+---
+# yaml-language-server: $schema=https://github.com/fluxcd-community/flux2-schemas/raw/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app tubearchivist-elasticsearch
+  namespace: &namespace downloads
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: openebs
+      namespace: openebs-system
+    - name: volsync
+      namespace: volsync-system
+  components:
+    - ../../../../components/common
+    - ../../../../components/gatus/guarded
+    - ../../../../components/volsync
+  path: ./kubernetes/apps/downloads/tubearchivist/elasticsearch
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  wait: false  # no flux ks dependencies
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  postBuild:
+    substitute:
+      APP: *app
+      VOLSYNC_CAPACITY: 5Gi
+---
+# yaml-language-server: $schema=https://github.com/fluxcd-community/flux2-schemas/raw/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app tubearchivist-web
+  namespace: &namespace downloads
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: keda
+      namespace: observability
+    - name: openebs
+      namespace: openebs-system
+    - name: dragonfly-cluster
+      namespace: database
+    - name: tubearchivist-elasticsearch
+      namespace: *namespace
+  components:
+    - ../../../../components/common
+    - ../../../../components/gatus/guarded
+    - ../../../../components/gatus/internal
+    - ../../../../components/volsync
+  path: ./kubernetes/apps/downloads/tubearchivist/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  wait: false  # no flux ks dependencies
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  postBuild:
+    substitute:
+      APP: *app
+      VOLSYNC_CAPACITY: 30Gi
