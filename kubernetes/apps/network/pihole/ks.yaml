@@ -26,5 +26,5 @@ spec:
   retryInterval: 2m
   timeout: 5m
   dependsOn:
-    - name: storage-ready
-      namespace: flux-system
+    - name: openebs
+      namespace: openebs-system
