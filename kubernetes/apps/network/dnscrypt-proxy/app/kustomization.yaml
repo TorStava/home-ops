@@ -1,0 +1,12 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ./helmrelease.yaml
+configMapGenerator:
+  - name: dnscrypt-proxy-configmap
+    files:
+      - dnscrypt-proxy.toml=./resources/dnscrypt-proxy.toml
+generatorOptions:
+  disableNameSuffixHash: true
