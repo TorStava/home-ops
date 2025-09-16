@@ -1,0 +1,85 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app calibre
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: [/spec/replicas]
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        containers:
+          app:
+            image:
+              repository: lscr.io/linuxserver/calibre
+              tag: 8.9.0@sha256:92d4d2df356d8097852368759a24eb5336bb2b0db29192913b809c3f031d5b9c
+            env:
+              CACHE_DIR: /cache
+              PUID: 568
+              PGID: 1234
+              TZ: ${TIMEZONE}
+              DOCKER_MODS: linuxserver/mods:universal-calibre
+            probes:
+              liveness:
+                enabled: true
+              readiness:
+                enabled: true
+              startup:
+                enabled: true
+                spec:
+                  failureThreshold: 60
+                  periodSeconds: 10
+                  timeoutSeconds: 30
+            securityContext:
+              fsGroup: 1234
+              fsGroupChangePolicy: OnRootMismatch
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+
+    service:
+      app:
+        ports:
+          http:
+            port: &port 8080
+
+    route:
+      app:
+        hostnames: ["calibe-gui.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Media
+          gethomepage.dev/name: Calibre GUI
+          gethomepage.dev/icon: calibre.png
+          gethomepage.dev/app: calibre
+
+    persistence:
+      config:
+        existingClaim: *app
+      media:
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data/ebooks/CalibreDB
+        globalMounts:
+          - path: /calibre-library
+            subPath: Ebooks
