@@ -165,7 +165,7 @@ spec:
           bootstrap:
             recovery:
               recoveryTarget:
-                targetTime: "2025-09-12 12:48:26.000000+02:00"
+                targetTime: "2025-09-12 02:00:25.000000+02:00"
 
 ---
 # yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
