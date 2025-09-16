@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app dragonfly-authentik
+  namespace: &namespace security
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/security/authentik/cluster
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: dragonfly
+      namespace: database
+  postBuild:
+    substitute:
+      APP: authentik
+      DRAGONFLY_REQUESTS_MEMORY: 256Mi
+  components:
+    - ../../../../components/dragonfly
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app authentik
+  namespace: &namespace security
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/security/authentik/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: postgres-cluster
+      namespace: database
+    - name: dragonfly-authentik
+      namespace: *namespace
+    - name: openebs
+      namespace: openebs-system
+  postBuild:
+    substitute:
+      APP: *app
+      GATUS_SUBDOMAIN: auth
+  components:
+    - ../../../../components/gatus/external
+    - ../../../../components/gatus/internal
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app authentik-references
+  namespace: &namespace security
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/security/authentik/references
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  postBuild:
+    substitute:
+      AUTH_SVC: ak-outpost-authentik-embedded-outpost
