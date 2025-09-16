@@ -89,16 +89,6 @@ spec:
       DRAGONFLY_REQUESTS_MEMORY: 256Mi
   components:
     - ../../../../components/dragonfly
-  healthChecks:
-    - apiVersion: &dragonflyVersion dragonflydb.io/v1alpha1
-      kind: &dragonflyKind Dragonfly
-      name: *app
-      namespace: *namespace
-  healthCheckExprs:
-    - apiVersion: *dragonflyVersion
-      kind: *dragonflyKind
-      failed: status.phase != 'ready'
-      current: status.phase == 'ready'
   patches:
     - target:
         kind: *dragonflyKind
