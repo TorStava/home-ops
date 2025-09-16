@@ -18,6 +18,8 @@ spec:
     - --proactor_threads=${DRAGONFLY_ARGS_THREADS:=2}
     - --proactor_affinity_mode=auto
     - --cluster_mode=emulated
+    - --lock_on_hashtags
+    - --default_lua_flags=allow-undeclared-keys
   resources:
     requests:
       cpu: ${DRAGONFLY_REQUESTS_CPU:=100m}

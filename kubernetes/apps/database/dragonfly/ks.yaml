@@ -89,11 +89,3 @@ spec:
       DRAGONFLY_REQUESTS_MEMORY: 256Mi
   components:
     - ../../../../components/dragonfly
-  patches:
-    - target:
-        kind: *dragonflyKind
-      # immich needs this for bullmq, this has some pretty big performance implications though
-      patch: |-
-        - op: add
-          path: /spec/args/-
-          value: --default_lua_flags=allow-undeclared-keys
