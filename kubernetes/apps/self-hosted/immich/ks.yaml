@@ -92,7 +92,10 @@ spec:
           postgresql:
             shared_preload_libraries:
               - "vchord.so"
-          # bootstrap:
+          bootstrap:
+            recovery:
+              recoveryTarget:
+                targetTime: "2025-09-12 02:03:58.000000+02:00"
           #   initdb:
           #     database: immich
           #     owner: immich
