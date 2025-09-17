@@ -1,0 +1,71 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app komga
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    controllers:
+      komga:
+        containers:
+          app:
+            image:
+              repository: gotson/komga
+              tag: 1.23.3@sha256:9ec80c47555d1b31afc1c0499e697d1ddc50accc2fc2951a919749b641230cc3
+            env:
+              TZ: "${TIMEZONE}"
+              SERVER_PORT: &port 8080
+              KOMGA_OAUTH2ACCOUNTCREATION: "true"
+              KOMGA_OIDCEMAILVERIFICATION: "true"
+            resources:
+              requests:
+                memory: 512M
+                cpu: 25m
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+
+    route:
+      app:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Media
+          gethomepage.dev/name: Komga
+          gethomepage.dev/icon: komga.png
+          gethomepage.dev/app: komga
+    persistence:
+      config:
+        enabled: true
+        existingClaim: *app
+      application-yml:
+        type: secret
+        name: komga
+        defaultMode: 0400
+        globalMounts:
+          - subPath: application.yml
+            path: /config/application.yml
+      magazines:
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data/magazines
