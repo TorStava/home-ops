@@ -53,8 +53,6 @@ spec:
         runAsGroup: 568
         fsGroup: 568
         fsGroupChangePolicy: OnRootMismatch
-      nodeSelector:
-        nfs-colocated: "true"
     service:
       app:
         ports:
