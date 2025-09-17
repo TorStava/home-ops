@@ -40,9 +40,9 @@ spec:
                 memory: 512Mi
             securityContext:
               runAsUser: 1000
-              runAsGroup: 568
-              fsGroup: 568
-              fsGroupChangePolicy: OnRootMismatch
+              runAsGroup: 1000
+              fsGroup: 1000
+              fsGroupChangePolicy: Always
     service:
       app:
         controller: elasticsearch
