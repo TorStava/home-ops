@@ -138,7 +138,7 @@ spec:
       APP: *app
       GATUS_SUBDOMAIN: photos
       SCALER_NAME: immich-server
-      SCALER_MAX_REPLICAS: '6'
+      SCALER_MAX_REPLICAS: '5'
   prune: true
   sourceRef:
     kind: GitRepository
