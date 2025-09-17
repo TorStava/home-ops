@@ -1,0 +1,153 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app immich
+  namespace: self-hosted
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: *app
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: [/spec/replicas]
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  valuesFrom:
+    - &valuesFrom
+      targetPath: immich.configuration.oauth.clientId
+      kind: Secret
+      name: *app
+      valuesKey: IMMICH_OAUTH_CLIENT_ID
+    - <<: *valuesFrom
+      targetPath: immich.configuration.oauth.clientSecret
+      valuesKey: IMMICH_OAUTH_CLIENT_SECRET
+    - <<: *valuesFrom
+      targetPath: immich.configuration.notifications.smtp.transport.host
+      valuesKey: EMAIL_SERVER
+    - <<: *valuesFrom
+      targetPath: immich.configuration.notifications.smtp.transport.username
+      valuesKey: EMAIL_USER
+    - <<: *valuesFrom
+      targetPath: immich.configuration.notifications.smtp.transport.password
+      valuesKey: EMAIL_PASS
+    - <<: *valuesFrom
+      targetPath: immich.configuration.notifications.smtp.from
+      valuesKey: EMAIL_FROM
+  values:
+    env:
+      REDIS_HOSTNAME: dragonfly-cluster.database.svc.cluster.local
+      REDIS_PORT: '6379'
+      REDIS_DBINDEX: '2'
+
+      LOG_LEVEL: verbose
+
+      DB_DATABASE_NAME: *app
+      DB_HOSTNAME: postgres-immich-rw.self-hosted.svc.cluster.local
+      DB_USERNAME:
+        valueFrom:
+          secretKeyRef:
+            name: immich-postgres-user
+            key: username
+      DB_PASSWORD:
+        valueFrom:
+          secretKeyRef:
+            name: immich-postgres-user
+            key: password
+    postgres:
+      enabled: false
+    redis:
+      enabled: false
+
+    global:
+      annotations:
+        reloader.stakater.com/auto: 'true'
+
+    immich:
+      metrics:
+        enabled: true
+      persistence:
+        library:
+          existingClaim: immich-photos
+      configuration: # see https://immich.app/docs/install/config-file/
+        backup:
+          database:
+            cronExpression: 0 02 * * *
+            enabled: true
+            keepLastAmount: 14
+        ffmpeg:
+          preset: slow
+          targetResolution: original
+        image:
+          colorspace: p3
+          extractEmbedded: false
+          preview:
+            format: webp
+            quality: 80
+            size: 1440
+        machineLearning:
+          clip:
+            modelName: nllb-clip-large-siglip__mrl
+          facialRecognition:
+            modelName: antelopev2
+            maxDistance: 0.4
+            minFaces: 20
+        metadata:
+          faces:
+            import: true
+        notifications:
+          smtp:
+            enabled: true
+        oauth:
+          autoLaunch: true
+          autoRegister: true
+          buttonText: Login with Authentik
+          defaultStorageQuota: 0 # Unlimited
+          enabled: true
+          issuerUrl: https://auth.${SECRET_DOMAIN}/application/o/immich/.well-known/openid-configuration
+        passwordLogin:
+          enabled: false
+        server:
+          externalDomain: https://photos.${SECRET_DOMAIN}
+        storageTemplate:
+          enabled: true
+          hashVerificationEnabled: true
+          template: '{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}'
+
+    image:
+      # renovate: datasource=github-releases depName=immich-app/immich
+      tag: v1.140.1
+    server:
+      resources:
+        requests:
+          cpu: 1000m
+          memory: 1Gi
+      probes:
+        # nas is a bit slow sometimes when doing a large import, which causes the app to hang
+        liveness: &probes
+          spec:
+            failureThreshold: 10
+            timeoutSeconds: 30
+        readiness:
+          spec:
+            failureThreshold: 10
+            timeoutSeconds: 30
+            periodSeconds: 10
+
+    machine-learning:
+      resources:
+        requests:
+          cpu: 2000m
+          memory: 4Gi
+      persistence:
+        cache:
+          type: pvc
+          existingClaim: immich-ml-cache
