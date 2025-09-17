@@ -82,6 +82,7 @@ spec:
       current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
   patches:
     # note: remove bootstrap when switching to restore. could probably also remove managed and the init step, since the user is already created?
+    # Note: set the recovery target time to the time of the backup you want to restore to
     - target:
         kind: *postgresKind
       patch: |-
@@ -137,7 +138,7 @@ spec:
       APP: *app
       GATUS_SUBDOMAIN: photos
       SCALER_NAME: immich-server
-      SCALER_MAX_REPLICAS: '5'
+      SCALER_MAX_REPLICAS: '6'
   prune: true
   sourceRef:
     kind: GitRepository
