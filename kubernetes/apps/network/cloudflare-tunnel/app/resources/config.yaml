@@ -1,6 +1,8 @@
 ---
 originRequest:
   originServerName: "external.${SECRET_DOMAIN}"
+  noTLSVerify: true
+  disableChunkedEncoding: true
 
 ingress:
   - hostname: "${SECRET_DOMAIN}"
