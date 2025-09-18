@@ -37,9 +37,6 @@ spec:
                   periodSeconds: 10
               readiness: *probes
               startup: *probes
-            envFrom:
-              - secretRef:
-                  name: jellyfin-secret
     service:
       app:
         ports:
