@@ -17,5 +17,6 @@ resources:
   - ./komga/ks.yaml
   - ./linkwarden/ks.yaml
   - ./n8n/ks.yaml
+  - ./ollama/ks.yaml
   - ./outline/ks.yaml
   - ./paperless/ks.yaml
