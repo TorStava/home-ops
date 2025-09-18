@@ -8,7 +8,6 @@ components:
 resources:
   - ./calibre/ks.yaml
   - ./calibre-web-automated/ks.yaml
-  - ./esphome/ks.yaml
   - ./firefly-iii/ks.yaml
   - ./frigate/ks.yaml
   - ./homepage/ks.yaml
