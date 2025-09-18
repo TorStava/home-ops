@@ -45,7 +45,7 @@ spec:
               NEXT_PUBLIC_CREDENTIALS_ENABLED: "false"
               NEXT_PUBLIC_AUTHENTIK_ENABLED: "true"
               AUTHENTIK_CUSTOM_NAME: "SSO"
-              AUTHENTIK_ISSUER: "https://auth.${SECRET_DOMAIN}/application/o/${APP}/.well-known/openid-configuration"
+              AUTHENTIK_ISSUER: "https://auth.${SECRET_DOMAIN}/application/o/${APP}/"
             envFrom:
               - secretRef:
                   name: *app
