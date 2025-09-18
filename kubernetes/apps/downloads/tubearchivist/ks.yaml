@@ -27,16 +27,6 @@ spec:
       DRAGONFLY_REQUESTS_MEMORY: 256Mi
   components:
     - ../../../../components/dragonfly
-  healthChecks:
-    - apiVersion: &dragonflyVersion dragonflydb.io/v1alpha1
-      kind: &dragonflyKind Dragonfly
-      name: *app
-      namespace: *namespace
-  healthCheckExprs:
-    - apiVersion: *dragonflyVersion
-      kind: *dragonflyKind
-      failed: status.phase != 'ready'
-      current: status.phase == 'ready'
 ---
 # yaml-language-server: $schema=https://github.com/fluxcd-community/flux2-schemas/raw/main/kustomization-kustomize-v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
