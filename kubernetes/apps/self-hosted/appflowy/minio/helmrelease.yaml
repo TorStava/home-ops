@@ -92,14 +92,14 @@ spec:
                   type: PathPrefix
                   value: /minio
             backendRefs:
-              - name: main
+              - name: *app
                 port: *http_port
           - matches:
               - path:
                   type: PathPrefix
                   value: /minio-api
             backendRefs:
-              - name: main
+              - name: *app
                 port: *s3_port
         annotations:
           gethomepage.dev/enabled: 'true'
