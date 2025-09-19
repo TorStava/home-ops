@@ -26,12 +26,11 @@ spec:
               repository: minio/minio
               tag: RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
             env:
-              MINIO_BROWSER_REDIRECT_URL: https://appflowy.${SECRET_DOMAIN}/minio
-              APPFLOWY_S3_MINIO_URL: https://appflowy.${SECRET_DOMAIN}/minio-api
+              MINIO_BROWSER_REDIRECT_URL: https://appflowy.${SECRET_DOMAIN}/minio/
             envFrom:
               - secretRef:
                   name: *app
-            args: ["server", "/data", "--console-address", ":9001", "--console-path", "/minio"]
+            args: ["server", "/data", "--console-address", ":9001"]
             probes:
               liveness: &probes
                 enabled: true
@@ -92,6 +91,12 @@ spec:
               - path:
                   type: PathPrefix
                   value: /minio
+            filters:
+              - type: URLRewrite
+                urlRewrite:
+                  path:
+                    type: ReplacePrefixMatch
+                    replacePrefixMatch: /
             backendRefs:
               - name: *app
                 port: *http_port
