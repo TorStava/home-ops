@@ -59,7 +59,7 @@ spec:
       namespace: *namespace
   postBuild:
     substitute:
-      APP: *app
+      APP: appflowy
       CNPG_REPLICAS: '2'
       CNPG_IMAGE: ghcr.io/tensorchord/cloudnative-vectorchord
       # on upgrade of vectorchord, run: k exec -n self-hosted postgres-immich-1 -- psql -d immich -c 'ALTER EXTENSION vchord UPDATE;'
