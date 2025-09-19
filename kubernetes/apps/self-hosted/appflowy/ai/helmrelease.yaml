@@ -28,6 +28,8 @@ spec:
               tag: 0.9.100@sha256:cac908609b2c3ac13deebe76a58fb23174c53fcf9967a9fd3614df02c458c9e7
             env:
               AI_SERVER_PORT: &port 5001
+              DEFAULT_AI_MODEL: gpt-4.1-mini # Make sure the model is available in your OpenAI account
+              DEFAULT_AI_COMPLETION_MODEL: gpt-4.1-mini # Make sure the model is available in your OpenAI account
               AI_REDIS_URL: "redis://dragonfly-appflowy:6379"
               AI_APPFLOWY_HOST: https://appflowy.${SECRET_DOMAIN}
             envFrom:
