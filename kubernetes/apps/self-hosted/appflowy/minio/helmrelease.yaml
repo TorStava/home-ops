@@ -91,6 +91,12 @@ spec:
               - path:
                   type: PathPrefix
                   value: /minio
+            filters:
+            - type: URLRewrite
+              urlRewrite:
+                path:
+                  type: ReplacePrefixMatch
+                  replacePrefixMatch: /
             backendRefs:
               - name: *app
                 port: *http_port
@@ -98,6 +104,12 @@ spec:
               - path:
                   type: PathPrefix
                   value: /minio-api
+            filters:
+            - type: URLRewrite
+              urlRewrite:
+                path:
+                  type: ReplacePrefixMatch
+                  replacePrefixMatch: /
             backendRefs:
               - name: *app
                 port: *s3_port
