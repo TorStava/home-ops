@@ -26,7 +26,7 @@ spec:
               repository: minio/minio
               tag: RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
             env:
-              MINIO_BROWSER_REDIRECT_URL: https://${APP}.${SECRET_DOMAIN}
+              MINIO_BROWSER_REDIRECT_URL: https://minio.${SECRET_DOMAIN}
             envFrom:
               - secretRef:
                   name: *app
@@ -81,7 +81,7 @@ spec:
     route:
       *app :
         enabled: true
-        hostnames: ["appflowy.${SECRET_DOMAIN}"]
+        hostnames: ["minio.${SECRET_DOMAIN}"]
         parentRefs:
           - name: internal
             namespace: kube-system
