@@ -105,3 +105,33 @@ spec:
             # recovery:
             #   recoveryTarget:
             #     targetTime: "2025-09-12 02:03:58.000000+02:00"
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app dragonfly-appflowy
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/appflowy/dragonfly
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: dragonfly
+      namespace: database
+  postBuild:
+    substitute:
+      APP: appflowy
+      DRAGONFLY_REQUESTS_MEMORY: 256Mi
+  components:
+    - ../../../../components/dragonfly
