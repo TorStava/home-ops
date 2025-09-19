@@ -31,6 +31,7 @@ spec:
               DEFAULT_AI_MODEL: gpt-4.1-mini # Make sure the model is available in your OpenAI account
               DEFAULT_AI_COMPLETION_MODEL: gpt-4.1-mini # Make sure the model is available in your OpenAI account
               AI_REDIS_URL: "redis://dragonfly-appflowy:6379"
+              AI_MINIO_URL: https://appflowy.${SECRET_DOMAIN}/minio
               AI_APPFLOWY_HOST: https://appflowy.${SECRET_DOMAIN}
             envFrom:
               - secretRef:
