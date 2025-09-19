@@ -1,0 +1,107 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app appflowy-init
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/appflowy/init
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  healthChecks:
+    - apiVersion: &esVersion external-secrets.io/v1
+      kind: &esKind ExternalSecret
+      name: appflowy-postgres-user
+      namespace: *namespace
+  healthCheckExprs:
+    - apiVersion: *esVersion
+      kind: *esKind
+      failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app postgres-appflowy
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 1m
+  path: ./kubernetes/apps/self-hosted/appflowy/postgres
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: cnpg-crds
+      namespace: database
+    - name: openebs
+      namespace: openebs-system
+    - name: appflowy-init
+      namespace: *namespace
+  postBuild:
+    substitute:
+      APP: *app
+      CNPG_REPLICAS: '2'
+      CNPG_IMAGE: ghcr.io/tensorchord/cloudnative-vectorchord
+      # on upgrade of vectorchord, run: k exec -n self-hosted postgres-immich-1 -- psql -d immich -c 'ALTER EXTENSION vchord UPDATE;'
+      # renovate: datasource=docker depName=ghcr.io/tensorchord/cloudnative-vectorchord
+      CNPG_VERSION: 16.10-0.5.2@sha256:f4e25b6850c3368fa40a861ccd3902bd8ece06503b57bca3b9e036d87314244a
+      CNPG_SIZE: 5Gi
+      CNPG_LIMITS_MEMORY_HUGEPAGES: 1Gi
+      CNPG_LIMITS_MEMORY: 4Gi
+  components:
+    - ../../../../components/cnpg/backup
+  healthChecks:
+    - apiVersion: &postgresVersion postgresql.cnpg.io/v1
+      kind: &postgresKind Cluster
+      name: *app
+      namespace: *namespace
+  healthCheckExprs:
+    - apiVersion: *postgresVersion
+      kind: *postgresKind
+      failed: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'False')
+      current: status.conditions.filter(e, e.type == 'Ready').all(e, e.status == 'True')
+  patches:
+    # note: remove bootstrap when switching to restore. could probably also remove managed and the init step, since the user is already created?
+    # Note: set the recovery target time to the time of the backup you want to restore to
+    - target:
+        kind: *postgresKind
+      patch: |-
+        kind: Cluster
+        metadata:
+          name: not-used
+        spec:
+          postgresql:
+            shared_preload_libraries:
+              - "vchord.so"
+          bootstrap:
+            initdb:
+              database: appflowy
+              owner: appflowy
+              secret:
+                name: appflowy-postgres-user
+              dataChecksums: true
+              postInitApplicationSQL:
+                - CREATE EXTENSION vchord CASCADE;
+            # recovery:
+            #   recoveryTarget:
+            #     targetTime: "2025-09-12 02:03:58.000000+02:00"
