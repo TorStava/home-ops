@@ -10,7 +10,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   interval: 1h
-  retryInterval: 1m
+  retryInterval: 2m
   path: ./kubernetes/apps/self-hosted/appflowy/postgres
   prune: true
   sourceRef:
@@ -113,13 +113,13 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/ai
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -143,14 +143,14 @@ spec:
   dependsOn:
     - name: volsync
       namespace: volsync-system
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/minio
   postBuild:
     substitute:
       APP: *app
       VOLSYNC_CAPACITY: 5Gi
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -172,13 +172,13 @@ spec:
   dependsOn:
     - name: appflowy-postgres
       namespace: self-hosted
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/gotrue
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -208,13 +208,13 @@ spec:
       namespace: self-hosted
     - name: appflowy-postgres
       namespace: self-hosted
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/cloud
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -236,13 +236,13 @@ spec:
   dependsOn:
     - name: appflowy-cloud
       namespace: self-hosted
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/frontend
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -264,13 +264,13 @@ spec:
   dependsOn:
     - name: appflowy-cloud
       namespace: self-hosted
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/web
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -289,13 +289,13 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 30m
+  interval: 1h
   path: ./kubernetes/apps/self-hosted/appflowy/worker
   postBuild:
     substitute:
       APP: *app
   prune: true
-  retryInterval: 1m
+  retryInterval: 2m
   sourceRef:
     kind: GitRepository
     name: flux-system
