@@ -89,8 +89,8 @@ spec:
         rules:
           - matches:
               - path:
-                  type: RegularExpression
-                  value: "^/gotrue(/.*)?$"
+                  type: PathPrefix
+                  value: "/gotrue"
             filters:
               - type: URLRewrite
                 urlRewrite:

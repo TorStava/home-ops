@@ -89,8 +89,8 @@ spec:
         rules:
           - matches:
               - path:
-                  type: RegularExpression
-                  value: "^/minio(/.*)?$"
+                  type: PathPrefix
+                  value: "/minio"
             filters:
               - type: URLRewrite
                 urlRewrite:
