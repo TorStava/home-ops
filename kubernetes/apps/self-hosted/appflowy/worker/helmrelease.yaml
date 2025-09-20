@@ -27,7 +27,7 @@ spec:
               repository: appflowyinc/appflowy_worker
               tag: 0.9.100@sha256:45a90da1b922f7bd40d16629bb4b7b56ae369dc3f1e042b97257b73c203e7792
             env:
-              APPFLOWY_WORKER_REDIS_URL: "redis://appflowy-redis:6379"
+              APPFLOWY_WORKER_REDIS_URL: "redis://dragonfly-appflowy:6379"
               APPFLOWY_WORKER_ENVIRONMENT: "production"
               APPFLOWY_WORKER_IMPORT_TICK_INTERVAL: "30"
               APPFLOWY_S3_USE_MINIO: "true"
