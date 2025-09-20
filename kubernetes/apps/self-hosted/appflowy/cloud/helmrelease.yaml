@@ -19,8 +19,6 @@ spec:
   dependsOn:
     - name: appflowy-gotrue
       namespace: self-hosted
-    - name: appflowy-dragonfly
-      namespace: self-hosted
     - name: appflowy-ai
       namespace: self-hosted
     - name: appflowy-minio
