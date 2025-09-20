@@ -16,6 +16,17 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 3
+  dependsOn:
+    - name: appflowy-gotrue
+      namespace: self-hosted
+    - name: appflowy-dragonfly
+      namespace: self-hosted
+    - name: appflowy-ai
+      namespace: self-hosted
+    - name: appflowy-minio
+      namespace: self-hosted
+    - name: appflowy-postgres
+      namespace: self-hosted
   values:
     controllers:
       *app :
