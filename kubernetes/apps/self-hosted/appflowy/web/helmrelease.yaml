@@ -67,3 +67,9 @@ spec:
             backendRefs:
               - name: *app
                 port: *port
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: Appflowy
+          gethomepage.dev/icon: appflowy.svg
+          gethomepage.dev/app: *app
