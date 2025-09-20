@@ -24,8 +24,6 @@ spec:
       namespace: database
     - name: openebs
       namespace: openebs-system
-    - name: appflowy-init
-      namespace: *namespace
   postBuild:
     substitute:
       APP: appflowy
@@ -172,7 +170,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: postgres-appflowy
+    - name: appflowy-postgres
       namespace: self-hosted
   interval: 30m
   path: ./kubernetes/apps/self-hosted/appflowy/gotrue
