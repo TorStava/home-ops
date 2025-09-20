@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: appflowy-configmap
+  namespace: self-hosted
 data:
   # =============================================================================
   # AppFlowy Cloud - Production Deployment Configuration
