@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: localai/localai
-              tag: v3.5.2-aio-cpu@sha256:8ec2ba9bb95db5457e6dc5256e7ea246118b829b4f4efe992f76cab5332ad29a
+              tag: v3.5.4-aio-cpu@sha256:948fb281d8b071420423c3efbec2fd7c7d27fed0b65935d41ad9ababaf2634ee
             env:
               DEBUG: "true"
             probes:
