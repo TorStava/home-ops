@@ -200,6 +200,14 @@ spec:
   dependsOn:
     - name: appflowy-gotrue
       namespace: self-hosted
+    - name: appflowy-dragonfly
+      namespace: self-hosted
+    - name: appflowy-ai
+      namespace: self-hosted
+    - name: appflowy-minio
+      namespace: self-hosted
+    - name: appflowy-postgres
+      namespace: self-hosted
   interval: 30m
   path: ./kubernetes/apps/self-hosted/appflowy/cloud
   postBuild:
