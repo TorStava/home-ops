@@ -77,7 +77,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: &app dragonfly-appflowy
+  name: &app appflowy-dragonfly
   namespace: &namespace self-hosted
 spec:
   commonMetadata:
