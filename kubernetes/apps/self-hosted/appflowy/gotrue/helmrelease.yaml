@@ -31,7 +31,7 @@ spec:
               GOTRUE_LOG_LEVEL: "debug"
               API_EXTERNAL_URL: "https://appflowy.${SECRET_DOMAIN}/gotrue"
               GOTRUE_DB_DRIVER: "postgres"
-              GOTRUE_SITE_URL: "appflowy-flutter://"
+              GOTRUE_SITE_URL: "appflowy-gotrue://"
               GOTRUE_URI_ALLOW_LIST: "**"
               GOTRUE_DISABLE_SIGNUP: "false"
               GOTRUE_JWT_EXP: "7200"
