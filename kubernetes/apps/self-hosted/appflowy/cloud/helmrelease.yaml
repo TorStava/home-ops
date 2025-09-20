@@ -23,8 +23,6 @@ spec:
       namespace: self-hosted
     - name: appflowy-minio
       namespace: self-hosted
-    - name: appflowy-postgres
-      namespace: self-hosted
   values:
     controllers:
       *app :
