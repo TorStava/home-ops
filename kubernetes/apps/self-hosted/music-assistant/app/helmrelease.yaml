@@ -82,9 +82,6 @@ spec:
           gethomepage.dev/name: Music Assistant
           gethomepage.dev/icon: music-assistant.svg
           gethomepage.dev/app: music-assistant
-          gethomepage.dev/widget.type: music-assistant
-          gethomepage.dev/widget.url: http://music-assistant.self-hosted.svc.cluster.local:8095
-          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_MUSIC_ASSISTANT_TOKEN}}`}}'
 
     persistence:
       data:

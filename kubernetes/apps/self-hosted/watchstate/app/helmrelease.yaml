@@ -67,13 +67,10 @@ spec:
                 port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
-          gethomepage.dev/group: Home
+          gethomepage.dev/group: Media
           gethomepage.dev/name: Watchstate
-          gethomepage.dev/icon: watchstate.svg
+          gethomepage.dev/icon: sh-watchstate.png
           gethomepage.dev/app: watchstate
-          gethomepage.dev/widget.type: watchstate
-          gethomepage.dev.widget.url: http://watchstate.self-hosted.svc.cluster.local:8080
-          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_WATCHSTATE_TOKEN}}`}}'
 
     persistence:
       config:

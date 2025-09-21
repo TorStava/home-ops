@@ -51,7 +51,7 @@ spec:
             sectionName: https
         annotations:
           gethomepage.dev/enabled: 'true'
-          gethomepage.dev/group: Downloads
+          gethomepage.dev/group: Home
           gethomepage.dev/name: ESPhome
           gethomepage.dev/icon: esphome.svg
           gethomepage.dev/app: esphome

@@ -62,11 +62,8 @@ spec:
           gethomepage.dev/enabled: 'true'
           gethomepage.dev/name: Huntarr
           gethomepage.dev/group: Downloads
-          gethomepage.dev/icon: huntarr.svg
+          gethomepage.dev/icon: huntarr.png
           gethomepage.dev/app: huntarr
-          gethomepage.dev/widget.type: huntarr
-          gethomepage.dev/widget.url: http://huntarr.downloads.svc.cluster.local:9705
-          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_HUNTARR_TOKEN}}`}}'
     persistence:
       config:
         existingClaim: *app
