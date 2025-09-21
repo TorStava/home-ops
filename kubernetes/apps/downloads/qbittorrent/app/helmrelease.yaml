@@ -200,6 +200,15 @@ spec:
           - backendRefs:
               - name: *app
                 port: *port
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/group: Downloads
+          gethomepage.dev/name: Qbittorrent
+          gethomepage.dev/icon: qbittorrent.svg
+          gethomepage.dev/app: qbittorrent
+          gethomepage.dev/widget.type: qbittorrent
+          gethomepage.dev/widget.url: http://qbittorrent.downloads.svc.cluster.local
+          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_QBITTORRENT_TOKEN}}`}}'
 
     configMaps:
       config:
