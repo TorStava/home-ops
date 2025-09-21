@@ -64,7 +64,7 @@ spec:
           gethomepage.dev/icon: audiobookshelf.svg
           gethomepage.dev/app: *app
           gethomepage.dev/widget.type: audiobookshelf
-          gethomepage.dev/widget.url: http://audiobookshelf.self-hosted.svc.cluster.local:8080
+          gethomepage.dev/widget.url: http://audiobookshelf.self-hosted.svc.cluster.local
           gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_AUDIOBOOKSHELF_TOKEN}}`}}'
 
     persistence:
