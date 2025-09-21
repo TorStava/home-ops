@@ -103,7 +103,7 @@ spec:
           gethomepage.dev/name: Firefly III
           gethomepage.dev/group: Finance
           gethomepage.dev/icon: firefly-iii.png
-          gethomepage.dev/app: firefly-iii-web
+          gethomepage.dev/app: firefly-iii
         rules:
           - backendRefs:
               - name: *app
