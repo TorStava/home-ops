@@ -42,7 +42,6 @@ spec:
               VPN_TYPE: "wireguard"
               WIREGUARD_ENDPOINT_PORT: 51820
               VPN_PORT_FORWARDING: 'on'
-              PORT_FORWARD_ONLY: 'on'
               VPN_INTERFACE: tun0
             envFrom:
               - secretRef:
