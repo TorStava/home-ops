@@ -93,8 +93,6 @@ spec:
             resources:
               requests:
                 cpu: 20m
-              limits:
-                squat.ai/tun: 1
           # TODO: Replace once gluetun supports socks5, nothing supports shadowsocks
           socks5:
             restartPolicy: Always
