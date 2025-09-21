@@ -31,6 +31,7 @@ spec:
               repository: ghcr.io/qdm12/gluetun
               tag: v3.40.0@sha256:2b42bfa046757145a5155acece417b65b4443c8033fb88661a8e9dcf7fda5a00
             env:
+              TZ: ${TIMEZONE}
               DOT: 'off'
               DNS_ADDRESS: 10.43.0.10 # coredns is either pihole, dnsmasq, or cloudflare over tls, so it's fine to use
               HTTP_CONTROL_SERVER_AUTH_CONFIG_FILEPATH: &gluetunAuthPath /gluetun/auth.toml
@@ -38,7 +39,8 @@ spec:
               FIREWALL_OUTBOUND_SUBNETS: 10.43.0.0/16,10.43.0.0/16 # Allow access to k8s subnets
               HEALTH_SERVER_ADDRESS: :9999
               HEALTH_SUCCESS_WAIT_DURATION: 10s
-              VPN_TYPE: wireguard
+              VPN_TYPE: "wireguard"
+              WIREGUARD_ENDPOINT_PORT: 51820
               VPN_PORT_FORWARDING: 'on'
               PORT_FORWARD_ONLY: 'on'
               VPN_INTERFACE: tun0
