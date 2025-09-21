@@ -42,7 +42,6 @@ spec:
               VPN_TYPE: "wireguard"
               WIREGUARD_ENDPOINT_PORT: 51820
               VPN_INTERFACE: tun0
-              UPDATER_PERIOD: 0
             envFrom:
               - secretRef:
                   name: wireguard
