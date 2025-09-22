@@ -188,10 +188,6 @@ spec:
         ports:
           socks-proxy:
             port: *proxy-port
-      vuetorrent:
-        ports:
-          http:
-            port: &vt_port 8080
     route:
       app:
         hostnames:
@@ -202,8 +198,8 @@ spec:
             sectionName: https
         rules:
           - backendRefs:
-              - name: vuetorrent
-                port: *vt_port
+              - name: *app
+                port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
           gethomepage.dev/group: Downloads
