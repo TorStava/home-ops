@@ -208,7 +208,8 @@ spec:
           gethomepage.dev/app: qbittorrent
           gethomepage.dev/widget.type: qbittorrent
           gethomepage.dev/widget.url: http://qbittorrent.downloads.svc.cluster.local
-          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_QBITTORRENT_TOKEN}}`}}'
+          gethomepage.dev/widget.username: '{{`{{HOMEPAGE_VAR_QBITTORRENT_USERNAME}}`}}'
+          gethomepage.dev/widget.password: '{{`{{HOMEPAGE_VAR_QBITTORRENT_PASSWORD}}`}}'
 
     configMaps:
       config:
