@@ -13,7 +13,6 @@ spec:
     template:
       data:
         HASS_IP: '{{ .HASS_IP }}'
-        HASS_PORT: '{{ .HASS_PORT }}'
   dataFrom:
     - extract:
         key: home_assistant
@@ -28,8 +27,8 @@ spec:
   selector:
     app: home-assistant
   ports:
-    - port: ${HASS_PORT}
-      targetPort: ${HASS_PORT}
+    - port:
+      targetPort: 8123
   type: ClusterIP
   clusterIP: None
 
@@ -44,7 +43,7 @@ spec:
     - addresses:
         - ${HASS_IP}
       ports:
-        - port: ${HASS_PORT}
+        - port: 8123
 
 ---
 # HTTPRoute
