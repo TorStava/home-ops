@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 2.18.3
+              tag: 2.18.4
             env:
               # Configure application
               PAPERLESS_URL: https://{{ .Release.Name }}.${SECRET_DOMAIN}
@@ -94,7 +94,7 @@ spec:
           gotenberg:
             image:
               repository: gotenberg/gotenberg
-              tag: 8.23.0
+              tag: 8.23.1
             ports:
               - containerPort: 3000
             command:
