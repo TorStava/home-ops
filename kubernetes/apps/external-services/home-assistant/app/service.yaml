@@ -6,6 +6,6 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: ${HASS_PORT}
+    - port: 8123
       protocol: TCP
-      targetPort: ${HASS_PORT}
+      targetPort: 8123
