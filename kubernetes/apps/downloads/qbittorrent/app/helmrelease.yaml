@@ -101,6 +101,7 @@ spec:
               tag: latest@sha256:e9c663beee368d613e16ad2464497e900e0e99e5882a3d2fee0c13687b569361
             env:
               PROXY_PORT: &proxy-port 8388
+              REQUIRE_AUTH: false
             resources:
               requests:
                 cpu: 5m
