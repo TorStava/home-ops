@@ -1,0 +1,69 @@
+---
+# ExternalSecret
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: home-assistant
+spec:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: bitwarden
+  target:
+    name: home-assistant
+    template:
+      data:
+        HASS_IP: '{{ .HASS_IP }}'
+        HASS_PORT: '{{ .HASS_PORT }}'
+  dataFrom:
+    - extract:
+        key: home_assistant
+
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: home-assistant
+spec:
+  selector:
+    app: home-assistant
+  ports:
+    - port: ${HASS_PORT}
+      targetPort: ${HASS_PORT}
+  type: ClusterIP
+  clusterIP: None
+
+---
+# EndpointSlice
+apiVersion: v1
+kind: EndpointSlice
+metadata:
+  name: home-assistant
+spec:
+  endpoints:
+    - addresses:
+        - ${HASS_IP}
+      ports:
+        - port: ${HASS_PORT}
+
+---
+# HTTPRoute
+apiVersion: v1
+kind: HTTPRoute
+metadata:
+  name: home-assistant
+  annotations:
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/group: Home
+    gethomepage.dev/name: Home Assistant
+    gethomepage.dev/icon: home-assistant.svg
+    gethomepage.dev/widget.type: homeassistant
+    gethomepage.dev/widget.url: http://home-assistant.external-services.svc.cluster.local:8123
+    gethomepage.dev/widget.key: '{{HOMEPAGE_VAR_HA_TOKEN}}'
+spec:
+  hostnames:
+    - home-assistant.${SECRET_DOMAIN}
+  parentRefs:
+    - name: internal
+      namespace: kube-system
+      sectionName: https
