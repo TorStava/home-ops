@@ -5,6 +5,7 @@ metadata:
   name: ${APP}
 spec:
   type: ClusterIP
+  clusterIP: None  # Headless service for external endpoints
   ports:
     - port: 8123
       protocol: TCP
