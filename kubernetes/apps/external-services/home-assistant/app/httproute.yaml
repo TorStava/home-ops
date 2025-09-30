@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/name: Home Assistant
     gethomepage.dev/icon: home-assistant.svg
     gethomepage.dev/widget.type: homeassistant
-    gethomepage.dev/widget.url: http://${APP}.external-services.svc.cluster.local:8123
+    gethomepage.dev/widget.url: http://${HOMEASSISTANT_IP}:8123
     gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_HA_TOKEN}}`}}'
 spec:
   hostnames:
