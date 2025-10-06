@@ -20,5 +20,5 @@ spec:
       sectionName: http
   rules:
     - backendRefs:
-        - name: http
+        - name: ${APP}
           port: 80
