@@ -20,6 +20,5 @@ spec:
       sectionName: https
   rules:
     - backendRefs:
-        - name: ${APP}
-          namespace: external-services
+        - name: http
           port: 32400

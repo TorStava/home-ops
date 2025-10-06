@@ -9,7 +9,6 @@ addressType: IPv4
 ports:
   - name: http
     port: 32400
-    protocol: TCP
 endpoints:
   - addresses:
       - ${PLEX_IP}
