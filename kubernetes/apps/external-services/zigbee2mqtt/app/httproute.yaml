@@ -1,0 +1,22 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ${APP}
+  annotations:
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/group: Home
+    gethomepage.dev/name: Zigbee2MQTT
+    gethomepage.dev/icon: zigbee2mqtt.svg
+spec:
+  hostnames:
+    - ${APP}.${SECRET_DOMAIN}
+  parentRefs:
+    - name: internal
+      namespace: kube-system
+      sectionName: https
+  rules:
+    - backendRefs:
+        - name: ${APP}
+          namespace: external-services
+          port: 8080

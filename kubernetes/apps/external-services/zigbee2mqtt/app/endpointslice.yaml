@@ -1,0 +1,15 @@
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: ${APP}
+  labels:
+    kubernetes.io/service-name: ${APP}
+addressType: IPv4
+ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+endpoints:
+  - addresses:
+      - ${ZIGBEE2MQTT_IP}
