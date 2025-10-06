@@ -52,16 +52,7 @@ spec:
           - name: autopath
             parameters: "@kubernetes"
           - name: forward
-            parameters: ${SECRET_DOMAIN}. dns://192.168.1.2
-            configBlock: |-
-              policy sequential
-              health_check 5s
-          - name: forward
-            parameters: . dns://192.168.1.2
-            configBlock: |-
-              tls_servername cloudflare-dns.com
-              policy sequential
-              health_check 5s
+            parameters: . /etc/resolv.conf
           - name: cache
             configBlock: |-
               prefetch 20
