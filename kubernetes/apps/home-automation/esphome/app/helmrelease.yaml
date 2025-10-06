@@ -56,7 +56,7 @@ spec:
           gethomepage.dev/icon: esphome.svg
           gethomepage.dev/app: esphome
           gethomepage.dev/widget.type: esphome
-          gethomepage.dev.widget.url: http://esphome.self-hosted.svc.cluster.local
+          gethomepage.dev.widget.url: http://esphome.home-automation.svc.cluster.local
     persistence:
       config:
         existingClaim: *app
