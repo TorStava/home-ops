@@ -8,6 +8,7 @@ metadata:
     gethomepage.dev/group: Home
     gethomepage.dev/name: Zigbee2MQTT
     gethomepage.dev/icon: zigbee2mqtt.svg
+    gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}
