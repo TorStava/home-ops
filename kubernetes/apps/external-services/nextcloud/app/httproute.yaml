@@ -9,7 +9,7 @@ metadata:
     gethomepage.dev/name: Nextcloud
     gethomepage.dev/icon: nextcloud.svg
     gethomepage.dev/widget.type: nextcloud
-    gethomepage.dev/widget.url: https://${NEXTCLOUD_IP}
+    gethomepage.dev/widget.url: http://${NEXTCLOUD_IP}
     gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}`}}'
 spec:
   hostnames:
@@ -22,4 +22,4 @@ spec:
     - backendRefs:
         - name: ${APP}
           namespace: external-services
-          port: 443
+          port: 80

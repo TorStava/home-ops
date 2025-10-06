@@ -9,7 +9,7 @@ spec:
   type: ClusterIP
   clusterIP: None  # Headless service for external endpoints
   ports:
-    - name: https
-      port: 443
+    - name: http
+      port: 80
       protocol: TCP
-      targetPort: 443
+      targetPort: 80
