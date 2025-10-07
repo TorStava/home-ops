@@ -4,7 +4,5 @@ kind: Service
 metadata:
   name: ${APP}
 spec:
-  ports:
-    - name: http
-      port: 8123
-      targetPort: 8123
+  type: ExternalName
+  externalName: ${APP}.${SECRET_DOMAIN}
