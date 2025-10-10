@@ -8,9 +8,7 @@ metadata:
     gethomepage.dev/group: Home
     gethomepage.dev/name: Plex
     gethomepage.dev/icon: plex.svg
-    gethomepage.dev/widget.type: plex
-    gethomepage.dev/widget.url: http://${PLEX_IP}:32400
-    gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_PLEX_TOKEN}}`}}'
+    gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}

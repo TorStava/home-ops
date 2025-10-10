@@ -8,9 +8,7 @@ metadata:
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/name: Nextcloud
     gethomepage.dev/icon: nextcloud.svg
-    gethomepage.dev/widget.type: nextcloud
-    gethomepage.dev/widget.url: https://${APP}.${SECRET_DOMAIN}
-    gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_NEXTCLOUD_TOKEN}}`}}'
+    gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}
