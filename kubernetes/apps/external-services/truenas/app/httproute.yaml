@@ -26,5 +26,4 @@ spec:
   rules:
     - backendRefs:
         - name: ${APP}
-          namespace: external-services
           port: 80

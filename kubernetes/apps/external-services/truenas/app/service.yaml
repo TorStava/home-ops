@@ -4,5 +4,8 @@ kind: Service
 metadata:
   name: ${APP}
 spec:
-  type: ExternalName
-  externalName: ${APP}.${SECRET_DOMAIN}
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      port: 80
