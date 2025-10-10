@@ -51,8 +51,13 @@ spec:
               ttl 30
           - name: autopath
             parameters: "@kubernetes"
+          # - name: forward
+          #   parameters: . /etc/resolv.conf
           - name: forward
-            parameters: . /etc/resolv.conf
+            parameters: . dns://192.168.1.2 dns://192.168.1.1 dns://1.1.1.1  # pihole;fw;cloudflare
+            configBlock: |-
+              policy sequential
+              health_check 5s
           - name: cache
             configBlock: |-
               prefetch 20
