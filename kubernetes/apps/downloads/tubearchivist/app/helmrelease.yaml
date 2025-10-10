@@ -66,6 +66,9 @@ spec:
           gethomepage.dev/group: Downloads
           gethomepage.dev/icon: tube-archivist.png
           gethomepage.dev/app: tubearchivist-web
+          gethomepage.dev/widget.type: tubearchivist
+          gethomepage.dev/widget.url: http://tubearchivist.downloads.svc.cluster.local
+          gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TUBEARCHIVIST_TOKEN}}`}}'
         rules:
           - backendRefs:
               - name: "tubearchivist-web"
