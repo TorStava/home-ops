@@ -93,8 +93,8 @@ spec:
           gethomepage.dev/icon: homebox.png
           gethomepage.dev/widget.type: homebox
           gethomepage.dev/widget.url: https://{{ .Release.Name }}.${SECRET_DOMAIN}
-          gethomepage.dev/widget.username: "{{HOMEPAGE_VAR_HOMEBOX_USER}}"
-          gethomepage.dev/widget.password: "{{HOMEPAGE_VAR_HOMEBOX_PASS}}"
+          gethomepage.dev/widget.username: "{{`{{HOMEPAGE_VAR_HOMEBOX_USER}}`}}"
+          gethomepage.dev/widget.password: "{{`{{HOMEPAGE_VAR_HOMEBOX_PASS}}`}}"
 
     persistence:
       data:
