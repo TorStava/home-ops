@@ -14,8 +14,8 @@ metadata:
     gethomepage.dev/widget.type: truenas
     gethomepage.dev/widget.url: *ip
     gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TRUENAS_TOKEN}}`}}'
-    gethomepage.dev/widget.nasType: core
-    gethomepage.dev/widget.enablePools: true
+    gethomepage.dev/widget.nasType: "core"
+    gethomepage.dev/widget.enablePools: "true"
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}
