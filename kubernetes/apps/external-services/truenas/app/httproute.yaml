@@ -9,6 +9,11 @@ metadata:
     gethomepage.dev/name: Truenas
     gethomepage.dev/icon: truenas.svg
     gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
+    gethomepage.dev/widget.type: truenas
+    gethomepage.dev/widget.url: http://${NAS_IP}
+    gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TRUENAS_TOKEN}}`}}'
+    gethomepage.dev/widget.nasType: core
+    gethomepage.dev/widget.enablePools: true
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}
