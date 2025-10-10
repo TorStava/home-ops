@@ -83,7 +83,7 @@ spec:
           gethomepage.dev/icon: linkwarden.png
           gethomepage.dev/app: linkwarden
           gethomepage.dev/widget.type: linkwarden
-          gethomepage.dev.widget.url: http://linkwarden.self-hosted.svc.cluster.local:3000
+          gethomepage.dev.widget.url: http://linkwarden.self-hosted.svc.cluster.local
           gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_LINKWARDEN_TOKEN}}`}}'
     persistence:
       data:
