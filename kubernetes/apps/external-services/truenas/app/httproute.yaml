@@ -8,10 +8,11 @@ metadata:
     gethomepage.dev/group: Infrastructure
     gethomepage.dev/name: Truenas
     gethomepage.dev/icon: truenas.svg
-    gethomepage.dev/href: &href https://${APP}.${SECRET_DOMAIN}
-    gethomepage.dev/ping: *href
+    gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
+    gethomepage.dev/ping: &ip http://${NAS_IP}
+    gethomepage.dev/siteMonitor: *ip
     gethomepage.dev/widget.type: truenas
-    gethomepage.dev/widget.url: http://${NAS_IP}
+    gethomepage.dev/widget.url: *ip
     gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TRUENAS_TOKEN}}`}}'
     gethomepage.dev/widget.nasType: core
     gethomepage.dev/widget.enablePools: true
