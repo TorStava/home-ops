@@ -76,10 +76,7 @@ spec:
     persistence:
       config:
         existingClaim: *app
-      media:
+      data:
         type: nfs
         server: ${NAS_IP}
-        path: ${NAS_PATH}/data/ebooks/CalibreDB
-        globalMounts:
-          - path: /calibre-library
-            subPath: Ebooks
+        path: ${NAS_PATH}/data
