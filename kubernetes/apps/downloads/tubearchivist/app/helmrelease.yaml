@@ -24,7 +24,7 @@ spec:
           app:
             image:
               repository: bbilly1/tubearchivist
-              tag: v0.5.7@sha256:20ce26849d0bf00db9d85300f8205af24d4cd507dd7ab53b55d48a33544ce5b6
+              tag: v0.5.8@sha256:83ccd1e372a654654e8cb3c0278256b6889653a4cf239c052bb532401c79daeb
             env:
               TZ: "${TIMEZONE}"
               HOST_UID: 568
