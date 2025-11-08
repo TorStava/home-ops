@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: lscr.io/linuxserver/calibre
-              tag: 8.13.0@sha256:fc5c62b2d11fb1396a4fd97d18270c2802f3980b8d49a51675b9dc90c9443250
+              tag: 8.14.0@sha256:0061aa725d1978ef167f085b84a4b4ce53507f37e49056ef898ea84478415284
             env:
               CACHE_DIR: /cache
               PUID: 568
