@@ -21,9 +21,9 @@ spec:
           reloader.stakater.com/auto: 'true'
         pod:
           securityContext:
-            runAsUser: 568
-            runAsGroup: 568
-            fsGroup: 568
+            runAsUser: 0
+            runAsGroup: 0
+            fsGroup: 0
             fsGroupChangePolicy: 'OnRootMismatch'
         containers:
           app:
@@ -62,11 +62,3 @@ spec:
     persistence:
       tmp:
         type: emptyDir
-      cache:
-        type: emptyDir
-        globalMounts:
-          - path: /var/cache/nginx
-      run:
-        type: emptyDir
-        globalMounts:
-          - path: /var/run
