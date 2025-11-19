@@ -24,6 +24,7 @@ spec:
     - ../../../../components/common
     - ../../../../components/gatus/guarded
     - ../../../../components/gatus/internal
+    - ../../../../components/volsync
   path: ./kubernetes/apps/self-hosted/penpot/app
   prune: true
   sourceRef:
