@@ -75,23 +75,22 @@ spec:
               - secretRef:
                   name: *app
     service:
-      ${APP}-frontend:
-        controller: *app
+      frontend:
+        primary: true
+        forceRename: *app
         ports:
           http:
+            primary: true
             port: 8080
-      ${APP}-backend:
-        controller: *app
+      backend:
         ports:
           http:
             port: 6060
-      ${APP}-exporter:
-        controller: *app
+      exporter:
         ports:
           http:
             port: 6061
-      ${APP}-prepl:
-        controller: *app
+      prepl:
         ports:
           http:
             port: 6062
