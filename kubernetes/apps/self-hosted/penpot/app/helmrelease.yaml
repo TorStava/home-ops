@@ -45,8 +45,8 @@ spec:
               repository: penpotapp/frontend
               tag: 2.11.1@sha256:df67f79dfb8be3d7edf673aa66bc1ed8dc24ea534025f4ae156edba31a86a9fa
             env:
-              PENPOT_BACKEND_URI: http://backend:6060
-              PENPOT_EXPORTER_URI: http://exporter:6061
+              PENPOT_BACKEND_URI: http://backend.penpot.svc.cluster.local:6060
+              PENPOT_EXPORTER_URI: http://exporter.penpot.svc.cluster.local:6061
             envFrom:
               - secretRef:
                   name: *app
@@ -80,6 +80,12 @@ spec:
         ports:
           http:
             port: &port 8080
+          backend:
+            port: 6060
+          exporter:
+            port: 6061
+          prepl:
+            port: 6062
 
     route:
       app:
