@@ -81,7 +81,7 @@ spec:
         ports:
           http:
             primary: true
-            port: 8080
+            port: &port 8080
       backend:
         ports:
           http:
