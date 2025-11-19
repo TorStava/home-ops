@@ -75,19 +75,26 @@ spec:
               - secretRef:
                   name: *app
     service:
-      *app -frontend:
+      ${APP}-frontend:
         controller: *app
         ports:
-          http: *port
-      *app -backend:
+          http:
+            port: 8080
+      ${APP}-backend:
+        controller: *app
         ports:
-          backend: 6060
-      *app -exporter:
+          http:
+            port: 6060
+      ${APP}-exporter:
+        controller: *app
         ports:
-          exporter: 6061
-      *app -prepl:
+          http:
+            port: 6061
+      ${APP}-prepl:
+        controller: *app
         ports:
-          prepl: 6062
+          http:
+            port: 6062
 
     route:
       app:
