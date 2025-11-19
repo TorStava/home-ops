@@ -1,0 +1,108 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app "${APP}"
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: [/spec/replicas]
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      strategy: rollback
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            envFrom:
+              - secretRef:
+                  name: *app
+              - secretRef:
+                  name: penpot-initdb
+        containers:
+          frontend:
+            dependsOn:
+              - backend
+              - exporter
+            image:
+              repository: penpotapp/frontend
+              tag: 2.11.1@sha256:df67f79dfb8be3d7edf673aa66bc1ed8dc24ea534025f4ae156edba31a86a9fa
+            envFrom:
+              - secretRef:
+                  name: *app
+          backend:
+            image:
+              repository: penpotapp/backend
+              tag: 2.11.1@sha256:895e5c3c1ff197070b882099c76be167242d458069a1500e98fea3e1c3269909
+            env:
+              PENPOT_PUBLIC_URI: https://penpot.${SECRET_DOMAIN}
+              PENPOT_DATABASE_URI: postgresql://postgres-cluster-rw.database.svc.cluster.local/{{ .PENPOT_POSTGRES_DBNAME }}
+              PENPOT_REDIS_URI: redis://dragonfly-cluster.database.svc.cluster.local:6379
+              PENPOT_ASSETS_STORAGE_BACKEND: assets-fs
+              PENPOT_STORAGE_ASSETS_FS_DIRECTORY: /opt/data/assets
+              PENPOT_TELEMETRY_ENABLED: false
+            envFrom:
+              - secretRef:
+                  name: *app
+          exporter:
+            image:
+              repository: penpotapp/exporter
+              tag: 2.11.1
+            env:
+              PENPOT_PUBLIC_URI: https://penpot.${SECRET_DOMAIN}
+              PENPOT_REDIS_URI: redis://dragonfly-cluster.database.svc.cluster.local:6379
+            envFrom:
+              - secretRef:
+                  name: *app
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: &port 8080
+
+    route:
+      app:
+        hostnames: ["penpot.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Penpot
+          gethomepage.dev/group: Design
+          gethomepage.dev/icon: penpot.png
+          gethomepage.dev/app: penpot
+        rules:
+          - backendRefs:
+              - name: *app
+                port: *port
+    persistence:
+      assets:
+        enabled: true
+        existingClaim: *app
+        advancedMounts:
+          *app :
+            frontend:
+              - path: /opt/data/assets
+            backend:
+              - path: /opt/data/assets
+

@@ -27,4 +27,5 @@ resources:
   - ./ollama/ks.yaml
   - ./outline/ks.yaml
   - ./paperless/ks.yaml
+  - ./penpot/ks.yaml
   - ./watchstate/ks.yaml

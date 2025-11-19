@@ -1,0 +1,41 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app penpot
+  namespace: &namespace self-hosted
+  labels:
+    substitution.flux.home.arpa/enabled: "true"
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: openebs
+      namespace: openebs-system
+    - name: volsync
+      namespace: volsync-system
+    - name: postgres-cluster
+      namespace: database
+    - name: dragonfly-cluster
+      namespace: database
+  components:
+    - ../../../../components/common
+    - ../../../../components/gatus/guarded
+    - ../../../../components/gatus/internal
+  path: ./kubernetes/apps/self-hosted/penpot/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  wait: false
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  postBuild:
+    substitute:
+      APP: *app
+      VOLSYNC_CAPACITY: 20Gi
