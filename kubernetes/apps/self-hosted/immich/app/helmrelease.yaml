@@ -149,5 +149,5 @@ spec:
           memory: 4Gi
       persistence:
         cache:
-          type: pvc
+          type: persistentVolumeClaim
           existingClaim: immich-ml-cache
