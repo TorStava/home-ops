@@ -55,6 +55,10 @@ spec:
               REDIS_PORT: '6379'
               REDIS_DBINDEX: '2'
               LOG_LEVEL: verbose
+              MACHINE_LEARNING_MODEL_TTL: 0  # disable model TTL
+              MACHINE_LEARNING_MODEL_TTL_POLL_S: 0  # disable model TTL poll
+              MACHINE_LEARNING_MODEL_INTER_OP_THREADS: 4  # use 4 threads for model inter-op
+              MACHINE_LEARNING_WORKERS: 4  # use 4 workers for machine learning
               DB_DATABASE_NAME: *app
               DB_HOSTNAME: postgres-immich-rw.self-hosted.svc.cluster.local
               DB_USERNAME:
