@@ -43,23 +43,31 @@ spec:
       targetPath: immich.configuration.notifications.smtp.from
       valuesKey: EMAIL_FROM
   values:
-    env:
-      REDIS_HOSTNAME: dragonfly-cluster.database.svc.cluster.local
-      REDIS_PORT: '6379'
-      REDIS_DBINDEX: '2'
-      LOG_LEVEL: verbose
-      DB_DATABASE_NAME: *app
-      DB_HOSTNAME: postgres-immich-rw.self-hosted.svc.cluster.local
-      DB_USERNAME:
-        valueFrom:
-          secretKeyRef:
-            name: immich-postgres-user
-            key: username
-      DB_PASSWORD:
-        valueFrom:
-          secretKeyRef:
-            name: immich-postgres-user
-            key: password
+    controllers:
+      main:
+        containers:
+          main:
+            image:
+              # renovate: datasource=github-releases depName=immich-app/immich
+              tag: v2.3.1
+            env:
+              REDIS_HOSTNAME: dragonfly-cluster.database.svc.cluster.local
+              REDIS_PORT: '6379'
+              REDIS_DBINDEX: '2'
+              LOG_LEVEL: verbose
+              DB_DATABASE_NAME: *app
+              DB_HOSTNAME: postgres-immich-rw.self-hosted.svc.cluster.local
+              DB_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-postgres-user
+                    key: username
+              DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-postgres-user
+                    key: password
+
     global:
       annotations:
         reloader.stakater.com/auto: 'true'
@@ -115,9 +123,6 @@ spec:
           hashVerificationEnabled: true
           template: '{{y}}/{{y}}-{{MM}}-{{dd}}/{{filename}}'
 
-    image:
-      # renovate: datasource=github-releases depName=immich-app/immich
-      tag: v2.3.1
 
     server:
       resources:
