@@ -47,9 +47,7 @@ spec:
       REDIS_HOSTNAME: dragonfly-cluster.database.svc.cluster.local
       REDIS_PORT: '6379'
       REDIS_DBINDEX: '2'
-
       LOG_LEVEL: verbose
-
       DB_DATABASE_NAME: *app
       DB_HOSTNAME: postgres-immich-rw.self-hosted.svc.cluster.local
       DB_USERNAME:
@@ -62,11 +60,6 @@ spec:
           secretKeyRef:
             name: immich-postgres-user
             key: password
-    postgres:
-      enabled: false
-    redis:
-      enabled: false
-
     global:
       annotations:
         reloader.stakater.com/auto: 'true'
@@ -125,6 +118,7 @@ spec:
     image:
       # renovate: datasource=github-releases depName=immich-app/immich
       tag: v2.3.1
+
     server:
       resources:
         requests:
