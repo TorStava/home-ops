@@ -6,6 +6,7 @@ namespace: self-hosted
 components:
   - ../../components/common
 resources:
+  - ./actual/ks.yaml
   - ./audiobookshelf/ks.yaml
   - ./bentopdf/ks.yaml
   - ./calibre/ks.yaml
