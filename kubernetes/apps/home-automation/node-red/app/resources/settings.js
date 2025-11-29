@@ -13,12 +13,12 @@ module.exports = {
       strategy: require("passport-openidconnect").Strategy,
       options: {
         issuer: "https://auth.${SECRET_DOMAIN}/application/o/${APP}/",
-        authorizationURL: "https://auth.${SECRET_DOMAIN}/application/o/authorize",
-        tokenURL: "https://auth.${SECRET_DOMAIN}/application/o/token",
-        userInfoURL: "https://auth.${SECRET_DOMAIN}/application/o/userinfo",
+        authorizationURL: "https://auth.${SECRET_DOMAIN}/application/o/authorize/",
+        tokenURL: "https://auth.${SECRET_DOMAIN}/application/o/token/",
+        userInfoURL: "https://auth.${SECRET_DOMAIN}/application/o/userinfo/",
         clientID: process.env.NODE_RED_OAUTH_CLIENT_ID,
         clientSecret: process.env.NODE_RED_OAUTH_CLIENT_SECRET,
-        callbackURL: "https://${APP}.${SECRET_DOMAIN}/auth/strategy/callback",
+        callbackURL: "https://${APP}.${SECRET_DOMAIN}/auth/strategy/callback/",
         scope: ["email", "profile", "openid"],
         proxy: true,
         verify: function(context, issuer, profile, done) {
