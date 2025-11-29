@@ -37,6 +37,9 @@ spec:
               TZ: ${TIMEZONE}
               NODE_RED_ENABLE_PROJECTS: "true"
               NODE_RED_ENABLE_SAFE_MODE: "false"
+            envFrom:
+              - secretRef:
+                  name: *app
     service:
       app:
         ports:
@@ -60,3 +63,10 @@ spec:
     persistence:
       data:
         existingClaim: *app
+      settings:
+        type: configMap
+        name: node-red-configmap
+        globalMounts:
+          - path: /data/settings.js
+            subPath: settings.js
+            readOnly: true
