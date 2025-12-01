@@ -107,7 +107,7 @@ spec:
             minFaces: 20
           ocr:
             maxResolution: 1080
-            modelName: latin_PP-OCRv5_mobile
+            modelName: LATIN__PP-OCRv5_mobile
         metadata:
           faces:
             import: true
