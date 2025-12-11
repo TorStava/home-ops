@@ -56,7 +56,22 @@ cat /tmp/firebog.list /tmp/tholinka.list | sort > /tmp/combined.list
 to_remove="$(comm -23 /tmp/current.list /tmp/combined.list)"
 echo "Removing lists not in the combined lists from db: $to_remove"
 
-echo "$to_remove" | xargs -I{} pihole-FTL sql /etc/pihole/gravity.db "DELETE FROM adlist WHERE address='{}' AND type=0;"
+# Fix to avoid foreign key constraint errors when deleting adlists from adlist table.
+echo "$to_remove" | while read -r url; do
+  id=$(pihole-FTL sql /etc/pihole/gravity.db "SELECT id FROM adlist WHERE address='$url' AND type=0;")
+  if [ -n "$id" ]; then
+    echo "Removing adlist ID $id: $url"
+    # Delete from gravity table
+    pihole-FTL sql /etc/pihole/gravity.db "DELETE FROM gravity WHERE adlist_id=$id;"
+    # Delete from antigravity table
+    pihole-FTL sql /etc/pihole/gravity.db "DELETE FROM antigravity WHERE adlist_id=$id;"
+    # Delete from adlist_by_group (though ON DELETE CASCADE should handle this)
+    pihole-FTL sql /etc/pihole/gravity.db "DELETE FROM adlist_by_group WHERE adlist_id=$id;"
+    # Finally delete from adlist
+    pihole-FTL sql /etc/pihole/gravity.db "DELETE FROM adlist WHERE id=$id;"
+    echo "Successfully removed adlist ID $id"
+  fi
+done
 
 to_add="$(comm -13 /tmp/current.list /tmp/firebog.list)"
 echo "Inserting new firebog lists into db: $to_add"
@@ -85,6 +100,7 @@ pihole-FTL --config dns.reply.blocking.IPv4 192.168.1.2
 pihole-FTL --config webserver.domain "pihole.${SECRET_DOMAIN}"
 pihole-FTL --config misc.nice -999
 pihole-FTL --config misc.check.load false
+pihole-FTL --config misc.dnsmasq_lines dns-forward-max=500
 pihole-FTL --config dns.ignoreLocalhost true
 pihole-FTL --config ntp.ipv4.active false
 pihole-FTL --config ntp.ipv6.active false
