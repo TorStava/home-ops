@@ -100,7 +100,7 @@ pihole-FTL --config dns.reply.blocking.IPv4 192.168.1.2
 pihole-FTL --config webserver.domain "pihole.${SECRET_DOMAIN}"
 pihole-FTL --config misc.nice -999
 pihole-FTL --config misc.check.load false
-pihole-FTL --config misc.dnsmasq_lines dns-forward-max=500
+pihole-FTL --config misc.dnsmasq_lines "dns-forward-max=500"
 pihole-FTL --config dns.ignoreLocalhost true
 pihole-FTL --config ntp.ipv4.active false
 pihole-FTL --config ntp.ipv6.active false
