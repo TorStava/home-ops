@@ -101,7 +101,7 @@ spec:
         existingClaim: *app
         advancedMounts:
           bambu-studio:
-            app:
+            main:
               - path: /config
             storage:
               - path: /shared
