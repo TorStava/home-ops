@@ -33,9 +33,6 @@ spec:
             securityContext:
               fsGroup: 1000
               fsGroupChangePolicy: OnRootMismatch
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: false
-              capabilities: {drop: ["ALL"]}
           storage:
             image:
               repository: pldubouilh/gossa
@@ -45,9 +42,6 @@ spec:
             securityContext:
               fsGroup: 1000
               fsGroupChangePolicy: OnRootMismatch
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
-              capabilities: {drop: ["ALL"]}
     service:
       bambu-studio:
         controller: bambu-studio
