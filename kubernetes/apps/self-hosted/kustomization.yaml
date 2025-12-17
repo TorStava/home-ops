@@ -8,6 +8,7 @@ components:
 resources:
   - ./actual/ks.yaml
   - ./audiobookshelf/ks.yaml
+  - ./bambu-studio/ks.yaml
   - ./bentopdf/ks.yaml
   - ./calibre/ks.yaml
   - ./calibre-web-automated/ks.yaml

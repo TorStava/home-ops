@@ -1,0 +1,134 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app bambu-studio
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          main:
+            image:
+              repository: lscr.io/linuxserver/bambustudio
+              tag: 02.04.00
+            env:
+              TZ: ${TIMEZONE}
+              PUID: 1000
+              PGID: 1000
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+              capabilities: {drop: ["ALL"]}
+          storage:
+            image:
+              repository: pldubouilh/gossa
+              tag: v1.1.2
+            env:
+              TIMEZONE: ${TIMEZONE}
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: {drop: ["ALL"]}
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 44 # video
+          - 109 # render
+    service:
+      bambu-studio:
+        controller: bambu-studio
+        ports:
+          http:
+            port: &port 3000
+          storage:
+            port: &storagePort 8001
+    configMaps:
+      config:
+        data:
+          .filebrowser.json: |-
+            {
+              "port": 8080,
+              "baseURL": "",
+              "address": "",
+              "log": "stdout",
+              "database": "/config/database.db",
+              "root": "/srv"
+            }
+    route:
+      *app :
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - name: *app
+                port: *port
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/group: 3D Printing
+          gethomepage.dev/name: Bambu Studio
+          gethomepage.dev/description: Bambu Studio 3D printing server
+          gethomepage.dev/icon: printer-3d.svg
+      storage:
+        hostnames: ["bambu-storage.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - name: *app
+                port: *storagePort
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/group: 3D Printing
+          gethomepage.dev/name: Bambu Storage
+          gethomepage.dev/description: Bambu Studio shared storage (for files, gcode, etc.)
+          gethomepage.dev/icon: file-upload.svg
+
+    persistence:
+      config:
+        existingClaim: *app
+        advancedMounts:
+          bambu-studio:
+            app:
+              - path: /config
+            storage:
+              - path: /shared
+      config-file:
+        type: configMap
+        identifier: config
+        advancedMounts:
+          bambu-studio:
+            storage:
+              - path: /config/.filebrowser.json
+                subPath: .filebrowser.json
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          bambu-studio:
+            app:
+              - path: /tmp
+              - path: /run
+              - path: /var/log
