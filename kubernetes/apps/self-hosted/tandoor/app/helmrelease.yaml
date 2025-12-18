@@ -45,6 +45,13 @@ spec:
             envFrom:
               - secretRef:
                   name: *app
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
     service:
       main:
         controller: *app
@@ -71,5 +78,21 @@ spec:
           gethomepage.dev/app: *app
 
     persistence:
-      staticfiles:
+      data:
         existingClaim: *app
+        advancedMounts:
+          tandoor:
+            main:
+              - path: /opt/recipes/mediafiles
+                subPath: mediafiles
+              - path: /opt/recipes/staticfiles
+                subPath: staticfiles
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          tandoor:
+            app:
+              - path: /opt/recipes/cookbook/static/django_js_reverse
+                subPath: django_js_reverse
+              - path: /tmp
+                subPath: tmp
