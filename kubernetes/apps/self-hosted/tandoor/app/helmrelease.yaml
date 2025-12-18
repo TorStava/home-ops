@@ -106,7 +106,7 @@ spec:
         type: emptyDir
         advancedMounts:
           tandoor:
-            app:
+            main:
               - path: /opt/recipes/cookbook/static/django_js_reverse
                 subPath: django_js_reverse
               - path: /tmp
