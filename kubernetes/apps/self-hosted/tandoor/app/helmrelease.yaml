@@ -72,7 +72,7 @@ spec:
         controller: *app
         ports:
           http:
-            port: &port 8080
+            port: 8080
     route:
       *app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
@@ -80,10 +80,6 @@ spec:
           - name: internal
             namespace: kube-system
             sectionName: https
-        rules:
-          - backendRefs:
-              - name: *app
-                port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
           gethomepage.dev/group: Home
