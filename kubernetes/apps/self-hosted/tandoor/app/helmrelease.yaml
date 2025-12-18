@@ -1,0 +1,75 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app tandoor
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: [/spec/replicas]
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            envFrom:
+              - secretRef:
+                  name: *app
+              - secretRef:
+                  name: tandoor-initdb
+        containers:
+          main:
+            image:
+              repository: ghcr.io/tandoorrecipes/recipes
+              tag: 2.3.6@sha256:5cd01ba0473a48878db3ed9b2c6f2c5db12b68649e169ce9cfa43f052fb0aa95
+            env:
+              TZ: ${TIMEZONE}
+            envFrom:
+              - secretRef:
+                  name: *app
+    service:
+      main:
+        controller: *app
+        ports:
+          http:
+            port: &port 8080
+    route:
+      *app :
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - name: *app
+                port: *port
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: Tandoor
+          gethomepage.dev/description: Tandoor is a recipe manager
+          gethomepage.dev/icon: tandoor-recipes.svg
+          gethomepage.dev/app: *app
+
+    persistence:
+      staticfiles:
+        existingClaim: *app
