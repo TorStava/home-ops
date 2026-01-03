@@ -68,7 +68,7 @@ spec:
           exporter:
             image:
               repository: penpotapp/exporter
-              tag: 2.11.1@sha256:666fcace51ae6476a66590ed2c7b77a0a8b4acd518d339f0ba53a22dd52d99e1
+              tag: 2.12.1@sha256:a245ec857c2c5cc7e8702309134312d459af086a2bd2e07983d5cf1d3f30e841
             env:
               PENPOT_PUBLIC_URI: https://penpot.${SECRET_DOMAIN}
               PENPOT_REDIS_URI: redis://dragonfly-cluster.database.svc.cluster.local:6379
