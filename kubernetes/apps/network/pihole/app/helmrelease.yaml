@@ -59,7 +59,7 @@ spec:
           init:
             image:
               repository: ghcr.io/pi-hole/pihole
-              tag: 2025.10.3@sha256:7f2dff3f60615e1b9982824cab30e10d399bd1178691e13a96359ea50323db69
+              tag: 2025.11.1@sha256:91dc91ddd413bf461c283204558f8f21839851e9824799075a7ceff7c77eea40
             command:
               - 'bash'
             args:
@@ -75,7 +75,7 @@ spec:
           *app :
             image:
               repository: ghcr.io/pi-hole/pihole
-              tag: 2025.10.3@sha256:7f2dff3f60615e1b9982824cab30e10d399bd1178691e13a96359ea50323db69
+              tag: 2025.11.1@sha256:91dc91ddd413bf461c283204558f8f21839851e9824799075a7ceff7c77eea40
             env:
               FTLCONF_dns_listeningMode: all
               FTLCONF_dns_dnssec: 'false'
