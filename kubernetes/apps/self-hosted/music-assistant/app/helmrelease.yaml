@@ -29,13 +29,6 @@ spec:
             env:
               TZ: ${TIMEZONE}
               XDG_CACHE_HOME: /cache
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities: { drop: ["ALL"] }
-            resources:
-              limits:
-                cpu: 4000m
-                memory: 8Gi
     defaultPodOptions:
       securityContext:
         runAsNonRoot: true
