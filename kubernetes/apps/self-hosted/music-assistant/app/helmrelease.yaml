@@ -22,7 +22,7 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
-          main:
+          *app :
             image:
               repository: ghcr.io/music-assistant/server
               tag: 2.7.5@sha256:3522e8a7a8f0ad18d790350dc692d3062c4f1df6c9567f838c959e03b251d00d
@@ -56,7 +56,7 @@ spec:
             sectionName: https
         rules:
           - backendRefs:
-              - name: app
+              - name: *app
                 port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
@@ -70,7 +70,7 @@ spec:
         existingClaim: *app
         advancedMounts:
           *app :
-            app:
+            *app :
               - path: /data
                 subPath: data
               - path: /cache
