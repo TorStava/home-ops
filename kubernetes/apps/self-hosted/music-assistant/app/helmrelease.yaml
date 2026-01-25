@@ -28,6 +28,7 @@ spec:
               tag: 2.7.5@sha256:3522e8a7a8f0ad18d790350dc692d3062c4f1df6c9567f838c959e03b251d00d
             env:
               TZ: ${TIMEZONE}
+              XDG_CACHE_HOME: /cache
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
@@ -41,7 +42,7 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
-        fsGroupChangePolicy: OnRootMismatch
+        fsGroupChangePolicy: Always
     service:
       app:
         controller: *app
