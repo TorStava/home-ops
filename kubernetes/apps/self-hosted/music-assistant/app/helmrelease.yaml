@@ -28,25 +28,13 @@ spec:
               tag: 2.7.5@sha256:3522e8a7a8f0ad18d790350dc692d3062c4f1df6c9567f838c959e03b251d00d
             env:
               TZ: ${TIMEZONE}
-            probes:
-              liveness: &probes
-                enabled: true
-                custom: true
-                spec:
-                  tcpSocket:
-                    port: &port 8095
-                  initialDelaySeconds: 0
-                  periodSeconds: 10
-                  timeoutSeconds: 1
-                  failureThreshold: 3
-              readiness: *probes
             securityContext:
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
             resources:
-              requests:
-                cpu: 10m
               limits:
+                cpu: 4000m
                 memory: 8Gi
     defaultPodOptions:
       securityContext:
@@ -56,16 +44,18 @@ spec:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
     service:
-      main:
+      app:
         controller: *app
         type: LoadBalancer
         annotations:
           lbipam.cilium.io/ips: 192.168.1.248
         ports:
           http:
-            port: *port
+            port: &port 8095
+          stream:
+            port: 8097
     route:
-      *app :
+      app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
         parentRefs:
           - name: internal
@@ -73,7 +63,7 @@ spec:
             sectionName: https
         rules:
           - backendRefs:
-              - name: *app
+              - name: app
                 port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
@@ -85,3 +75,12 @@ spec:
     persistence:
       data:
         existingClaim: *app
+        advancedMounts:
+          *app :
+            app:
+              - path: /data
+                subPath: data
+              - path: /cache
+                subPath: cache
+      tmp:
+        type: emptyDir
