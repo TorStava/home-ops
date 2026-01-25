@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: n8nio/n8n
-              tag: 1.123.1@sha256:cbb838c888f8d849afcb855d34390c6644ebad2c51010a0a12c3b83960a5b3f7
+              tag: 2.5.2@sha256:54c34f83b2294f3bef7fd684913873f575e51975e7443cf835dce5ede8a175df
             command:
               - /bin/sh
             args:
