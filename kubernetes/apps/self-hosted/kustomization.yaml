@@ -10,6 +10,7 @@ resources:
   - ./audiobookshelf/ks.yaml
   - ./bambu-studio/ks.yaml
   - ./bentopdf/ks.yaml
+  - ./booklore/ks.yaml
   - ./calibre/ks.yaml
   - ./calibre-web-automated/ks.yaml
   - ./excalidraw/ks.yaml
