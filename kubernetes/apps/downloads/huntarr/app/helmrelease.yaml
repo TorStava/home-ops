@@ -25,7 +25,7 @@ spec:
           main:
             image:
               repository: huntarr/huntarr
-              tag: 9.0.5@sha256:3a0422dd2201bfcee0d38526d170362b467847c611ddcf68ea8aba94b4a54133
+              tag: 9.4.3@sha256:b68c9e12e67d600f5b7bc573a48a23caaf98be9143d69c73045bc420b1418312
             probes:
               liveness: &probes
                 enabled: true
