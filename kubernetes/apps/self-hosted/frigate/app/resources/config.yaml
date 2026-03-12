@@ -89,7 +89,7 @@ objects:
     - person
     - vehicle
     - animal
-    - bike
+    # - bike  # not supported by default model
     - package
   filters:
     person:
@@ -152,9 +152,11 @@ cameras:
     ffmpeg:
       inputs:
         - path: rtsp://localhost:8554/office_cam
+          input_args: preset-rtsp-restream
           roles:
             - record
         - path: rtsp://localhost:8554/office_cam_lq
+          input_args: preset-rtsp-restream
           roles:
             - detect
             - audio
@@ -176,11 +178,22 @@ cameras:
   office_window_cam:
     enabled: true
     ffmpeg:
+      # Higher probesize/analyzeduration for flaky UDP streams (192.168.1.157)
       inputs:
         - path: rtsp://localhost:8554/office_window_cam
+          input_args:
+            - -analyzeduration
+            - "15M"
+            - -probesize
+            - "15M"
           roles:
             - record
         - path: rtsp://localhost:8554/office_window_cam_lq
+          input_args:
+            - -analyzeduration
+            - "15M"
+            - -probesize
+            - "15M"
           roles:
             - detect
             - audio
