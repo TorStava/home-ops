@@ -34,11 +34,6 @@ semantic_search:
   reindex: false
   model_size: large
 
-genai:
-  enabled: false
-  provider: openai
-  api_key: "{FRIGATE_FRIGATE_OPENAI_API_KEY}"
-  model: gpt-4o-mini
 
 model:
   # https://docs.frigate.video/configuration/objects
@@ -77,9 +72,9 @@ snapshots:
 
 record:
   enabled: true
-  retain:
+  # Top-level retain removed in current schema; use continuous for "all" video retention
+  continuous:
     days: 14
-    mode: all
   alerts:
     retain:
       days: 90
