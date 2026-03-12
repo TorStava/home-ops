@@ -122,10 +122,10 @@ go2rtc:
   streams:
     garage_lq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
     garage_hq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
-    office_cam: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_0
-    office_cam_lq: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_1
-    office_window_cam: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0
-    office_window_cam_lq: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1
+    office_cam: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_0#transport=udp
+    office_cam_lq: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_1#transport=udp
+    office_window_cam: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0#transport=udp
+    office_window_cam_lq: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1#transport=udp
 
 cameras:
   garage:
