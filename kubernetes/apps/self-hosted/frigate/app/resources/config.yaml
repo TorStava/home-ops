@@ -122,6 +122,10 @@ go2rtc:
   streams:
     garage_lq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
     garage_hq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
+    office_cam: rtsp://{CAMERA_USERNAME}:{CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_0
+    office_cam_lq: rtsp://{CAMERA_USERNAME}:{CAMERA_PASSWORD}@192.168.1.155:10554/udp/av0_1
+    office_window_cam: rtsp://{CAMERA_USERNAME}:{CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0
+    office_window_cam_lq: rtsp://{CAMERA_USERNAME}:{CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1
 
 cameras:
   garage:
@@ -142,6 +146,59 @@ cameras:
       streams:
         Main: garage_lq
         Sub: garage_hq
+
+  office_cam:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://localhost:8554/office_cam
+          roles:
+            - record
+        - path: rtsp://localhost:8554/office_cam_lq
+          roles:
+            - detect
+            - audio
+      output_args:
+        record: preset-record-generic-audio-aac
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    objects:
+      track:
+        - person
+        - animal
+    live:
+      streams:
+        Main: office_cam
+        Sub: office_cam_lq
+
+  office_window_cam:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://localhost:8554/office_window_cam
+          roles:
+            - record
+        - path: rtsp://localhost:8554/office_window_cam_lq
+          roles:
+            - detect
+            - audio
+      output_args:
+        record: preset-record-generic-audio-aac
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    objects:
+      track:
+        - person
+        - animal
+        - vehicle
+    live:
+      streams:
+        Main: office_window_cam
+        Sub: office_window_cam_lq
 
 auth:
   enabled: false
