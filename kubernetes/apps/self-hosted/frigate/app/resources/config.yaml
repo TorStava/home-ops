@@ -22,12 +22,12 @@ detectors:
     num_threads: 3
     model:
       path: /cpu_model.tflite
-  # coral1:
-  #   type: edgetpu
-  #   device: pci:0
-  # coral2:
-  #   type: edgetpu
-  #   device: pci:1
+  coral1:
+    type: edgetpu
+    device: pci:0
+  coral2:
+    type: edgetpu
+    device: pci:1
 
 semantic_search:
   enabled: true
