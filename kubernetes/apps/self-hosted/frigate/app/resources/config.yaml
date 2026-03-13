@@ -117,20 +117,24 @@ audio:
 
 go2rtc:
   streams:
-    garage_hd: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
-    garage_sd: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
-    # Office cameras (.144, .157): skipped here; Frigate connects directly to cameras (see cameras.*.ffmpeg.inputs) for stability
+    garage_main: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
+    garage_sub: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
+    # VSTARCAM office cameras (.144, .157): use /tcp/ paths so go2rtc sees proper SPS/resolution
+    office_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_0
+    office_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_1
+    office_window_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_0
+    office_window_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_1
 
 cameras:
   garage:
     enabled: true
     ffmpeg:
       inputs:
-        - path: rtsp://localhost:8554/garage_hd
+        - path: rtsp://localhost:8554/garage_main
           roles:
             - record
             - audio
-        - path: rtsp://localhost:8554/garage_sd
+        - path: rtsp://localhost:8554/garage_sub
           roles:
             - detect
     motion:
@@ -138,33 +142,18 @@ cameras:
         - 0.025,0.039,0.263,0.039,0.265,0.087,0.023,0.086
     live:
       streams:
-        Main: garage_hd
-        Sub: garage_sd
+        Main: garage_main
+        Sub: garage_sub
 
   office_cam:
     enabled: true
     ffmpeg:
-      # VSTARCAM: use /tcp/ path (not /udp/) so camera sends stream with proper SPS/resolution
       inputs:
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_0
-          input_args:
-            - -rtsp_transport
-            - tcp
-            - -analyzeduration
-            - "1000M"
-            - -probesize
-            - "1000M"
+        - path: rtsp://localhost:8554/office_cam_main
           roles:
             - record
             - audio
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_1
-          input_args:
-            - -rtsp_transport
-            - tcp
-            - -analyzeduration
-            - "1000M"
-            - -probesize
-            - "1000M"
+        - path: rtsp://localhost:8554/office_cam_sub
           roles:
             - detect
       output_args:
@@ -177,32 +166,20 @@ cameras:
       track:
         - person
         - animal
-    # No go2rtc stream; live view uses jsmpeg (detect stream)
+    live:
+      streams:
+        Main: office_cam_main
+        Sub: office_cam_sub
 
   office_window_cam:
     enabled: true
     ffmpeg:
-      # VSTARCAM: use /tcp/ path (not /udp/) so camera sends stream with proper SPS/resolution
       inputs:
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_0
-          input_args:
-            - -rtsp_transport
-            - tcp
-            - -analyzeduration
-            - "1000M"
-            - -probesize
-            - "1000M"
+        - path: rtsp://localhost:8554/office_window_cam_main
           roles:
             - record
             - audio
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_1
-          input_args:
-            - -rtsp_transport
-            - tcp
-            - -analyzeduration
-            - "1000M"
-            - -probesize
-            - "1000M"
+        - path: rtsp://localhost:8554/office_window_cam_sub
           roles:
             - detect
       output_args:
@@ -216,7 +193,10 @@ cameras:
         - person
         - animal
         - vehicle
-    # No go2rtc stream; live view uses jsmpeg (detect stream)
+    live:
+      streams:
+        Main: office_window_cam_main
+        Sub: office_window_cam_sub
 
 auth:
   enabled: false
