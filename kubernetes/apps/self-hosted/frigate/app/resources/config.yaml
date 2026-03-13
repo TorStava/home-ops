@@ -16,12 +16,8 @@ database:
 birdseye:
   enabled: true
 
+# Use both Corals for detection; they share a common queue (load-balanced). CPU detector omitted so all inference runs on TPU.
 detectors:
-  cpu1:
-    type: cpu
-    num_threads: 3
-    model:
-      path: /cpu_model.tflite
   coral1:
     type: edgetpu
     device: pci:0
@@ -35,6 +31,7 @@ semantic_search:
   model_size: large
 
 
+# Default detection model is Edge TPU–compatible (SSD MobileNet). No need to set model.path for Coral.
 model:
   # https://docs.frigate.video/configuration/objects
   labelmap:
