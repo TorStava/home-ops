@@ -27,7 +27,7 @@ nodes:
       wwid: "naa.5002538e01126c0e"
     machineSpec:
       secureboot: false
-    talosImageURL: factory.talos.dev/installer/d4fb6a885cdd5215ecf2c3f3205dc8139354bdd04e73bf3799b31ec23d4b35e9
+    talosImageURL: factory.talos.dev/installer/02127ff0b30ffb05d741488f690a6dbc85630476a9f6e2a33db20802a2680c9e
     controlPlane: true
     networkInterfaces:
       - deviceSelector:

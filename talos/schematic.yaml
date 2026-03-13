@@ -11,6 +11,7 @@ customization:
         - -talos.halt_if_installed
     systemExtensions:
         officialExtensions:
+            - siderolabs/gasket-driver
             - siderolabs/intel-ice-firmware
             - siderolabs/intel-ucode
             - siderolabs/util-linux-tools

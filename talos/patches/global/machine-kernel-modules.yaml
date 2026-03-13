@@ -3,3 +3,5 @@ machine:
     modules:
       - name: zfs
       - name: nvme-tcp
+      - name: gasket   # Coral Edge TPU framework; load before apex
+      - name: apex     # Coral Edge TPU device driver
