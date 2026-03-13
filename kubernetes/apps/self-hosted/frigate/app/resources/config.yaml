@@ -147,26 +147,26 @@ cameras:
   office_cam:
     enabled: true
     ffmpeg:
-      # Direct connection; VSTARCAM sends resolution late - need very high probe so ffmpeg waits for keyframe
+      # VSTARCAM: use /tcp/ path (not /udp/) so camera sends stream with proper SPS/resolution
       inputs:
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_0
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_0
           input_args:
             - -rtsp_transport
             - tcp
             - -analyzeduration
-            - "200M"
+            - "1000M"
             - -probesize
-            - "200M"
+            - "1000M"
           roles:
             - record
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_1
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_1
           input_args:
             - -rtsp_transport
             - tcp
             - -analyzeduration
-            - "200M"
+            - "1000M"
             - -probesize
-            - "200M"
+            - "1000M"
           roles:
             - detect
             - audio
@@ -185,26 +185,26 @@ cameras:
   office_window_cam:
     enabled: true
     ffmpeg:
-      # Direct connection; VSTARCAM sends resolution late - need very high probe so ffmpeg waits for keyframe
+      # VSTARCAM: use /tcp/ path (not /udp/) so camera sends stream with proper SPS/resolution
       inputs:
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_0
           input_args:
             - -rtsp_transport
             - tcp
             - -analyzeduration
-            - "200M"
+            - "1000M"
             - -probesize
-            - "200M"
+            - "1000M"
           roles:
             - record
-        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_1
           input_args:
             - -rtsp_transport
             - tcp
             - -analyzeduration
-            - "200M"
+            - "1000M"
             - -probesize
-            - "200M"
+            - "1000M"
           roles:
             - detect
             - audio
