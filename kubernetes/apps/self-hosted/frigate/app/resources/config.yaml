@@ -122,15 +122,7 @@ go2rtc:
   streams:
     garage_lq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
     garage_hq: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
-    # Office cameras (.144, .157): use ffmpeg source so RTSP runs over TCP (avoids UDP EOF drops)
-    office_cam:
-      - ffmpeg:rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_0
-    office_cam_lq:
-      - ffmpeg:rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_1
-    office_window_cam:
-      - ffmpeg:rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0
-    office_window_cam_lq:
-      - ffmpeg:rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1
+    # Office cameras (.144, .157): skipped here; Frigate connects directly to cameras (see cameras.*.ffmpeg.inputs) for stability
 
 cameras:
   garage:
@@ -155,13 +147,26 @@ cameras:
   office_cam:
     enabled: true
     ffmpeg:
+      # Direct connection to camera (no go2rtc) for stability; TCP + generous probe for O-KAM-style cameras
       inputs:
-        - path: rtsp://localhost:8554/office_cam
-          input_args: preset-rtsp-restream
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_0
+          input_args:
+            - -rtsp_transport
+            - tcp
+            - -analyzeduration
+            - "15M"
+            - -probesize
+            - "15M"
           roles:
             - record
-        - path: rtsp://localhost:8554/office_cam_lq
-          input_args: preset-rtsp-restream
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/udp/av0_1
+          input_args:
+            - -rtsp_transport
+            - tcp
+            - -analyzeduration
+            - "15M"
+            - -probesize
+            - "15M"
           roles:
             - detect
             - audio
@@ -175,26 +180,27 @@ cameras:
       track:
         - person
         - animal
-    live:
-      streams:
-        Main: office_cam
-        Sub: office_cam_lq
+    # No go2rtc stream; live view uses jsmpeg (detect stream)
 
   office_window_cam:
     enabled: true
     ffmpeg:
-      # Higher probesize/analyzeduration for flaky UDP streams (192.168.1.157)
+      # Direct connection to camera (no go2rtc) for stability; TCP + generous probe for O-KAM-style cameras
       inputs:
-        - path: rtsp://localhost:8554/office_window_cam
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_0
           input_args:
+            - -rtsp_transport
+            - tcp
             - -analyzeduration
             - "15M"
             - -probesize
             - "15M"
           roles:
             - record
-        - path: rtsp://localhost:8554/office_window_cam_lq
+        - path: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/udp/av0_1
           input_args:
+            - -rtsp_transport
+            - tcp
             - -analyzeduration
             - "15M"
             - -probesize
@@ -213,10 +219,7 @@ cameras:
         - person
         - animal
         - vehicle
-    live:
-      streams:
-        Main: office_window_cam
-        Sub: office_window_cam_lq
+    # No go2rtc stream; live view uses jsmpeg (detect stream)
 
 auth:
   enabled: false
