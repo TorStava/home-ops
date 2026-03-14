@@ -15,8 +15,11 @@ database:
 
 birdseye:
   enabled: true
+  mode: continuous  # or "motion" to show only active cameras
+  width: 1920
+  height: 1080
 
-# Use both Corals for detection; they share a common queue (load-balanced). CPU detector omitted so all inference runs on TPU.
+# Use both Corals for detection; they share a common queue (load-balanced).
 detectors:
   coral1:
     type: edgetpu
@@ -137,6 +140,16 @@ cameras:
         - path: rtsp://localhost:8554/garage_sub
           roles:
             - detect
+    detect:
+      width: 640
+      height: 360
+      fps: 5
+    objects:
+      track:
+        - person
+        - vehicle
+        - animal
+        - package
     motion:
       mask:
         - 0.025,0.039,0.263,0.039,0.265,0.087,0.023,0.086
