@@ -203,15 +203,6 @@ spec:
               - path: /config/.qbt.toml
                 subPath: .qbt.toml
                 readOnly: true
-
-      qbrr:
-        # in qbit config, set "on torrent add" to "/qbrr/qbrr --hash "%I" && qbt tag delete "cross-seed""
-        # "on torrent finished" set to "curl -v http://webhook.media.svc.cluster.local/hooks/qbit-pushover --header 'Content-Type: application/json' --data-raw '{"name": "%N", "cat": "%L", "size": "%Z", "indexer": "%T"}'"
-        type: image
-        image: ghcr.io/buroa/qbrr:0.1.4@sha256:35dce0dafb56f20d628b84eeb0e0214ee55fe18d452e27c850e62d163e239d8f
-        globalMounts:
-          - readOnly: true
-
       tmpfs:
         type: emptyDir
         advancedMounts:
@@ -225,7 +216,6 @@ spec:
             vuetorrent:
               - path: /addons
                 subPath: addons
-
       gluetun-auth:
         type: secret
         name: '{{ .Release.Name }}-gluetun'
