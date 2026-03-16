@@ -39,7 +39,7 @@ spec:
               ENABLE_DEBUGGER: "false"
               TOKEN:
                 secretKeyRef:
-                  name: browserless
+                  name: browserless-secret
                   key: BROWSERLESS_TOKEN
               TIMEOUT: "60000"
             securityContext:
