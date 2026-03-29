@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: ghcr.io/gethomepage/homepage
-              tag: v1.10.1@sha256:0b596092c0b55fe4c65379a428a3fe90bd192f10d1b07d189a34fe5fabe7eedb
+              tag: v1.12.1@sha256:9627769818fbfb14147d3e633e57cef9c27c0c5f07585f5a1d6c3d3425b3b33c
             env:
               HOMEPAGE_ALLOWED_HOSTS: '${SECRET_DOMAIN:=test},{{ .Release.Name }}.${SECRET_DOMAIN}'
               LOG_LEVEL: debug
