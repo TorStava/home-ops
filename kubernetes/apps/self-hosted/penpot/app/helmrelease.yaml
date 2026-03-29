@@ -43,7 +43,7 @@ spec:
               - exporter
             image:
               repository: penpotapp/frontend
-              tag: 2.13.3@sha256:caefaf8ef815c3dd3b789a6709324661c089b4ee7c872838a9e0b0e9022a8e02
+              tag: 2.14.0@sha256:0a04d520461eff0a603710da547d6836ab6bc4a299a20450bcd539b511ed9f6f
             env:
               PENPOT_PUBLIC_URI: https://penpot.${SECRET_DOMAIN}
               PENPOT_BACKEND_URI: http://penpot-backend.self-hosted.svc.cluster.local:6060
