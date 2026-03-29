@@ -25,7 +25,7 @@ spec:
           *app :
             image:
               repository: ghcr.io/music-assistant/server
-              tag: 2.7.10@sha256:ddb29c49c8c889ea12b177720bf7a5a174a23377ed8f4619263ed135002d7f6e
+              tag: 2.8.1@sha256:980fab61d07cbccbf7bbe7b5d7fa53cbc9cc04a66146e656bda9329886c2c396
             env:
               TZ: ${TIMEZONE}
               XDG_CACHE_HOME: /cache
