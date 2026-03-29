@@ -24,7 +24,7 @@ spec:
           app:
             image:
               repository: haveagitgat/tdarr
-              tag: 2.59.03@sha256:261290353c745efcaf613aa750094c007b07a1d683d8c22954f95dfb8bbf6b84
+              tag: 2.67.01@sha256:048ae8ed4de8e9f0de51ad739b2105bee3e4d1a8575120df468cec5f6ef2b1da
             env:
               TZ: "${TZ}"
               PUID: "568"
