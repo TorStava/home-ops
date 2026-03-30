@@ -8,7 +8,6 @@ components:
 resources:
   - ./bazarr/ks.yaml
   - ./flaresolverr/ks.yaml
-  - ./huntarr/ks.yaml
   - ./jellyseerr/ks.yaml
   - ./lidarr/ks.yaml
   - ./maintainerr/ks.yaml
