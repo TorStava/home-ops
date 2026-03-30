@@ -5,6 +5,8 @@ sonarr:
     base_url: http://sonarr.downloads.svc.cluster.local
     api_key: !env_var SONARR_API_KEY
     delete_old_custom_formats: true
+    media_management:
+      propers_and_repacks: do_not_prefer
     quality_definition:
       type: series
     quality_profiles:
@@ -13,39 +15,49 @@ sonarr:
           enabled: true
     custom_format_groups:
       add:
-        - trash_id: 158188097a58d7687dee647e04af0da3  # [Required] Golden Rule HD
-          select:
-            - 47435ece6b99a0b477caf360e79ba0bb  # x265 (HD)
+        - trash_id: d920fd959d220306888f40b6f38e1578  # [Optional] Season Packs
+    media_naming:
+      series: plex-tvdb
+      season: default
+      episodes:
+        rename: true
+        standard: default
+        daily: default
+        anime: default
 
 radarr:
   radarr:
     base_url: http://radarr.downloads.svc.cluster.local
     api_key: !env_var RADARR_API_KEY
     delete_old_custom_formats: true
+    media_management:
+      propers_and_repacks: do_not_prefer
     quality_definition:
       type: movie
     quality_profiles:
       - trash_id: d1d67249d3890e49bc12e275d989a7e9  # HD Bluray + WEB
         reset_unmatched_scores:
           enabled: true
-    custom_format_groups:
-      add:
-        - trash_id: f8bf8eab4617f12dfdbd16303d8da245  # [Required] Golden Rule HD
-          select:
-            - dc98083864ea246d05a42df0d05f81cc  # x265 (HD)
+    media_naming:
+      folder: default
+      movie:
+        rename: true
+        standard: plex-tmdb
 
   radarr-4k:
     base_url: http://radarr-4k.downloads.svc.cluster.local
     api_key: !env_var RADARR_4K_API_KEY
     delete_old_custom_formats: true
+    media_management:
+      propers_and_repacks: do_not_prefer
     quality_definition:
       type: movie
     quality_profiles:
       - trash_id: fd161a61e3ab826d3a22d53f935696dd  # Remux + WEB 2160p
         reset_unmatched_scores:
           enabled: true
-    custom_format_groups:
-      add:
-        - trash_id: ff204bbcecdd487d1cefcefdbf0c278d  # [Required] Golden Rule UHD
-          select:
-            - 839bea857ed2c0a8e084f3cbdbd65ecb  # x265 (no HDR/DV)
+    media_naming:
+      folder: default
+      movie:
+        rename: true
+        standard: plex-tmdb
