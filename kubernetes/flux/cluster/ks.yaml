@@ -6,8 +6,8 @@ metadata:
   name: cluster-apps
   namespace: flux-system
 spec:
-  interval: 1h
-  retryInterval: 2m
+  interval: 10m
+  retryInterval: 1m
   path: ./kubernetes/apps
   prune: true
   sourceRef:
@@ -32,6 +32,8 @@ spec:
               - name: cluster-secrets
                 kind: Secret
                 optional: false
+          interval: 10m
+          retryInterval: 1m
       target:
         group: kustomize.toolkit.fluxcd.io
         kind: Kustomization
