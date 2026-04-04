@@ -24,10 +24,7 @@ spec:
   values:
     defaultPodOptions:
       securityContext:
-        runAsUser: 568
-        runAsGroup: 568
-        fsGroup: 568
-        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups: [568]
     controllers:
       tubearchivist:
         containers:
@@ -51,6 +48,13 @@ spec:
               requests:
                 cpu: 1000m
                 memory: 512Mi
+            lifecycle:
+              postStart:
+                exec:
+                  command:
+                    - /bin/sh
+                    - -c
+                    - echo 'ta:x:568:root' >> /etc/group
             securityContext:
               capabilities:
                 add:
