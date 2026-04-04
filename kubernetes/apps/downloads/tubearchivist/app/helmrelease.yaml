@@ -23,8 +23,8 @@ spec:
       retries: 3
   values:
     defaultPodOptions:
-    securityContext:
-      supplementalGroups: [568]
+      securityContext:
+        supplementalGroups: [568]
     controllers:
       tubearchivist:
         containers:
