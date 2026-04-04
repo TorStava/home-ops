@@ -32,7 +32,7 @@ spec:
             env:
               TZ: "${TIMEZONE}"
               HOST_UID: 568
-              HOST_GID: 1234
+              HOST_GID: 568
               ES_URL: http://tubearchivist-elasticsearch:9200
               REDIS_CON: redis://dragonfly-tubearchivist:6379
               TA_HOST: https://tubearchivist.${SECRET_DOMAIN}
@@ -46,7 +46,6 @@ spec:
                 cpu: 1000m
                 memory: 512Mi
             securityContext:
-              fsGroup: 1234
               capabilities:
                 add:
                   - CHOWN
