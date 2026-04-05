@@ -94,3 +94,5 @@ spec:
         type: nfs
         server: ${NAS_IP}
         path: ${NAS_PATH}/data
+        globalMounts:
+          - path: /mnt/data

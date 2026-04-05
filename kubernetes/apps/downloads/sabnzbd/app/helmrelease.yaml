@@ -102,7 +102,7 @@ spec:
         server: ${NAS_IP}
         path: ${NAS_PATH}/data
         globalMounts:
-          - path: /data
+          - path: /mnt/data
       incomplete:
         type: emptyDir
       tmp:
