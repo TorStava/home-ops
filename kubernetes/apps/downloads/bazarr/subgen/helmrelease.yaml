@@ -36,7 +36,7 @@ spec:
               TRANSCRIBE_DEVICE: cpu
               WHISPER_MODEL: medium.en
               CONCURRENT_TRANSCRIPTIONS: 2
-              WHISPER_THREADS: 10
+              WHISPER_THREADS: 20
               COMPUTE_TYPE: auto
               CLEAR_VRAM_ON_COMPLETE: true
 
