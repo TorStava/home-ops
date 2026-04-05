@@ -36,7 +36,7 @@ spec:
               TRANSCRIBE_DEVICE: cpu
               WHISPER_MODEL: medium.en
               CONCURRENT_TRANSCRIPTIONS: 2
-              WHISPER_THREADS: 4
+              WHISPER_THREADS: 10
               COMPUTE_TYPE: auto
               CLEAR_VRAM_ON_COMPLETE: true
 
@@ -63,7 +63,7 @@ spec:
                 cpu: 4000m
                 memory: 4Gi
               limits:
-                memory: 12Gi
+                memory: 8Gi
 
     service:
       app:
