@@ -91,6 +91,7 @@ spec:
                 port: *storagePort
         annotations:
           gethomepage.dev/enabled: 'true'
+          gethomepage.dev/app: *app
           gethomepage.dev/group: 3D Printing
           gethomepage.dev/name: Bambu Storage
           gethomepage.dev/description: Bambu Studio shared storage (for files, gcode, etc.)
