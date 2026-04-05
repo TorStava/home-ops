@@ -13,8 +13,10 @@ metadata:
     gethomepage.dev/siteMonitor: *ip
     gethomepage.dev/widget.type: truenas
     gethomepage.dev/widget.url: *ip
+    gethomepage.dev/widget.version: '2'
+    gethomepage.dev/widget.enablePools: 'true'
     gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TRUENAS_TOKEN}}`}}'
-    gethomepage.dev/widget.nasType: "core"
+    gethomepage.dev/widget.nasType: "scale"
 spec:
   hostnames:
     - ${APP}.${SECRET_DOMAIN}
