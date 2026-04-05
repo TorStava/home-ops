@@ -175,4 +175,4 @@ spec:
         controller: *app
         ports:
           http:
-            port: *httpPort
+            port: 8080
