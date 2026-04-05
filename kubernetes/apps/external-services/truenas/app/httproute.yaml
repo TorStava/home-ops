@@ -9,13 +9,16 @@ metadata:
     gethomepage.dev/name: Truenas
     gethomepage.dev/icon: truenas.svg
     gethomepage.dev/href: https://${APP}.${SECRET_DOMAIN}
+    # Plain {{HOMEPAGE_*}} placeholders: this manifest is Flux+kustomize (not Helm), so do not use
+    # app-template's '{{`{{ ... }}`}}' escape — that leaves a literal wrong string in the annotation.
     gethomepage.dev/ping: &ip http://${NAS_IP}
     gethomepage.dev/siteMonitor: *ip
     gethomepage.dev/widget.type: truenas
-    gethomepage.dev/widget.url: *ip
+    # HTTPS matches the admin UI; widget v2 opens wss://…/api/current (see Homepage truenas/proxy.js).
+    gethomepage.dev/widget.url: https://${NAS_IP}
     gethomepage.dev/widget.version: '2'
     gethomepage.dev/widget.enablePools: 'true'
-    gethomepage.dev/widget.key: '{{`{{HOMEPAGE_VAR_TRUENAS_TOKEN}}`}}'
+    gethomepage.dev/widget.key: '{{HOMEPAGE_VAR_TRUENAS_TOKEN}}'
     gethomepage.dev/widget.nasType: "scale"
 spec:
   hostnames:
