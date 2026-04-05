@@ -52,7 +52,7 @@ spec:
               WEBHOOK_PORT: &port 9000
               PUID: 568
               PGID: 568
-              DEBUG: true
+              DEBUG: false
               MODEL_PATH: /models
 
               PLEX_SERVER: http://${PLEX_IP}:32400
