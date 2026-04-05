@@ -5,6 +5,7 @@ kind: HelmRelease
 metadata:
   name: &app booklore
 spec:
+  timeout: 15m
   interval: 1h
   chartRef:
     kind: OCIRepository
@@ -29,8 +30,8 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 568
-            runAsGroup: 1234
-            fsGroup: 1234
+            runAsGroup: 568
+            fsGroup: 568
             fsGroupChangePolicy: OnRootMismatch
         initContainers:
           mariadb:
@@ -108,7 +109,9 @@ spec:
                   httpGet:
                     path: /api/v1/healthcheck
                     port: 8080
-                  failureThreshold: 10
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  failureThreshold: 60
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
