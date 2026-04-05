@@ -86,6 +86,7 @@ spec:
             env:
               TZ: "${TIMEZONE}"
               LOG_LEVEL: "DEBUG"
+              SERVER_PORT: "8080"
               DATABASE_PASSWORD:
                 valueFrom:
                   secretKeyRef:
