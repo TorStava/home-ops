@@ -52,8 +52,8 @@ spec:
                     name: booklore-secret
                     key: booklore_mariadb_root_password
               MARIADB_USER: *app
-              PGID: "1000"
-              PUID: "1000"
+              PGID: "568"
+              PUID: "568"
             probes:
               liveness:
                 enabled: true
