@@ -38,7 +38,11 @@ spec:
               HOST_GID: 568
               ES_URL: http://tubearchivist-elasticsearch:9200
               REDIS_CON: redis://dragonfly-tubearchivist:6379
-              TA_HOST: https://tubearchivist.${SECRET_DOMAIN}
+              # Space-separated URLs for Django ALLOWED_HOSTS; include in-cluster URL so
+              # Homepage (and other cluster clients) can call the API with the Service hostname.
+              TA_HOST: >-
+                https://tubearchivist.${SECRET_DOMAIN}
+                http://tubearchivist-web.downloads.svc.cluster.local:8000
               TA_USERNAME: admin
               DISABLE_STATIC_AUTH: "true"
             envFrom:
