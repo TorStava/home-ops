@@ -58,8 +58,6 @@ spec:
           gethomepage.dev/name: Node-RED
           gethomepage.dev/icon: node-red.svg
           gethomepage.dev/app: node-red
-          gethomepage.dev/widget.type: node-red
-          gethomepage.dev.widget.url: http://node-red.home-automation.svc.cluster.local
     persistence:
       data:
         existingClaim: *app
