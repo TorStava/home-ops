@@ -34,7 +34,7 @@ spec:
               TZ: "${TIMEZONE}"
 
               TRANSCRIBE_DEVICE: cpu
-              WHISPER_MODEL: large-v3-turbo.en
+              WHISPER_MODEL: distil-large-v3.5
               CONCURRENT_TRANSCRIPTIONS: 2
               WHISPER_THREADS: 20
               COMPUTE_TYPE: auto
