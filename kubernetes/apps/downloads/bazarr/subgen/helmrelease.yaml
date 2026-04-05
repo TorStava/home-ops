@@ -34,11 +34,11 @@ spec:
               TZ: "${TIMEZONE}"
 
               TRANSCRIBE_DEVICE: cpu
-              WHISPER_MODEL: medium.en
+              WHISPER_MODEL: large-v3-turbo.en
               CONCURRENT_TRANSCRIPTIONS: 2
               WHISPER_THREADS: 20
               COMPUTE_TYPE: auto
-              CLEAR_VRAM_ON_COMPLETE: true
+              CLEAR_VRAM_ON_COMPLETE: false
 
               PROCESS_ADDED_MEDIA: true
               PROCESS_MEDIA_ON_PLAY: true
