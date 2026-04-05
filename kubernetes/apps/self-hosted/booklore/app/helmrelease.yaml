@@ -86,7 +86,6 @@ spec:
             env:
               TZ: "${TIMEZONE}"
               LOG_LEVEL: "DEBUG"
-              SERVER_PORT: "8080"
               DATABASE_PASSWORD:
                 valueFrom:
                   secretKeyRef:
@@ -101,7 +100,7 @@ spec:
                 spec:
                   httpGet:
                     path: /api/v1/healthcheck
-                    port: 8080
+                    port: &bookloreHttp 6060
               readiness: *probeApp
               startup:
                 enabled: true
@@ -109,7 +108,7 @@ spec:
                 spec:
                   httpGet:
                     path: /api/v1/healthcheck
-                    port: 8080
+                    port: *bookloreHttp
                   initialDelaySeconds: 30
                   periodSeconds: 10
                   failureThreshold: 60
@@ -179,4 +178,4 @@ spec:
         controller: *app
         ports:
           http:
-            port: 8080
+            port: *bookloreHttp
