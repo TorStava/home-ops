@@ -46,7 +46,9 @@ spec:
               PLEX_QUEUE_SEASON: true
               PLEX_QUEUE_SERIES: true
 
-              SUBTITLE_LANGUAGE_NAME: en
+              SKIP_IF_TARGET_SUBTITLES_EXIST: true
+              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: eng
+
               WEBHOOK_PORT: &port 9000
               PUID: 568
               PGID: 568
