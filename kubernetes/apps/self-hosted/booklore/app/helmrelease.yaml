@@ -141,7 +141,7 @@ spec:
               - path: /bookdrop
                 subPath: library/bookdrop
               - path: /tmp
-                subPath: temp
+                subPath: /library/temp
       mysqld:
         type: emptyDir
         medium: Memory

@@ -58,7 +58,7 @@ spec:
             env:
               TZ: ${TIMEZONE}
               PUID: "568"
-              PGID: "1234"
+              PGID: "568"
               serverIP: tdarr-server.downloads.svc.cluster.local.
               serverPort: 8266
               ffmpegPath: /usr/local/bin/ffmpeg
@@ -73,7 +73,7 @@ spec:
             securityContext:
               runAsUser: 0
               runAsGroup: 0
-              fsGroup: 1234
+              fsGroup: 568
               capabilities:
                 add:
                   - CHOWN

@@ -32,7 +32,7 @@ spec:
             env:
               TZ: "${TZ}"
               PUID: "568"
-              PGID: "1234"
+              PGID: "568"
               ffmpegPath: "/usr/local/bin/ffmpeg"
             resources:
               requests:
@@ -41,7 +41,7 @@ spec:
             securityContext:
               runAsUser: 0
               runAsGroup: 0
-              fsGroup: 1234
+              fsGroup: 568
               fsGroupChangePolicy: OnRootMismatch
               capabilities:
                 add:
