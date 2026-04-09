@@ -27,17 +27,34 @@ spec:
               repository: localai/localai
               tag: v3.12.1-aio-cpu@sha256:4cbc20c59558ed6c1cae9bc3f6ae34d75d390b370aa8ac62a59327089fa56cec
             probes:
-              liveness: &probes
+              # Defer liveness until :8080 is up; aio image boot can exceed the old liveness budget.
+              liveness:
                 enabled: true
                 custom: true
                 spec:
                   tcpSocket:
                     port: &port 8080
-                  initialDelaySeconds: 60
-                  periodSeconds: 60
-                  timeoutSeconds: 1
-                  failureThreshold: 10
-              readiness: *probes
+                  periodSeconds: 30
+                  timeoutSeconds: 3
+                  failureThreshold: 5
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 90
             resources:
               requests:
                 cpu: 10m
