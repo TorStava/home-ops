@@ -5,6 +5,7 @@ kind: HelmRelease
 metadata:
   name: &app vikunja
 spec:
+  timeout: 10m
   interval: 1h
   chartRef:
     kind: OCIRepository
@@ -47,15 +48,28 @@ spec:
               - secretRef:
                   name: *app
             probes:
-              liveness:
+              # app-template defaults probe `/`; Vikunja only serves `/health` (see vikunja pkg/routes).
+              liveness: &vikunjaProbes
                 enabled: true
-              readiness:
-                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: &port 3456
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *vikunjaProbes
               startup:
                 enabled: true
+                custom: true
                 spec:
+                  httpGet:
+                    path: /health
+                    port: *port
                   failureThreshold: 30
                   periodSeconds: 5
+                  timeoutSeconds: 3
             resources:
               requests:
                 cpu: 100m
