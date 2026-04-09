@@ -26,8 +26,6 @@ spec:
             image:
               repository: localai/localai
               tag: v3.12.1-aio-cpu@sha256:4cbc20c59558ed6c1cae9bc3f6ae34d75d390b370aa8ac62a59327089fa56cec
-            env:
-              DEBUG: "true"
             probes:
               liveness: &probes
                 enabled: true
