@@ -61,7 +61,7 @@ spec:
 
     route:
       app:
-        hostnames: ["calibe-gui.${SECRET_DOMAIN}"]
+        hostnames: ["calibre-gui.${SECRET_DOMAIN}"]
         parentRefs:
           - name: internal
             namespace: kube-system
