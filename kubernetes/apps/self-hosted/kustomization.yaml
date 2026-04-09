@@ -34,4 +34,5 @@ resources:
   - ./paperless/ks.yaml
   - ./penpot/ks.yaml
   - ./tandoor/ks.yaml
+  - ./vikunja/ks.yaml
   - ./watchstate/ks.yaml
