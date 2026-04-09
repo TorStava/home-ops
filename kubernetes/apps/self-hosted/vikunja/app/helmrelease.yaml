@@ -38,6 +38,8 @@ spec:
               repository: vikunja/vikunja
               tag: 2.2.2
             env:
+              # Image runs as uid 1000; no writable $HOME → Go tries /.cache and fails.
+              HOME: /tmp
               VIKUNJA_DATABASE_TYPE: postgres
               VIKUNJA_DATABASE_HOST: postgres-cluster-rw.database.svc.cluster.local
               VIKUNJA_DATABASE_USER: *app
@@ -74,6 +76,16 @@ spec:
               requests:
                 cpu: 100m
                 memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
     service:
       app:
         controller: *app
