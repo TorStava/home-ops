@@ -56,6 +56,12 @@ spec:
           - name: internal
             namespace: kube-system
             sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: LocalAI
+          gethomepage.dev/icon: localai.svg
+          gethomepage.dev/app: *app
 
     persistence:
       data:
