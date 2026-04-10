@@ -36,7 +36,7 @@ spec:
           app:
             image:
               repository: vikunja/vikunja
-              tag: 2.2.2
+              tag: 2.3.0
             env:
               # Image runs as uid 1000; no writable $HOME → Go tries /.cache and fails.
               HOME: /tmp
