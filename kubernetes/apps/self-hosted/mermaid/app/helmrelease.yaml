@@ -1,0 +1,52 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ${APP}
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+
+  values:
+    controllers:
+      mermaid:
+        replicas: 1
+        strategy: RollingUpdate
+        containers:
+          app:
+            image:
+              repository: ghcr.io/mermaid-js/mermaid-live-editor
+              tag: latest@sha256:3e2e8ff2e32a286204148f004ed4f7dbe778e7f9df3e9e6146fa66aba1bea78a
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+    service:
+      app:
+        ports:
+          http:
+            port: 8080
+    route:
+      app:
+        hostnames:
+          - '{{ .Release.Name }}.${SECRET_DOMAIN}'
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs: [{}]
+        annotations:
+          gethomepage.dev/enabled: 'true'
+          gethomepage.dev/name: Mermaid
+          gethomepage.dev/group: Tools
+          gethomepage.dev/icon: mdi-chart-gantt
+          gethomepage.dev/app: mermaid

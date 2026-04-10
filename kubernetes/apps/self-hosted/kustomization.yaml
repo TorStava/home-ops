@@ -28,6 +28,7 @@ resources:
   - ./komga/ks.yaml
   - ./linkwarden/ks.yaml
   - ./localai/ks.yaml
+  - ./mermaid/ks.yaml
   - ./music-assistant/ks.yaml
   - ./n8n/ks.yaml
   - ./ollama/ks.yaml
