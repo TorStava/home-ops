@@ -5,6 +5,7 @@ kind: HelmRelease
 metadata:
   name: &app jellyfin
 spec:
+  timeout: 15m
   interval: 1h
   chartRef:
     kind: OCIRepository

@@ -5,6 +5,7 @@ kind: HelmRelease
 metadata:
   name: &app ollama
 spec:
+  timeout: 20m
   interval: 30m
   chartRef:
     kind: OCIRepository
