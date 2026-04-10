@@ -77,7 +77,7 @@ spec:
           gethomepage.dev/enabled: "true"
           gethomepage.dev/group: Home
           gethomepage.dev/name: LocalAI
-          gethomepage.dev/icon: localai.svg
+          gethomepage.dev/icon: https://github.com/mudler/LocalAI/blob/master/cmd/launcher/logo.png
           gethomepage.dev/app: *app
 
     persistence:
