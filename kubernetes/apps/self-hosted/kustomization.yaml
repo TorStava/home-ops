@@ -16,6 +16,7 @@ resources:
   - ./calibre/ks.yaml
   - ./calibre-web-automated/ks.yaml
   - ./docmost/ks.yaml
+  - ./drawio/ks.yaml
   - ./excalidraw/ks.yaml
   - ./firefly-iii/ks.yaml
   - ./frigate/ks.yaml
