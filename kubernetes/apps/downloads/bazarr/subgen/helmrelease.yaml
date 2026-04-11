@@ -37,8 +37,9 @@ spec:
               WHISPER_MODEL: distil-large-v3.5
               CONCURRENT_TRANSCRIPTIONS: 2
               WHISPER_THREADS: 40
-              COMPUTE_TYPE: auto
-              CLEAR_VRAM_ON_COMPLETE: false
+              COMPUTE_TYPE: int8
+              CLEAR_VRAM_ON_COMPLETE: true
+              SUBGEN_KWARGS: '{"temperature": 0, "beam_size": 5, "no_speech_threshold": 0.8, "condition_on_previous_text": false, "suppress_blank": true, "vad_filter": true, "vad_parameters": {"min_silence_duration_ms": 500}}'
 
               PROCESS_ADDED_MEDIA: true
               PROCESS_MEDIA_ON_PLAY: true
@@ -46,8 +47,8 @@ spec:
               PLEX_QUEUE_SEASON: true
               PLEX_QUEUE_SERIES: true
 
-              SKIP_IF_TARGET_SUBTITLES_EXIST: true
-              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: eng
+              SKIP_IF_TARGET_SUBTITLES_EXIST: false
+              SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: ""
 
               WEBHOOK_PORT: &port 9000
               PUID: 568
