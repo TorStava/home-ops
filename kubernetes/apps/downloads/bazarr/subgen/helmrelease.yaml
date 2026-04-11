@@ -56,6 +56,7 @@ spec:
               PUID: 568
               PGID: 568
               DEBUG: true
+              UPDATE: true
               MODEL_PATH: /models
 
               PLEX_SERVER: http://${PLEX_IP}:32400
