@@ -50,10 +50,12 @@ spec:
               SKIP_IF_TARGET_SUBTITLES_EXIST: false
               SKIP_IF_INTERNAL_SUBTITLES_LANGUAGE: ""
 
+              APPEND: true
+
               WEBHOOK_PORT: &port 9000
               PUID: 568
               PGID: 568
-              DEBUG: false
+              DEBUG: true
               MODEL_PATH: /models
 
               PLEX_SERVER: http://${PLEX_IP}:32400
