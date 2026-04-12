@@ -34,8 +34,8 @@ spec:
               TZ: "${TIMEZONE}"
 
               TRANSCRIBE_DEVICE: cpu
-              WHISPER_MODEL: distil-medium.en
-              CONCURRENT_TRANSCRIPTIONS: 2
+              WHISPER_MODEL: distil-large-v3.5
+              CONCURRENT_TRANSCRIPTIONS: 1
               WHISPER_THREADS: 40
               COMPUTE_TYPE: int8
               CLEAR_VRAM_ON_COMPLETE: true
