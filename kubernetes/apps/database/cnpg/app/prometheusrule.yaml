@@ -68,10 +68,14 @@ spec:
             severity: warning
         - alert: DatabaseFailedBackup
           annotations:
-            description: Last database backup failed
-            summary: Checks for failed backups
+            description: >-
+              Fires when the latest failed backup is newer than the latest successful backup (barman-cloud plugin metrics).
+              The old cnpg_collector_last_failed_backup_timestamp gauge is not cleared after recovery, so `> 0` was a false positive.
+            summary: Database backup failed after the last successful backup
           expr: |-
-            cnpg_collector_last_failed_backup_timestamp > 0
+            barman_cloud_cloudnative_pg_io_last_failed_backup_timestamp
+              > barman_cloud_cloudnative_pg_io_last_available_backup_timestamp
+          for: 5m
         # - alert: DatabaseNoBackup # seems broken with plugin-barman-cloud, only updates for manual backups, not scheduled ones
         #   annotations:
         #     description: No database backup within the last 48 hours
