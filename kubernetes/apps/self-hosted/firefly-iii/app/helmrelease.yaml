@@ -70,7 +70,7 @@ spec:
                 memory: 256Mi
           cronjob:
             image:
-              repository: alpine
+              repository: public.ecr.aws/docker/library/alpine
               tag: 3.23.3
               pullPolicy: IfNotPresent
             command:

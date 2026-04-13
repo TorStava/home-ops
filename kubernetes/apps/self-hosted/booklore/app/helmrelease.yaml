@@ -36,8 +36,8 @@ spec:
         initContainers:
           mariadb:
             image:
-              repository: docker.io/library/mariadb
-              tag: 12.2.2-noble@sha256:b3af559fc38e013c50dd5b5993bfbbb21125c1a62d976b3b0a14d9c4acaae578
+              repository: public.ecr.aws/docker/library/mariadb
+              tag: 12.2.2-noble
             env:
               TZ: "${TIMEZONE}"
               MARIADB_DATABASE: *app

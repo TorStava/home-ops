@@ -39,8 +39,8 @@ spec:
         containers:
           app:
             image:
-              repository: n8nio/n8n
-              tag: 2.16.0@sha256:c9932d755356f6879ac4aab2efcb334e1e4f2248fc516ab7b115f0def9c69873
+              repository: ghcr.io/n8n-io/n8n
+              tag: 2.16.0
             command:
               - /bin/sh
             args:
