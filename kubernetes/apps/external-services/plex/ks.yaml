@@ -17,6 +17,7 @@ spec:
   postBuild:
     substitute:
       APP: *app
+      GATUS_PATH: /web/index.html
   prune: true
   sourceRef:
     kind: GitRepository
