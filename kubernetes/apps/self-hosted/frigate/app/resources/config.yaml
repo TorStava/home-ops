@@ -1,5 +1,7 @@
 ---
 # yaml-language-server: $schema=http://192.168.1.249:5000/api/config/schema.json
+version: "0.17-0"
+
 logger:
   default: info
 
@@ -32,33 +34,25 @@ detectors:
 semantic_search:
   enabled: true
   model_size: small
-  reindex: true       # one-time, then set back to false
+  reindex: false       # one-time, then set back to false
 
 
 # Default detection model is Edge TPU–compatible (SSD MobileNet). No need to set model.path for Coral.
-# model:
-#   # https://docs.frigate.video/configuration/objects
-#   labelmap:
-#     2: vehicle # car
-#     3: vehicle # motorcycle
-#     4: vehicle # airplane
-#     5: vehicle # bus
-#     6: vehicle # train
-#     7: vehicle # car
-#     8: vehicle # boat
-#     15: animal # bird
-#     16: animal # cat
-#     17: animal # dog
-#     18: animal # horse
-#     19: animal # sheep
-#     20: animal # cow
-#     21: animal # elephant
-#     22: animal # bear
-#     23: animal # zebra
-#     24: animal # giraffe
-#     26: package # backpack
-#     30: package # handbag
-#     32: package # suitcase
+model:
+  # https://docs.frigate.video/configuration/objects
+  labelmap:
+    2: vehicle   # car
+    3: vehicle   # motorcycle
+    7: vehicle   # truck
+    15: animal   # bird
+    16: animal   # cat
+    17: animal   # dog
+    18: animal   # horse
+    19: animal   # sheep
+    20: animal   # cow
+    26: package  # backpack
+    30: package  # handbag
+    32: package  # suitcase
 
 ffmpeg:
   global_args: ["-hide_banner", "-loglevel", "warning"]
