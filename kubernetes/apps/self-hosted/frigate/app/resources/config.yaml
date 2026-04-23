@@ -15,9 +15,10 @@ database:
 
 birdseye:
   enabled: true
-  mode: continuous  # or "motion" to show only active cameras
-  width: 1920
-  height: 1080
+  mode: motion        # only renders when a camera is active
+  width: 1280
+  height: 720
+  quality: 8
 
 # Use both Corals for detection; they share a common queue (load-balanced).
 detectors:
@@ -30,34 +31,34 @@ detectors:
 
 semantic_search:
   enabled: true
-  reindex: false
-  model_size: large
+  model_size: small
+  reindex: true       # one-time, then set back to false
 
 
 # Default detection model is Edge TPU–compatible (SSD MobileNet). No need to set model.path for Coral.
-model:
-  # https://docs.frigate.video/configuration/objects
-  labelmap:
-    2: vehicle # car
-    3: vehicle # motorcycle
-    4: vehicle # airplane
-    5: vehicle # bus
-    6: vehicle # train
-    7: vehicle # car
-    8: vehicle # boat
-    15: animal # bird
-    16: animal # cat
-    17: animal # dog
-    18: animal # horse
-    19: animal # sheep
-    20: animal # cow
-    21: animal # elephant
-    22: animal # bear
-    23: animal # zebra
-    24: animal # giraffe
-    26: package # backpack
-    30: package # handbag
-    32: package # suitcase
+# model:
+#   # https://docs.frigate.video/configuration/objects
+#   labelmap:
+#     2: vehicle # car
+#     3: vehicle # motorcycle
+#     4: vehicle # airplane
+#     5: vehicle # bus
+#     6: vehicle # train
+#     7: vehicle # car
+#     8: vehicle # boat
+#     15: animal # bird
+#     16: animal # cat
+#     17: animal # dog
+#     18: animal # horse
+#     19: animal # sheep
+#     20: animal # cow
+#     21: animal # elephant
+#     22: animal # bear
+#     23: animal # zebra
+#     24: animal # giraffe
+#     26: package # backpack
+#     30: package # handbag
+#     32: package # suitcase
 
 ffmpeg:
   global_args: ["-hide_banner", "-loglevel", "warning"]
@@ -93,8 +94,7 @@ objects:
     - package
   filters:
     person:
-      min_area: 5000
-      max_area: 100000
+      min_area: 1500
       threshold: 0.7
 
 audio:
@@ -109,13 +109,11 @@ audio:
     - fire_alarm
     - glass
     - knock
-    - noise
     - police_car
     - scream
     - siren
     - smash
     - speech
-    - tap
     - yell
 
 go2rtc:
@@ -123,10 +121,10 @@ go2rtc:
     garage_main: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=0
     garage_sub: rtsp://{FRIGATE_GARAGE_CAMERA_USERNAME}:{FRIGATE_GARAGE_CAMERA_PASSWORD}@192.168.1.180:554/cam/realmonitor?channel=1&subtype=1
     # VSTARCAM office cameras (.144, .157): use /tcp/ paths so go2rtc sees proper SPS/resolution
-    office_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_0
-    office_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_1
-    office_window_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_0
-    office_window_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_1
+    # office_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_0
+    # office_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.144:10554/tcp/av0_1
+    # office_window_cam_main: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_0
+    # office_window_cam_sub: rtsp://{FRIGATE_CAMERA_USERNAME}:{FRIGATE_CAMERA_PASSWORD}@192.168.1.157:10554/tcp/av0_1
 
 cameras:
   garage:
@@ -158,58 +156,58 @@ cameras:
         Main: garage_main
         Sub: garage_sub
 
-  office_cam:
-    enabled: true
-    ffmpeg:
-      inputs:
-        - path: rtsp://localhost:8554/office_cam_main
-          roles:
-            - record
-            - audio
-        - path: rtsp://localhost:8554/office_cam_sub
-          roles:
-            - detect
-      output_args:
-        record: preset-record-generic-audio-aac
-    detect:
-      width: 640
-      height: 360
-      fps: 5
-    objects:
-      track:
-        - person
-        - animal
-    live:
-      streams:
-        Main: office_cam_main
-        Sub: office_cam_sub
+  # office_cam:
+  #   enabled: true
+  #   ffmpeg:
+  #     inputs:
+  #       - path: rtsp://localhost:8554/office_cam_main
+  #         roles:
+  #           - record
+  #           - audio
+  #       - path: rtsp://localhost:8554/office_cam_sub
+  #         roles:
+  #           - detect
+  #     output_args:
+  #       record: preset-record-generic-audio-aac
+  #   detect:
+  #     width: 640
+  #     height: 360
+  #     fps: 5
+  #   objects:
+  #     track:
+  #       - person
+  #       - animal
+  #   live:
+  #     streams:
+  #       Main: office_cam_main
+  #       Sub: office_cam_sub
 
-  office_window_cam:
-    enabled: true
-    ffmpeg:
-      inputs:
-        - path: rtsp://localhost:8554/office_window_cam_main
-          roles:
-            - record
-            - audio
-        - path: rtsp://localhost:8554/office_window_cam_sub
-          roles:
-            - detect
-      output_args:
-        record: preset-record-generic-audio-aac
-    detect:
-      width: 640
-      height: 360
-      fps: 5
-    objects:
-      track:
-        - person
-        - animal
-        - vehicle
-    live:
-      streams:
-        Main: office_window_cam_main
-        Sub: office_window_cam_sub
+  # office_window_cam:
+  #   enabled: true
+  #   ffmpeg:
+  #     inputs:
+  #       - path: rtsp://localhost:8554/office_window_cam_main
+  #         roles:
+  #           - record
+  #           - audio
+  #       - path: rtsp://localhost:8554/office_window_cam_sub
+  #         roles:
+  #           - detect
+  #     output_args:
+  #       record: preset-record-generic-audio-aac
+  #   detect:
+  #     width: 640
+  #     height: 360
+  #     fps: 5
+  #   objects:
+  #     track:
+  #       - person
+  #       - animal
+  #       - vehicle
+  #   live:
+  #     streams:
+  #       Main: office_window_cam_main
+  #       Sub: office_window_cam_sub
 
 auth:
   enabled: false
