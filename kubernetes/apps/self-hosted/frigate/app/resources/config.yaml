@@ -209,6 +209,9 @@ auth:
 proxy:
   header_map:
     user: remote-user
+  # With auth.enabled: false, anonymous users default to 'viewer' role in 0.17.
+  # Grant admin for LAN-only deployment so the UI shows all controls.
+  default_role: admin
 
 tls:
   enabled: false
