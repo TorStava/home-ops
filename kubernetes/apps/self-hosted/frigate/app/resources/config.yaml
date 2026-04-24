@@ -16,11 +16,7 @@ database:
   path: /data/frigate.db
 
 birdseye:
-  enabled: true
-  mode: motion        # only renders when a camera is active
-  width: 1280
-  height: 720
-  quality: 8
+  mode: continuous
 
 # Use both Corals for detection; they share a common queue (load-balanced).
 detectors:
@@ -84,7 +80,6 @@ objects:
     - person
     - vehicle
     - animal
-    # - bike  # not supported by default model
     - package
   filters:
     person:
@@ -144,7 +139,7 @@ cameras:
         - package
     motion:
       mask:
-        - 0.025,0.039,0.263,0.039,0.265,0.087,0.023,0.086
+        - 0.743,0.051,0.981,0.051,0.983,0.099,0.741,0.098  # Timestamp
     live:
       streams:
         Main: garage_main
