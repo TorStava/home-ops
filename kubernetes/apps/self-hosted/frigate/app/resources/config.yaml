@@ -63,17 +63,16 @@ snapshots:
 
 record:
   enabled: true
-  # Top-level retain removed in current schema; use continuous for "all" video retention
   continuous:
-    days: 14
+    days: 30
+  motion:
+    days: 90
   alerts:
     retain:
-      days: 90
-      mode: active_objects
+      days: 120
   detections:
     retain:
-      days: 90
-      mode: active_objects
+      days: 120
 
 objects:
   track:
