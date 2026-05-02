@@ -132,27 +132,35 @@ spec:
 
 
     server:
-      resources:
-        requests:
-          cpu: 1000m
-          memory: 1Gi
-      probes:
-        # nas is a bit slow sometimes when doing a large import, which causes the app to hang
-        liveness: &probes
-          spec:
-            failureThreshold: 10
-            timeoutSeconds: 30
-        readiness:
-          spec:
-            failureThreshold: 10
-            timeoutSeconds: 30
-            periodSeconds: 10
+      controllers:
+        main:
+          containers:
+            main:
+              resources:
+                requests:
+                  cpu: 1000m
+                  memory: 1Gi
+              probes:
+                # nas is a bit slow sometimes when doing a large import, which causes the app to hang
+                liveness: &probes
+                  spec:
+                    failureThreshold: 10
+                    timeoutSeconds: 30
+                readiness:
+                  spec:
+                    failureThreshold: 10
+                    timeoutSeconds: 30
+                    periodSeconds: 10
 
     machine-learning:
-      resources:
-        requests:
-          cpu: 2000m
-          memory: 4Gi
+      controllers:
+        main:
+          containers:
+            main:
+              resources:
+                requests:
+                  cpu: 2000m
+                  memory: 4Gi
       persistence:
         cache:
           type: persistentVolumeClaim
