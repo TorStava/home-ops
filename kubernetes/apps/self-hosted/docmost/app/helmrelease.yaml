@@ -37,7 +37,7 @@ spec:
           app:
             image:
               repository: docmost/docmost
-              tag: 0.71.1@sha256:6a2979ce26186cf50665338fbcf1253637773d820441d331ce971d199db86c03
+              tag: 0.80.2@sha256:0376e0cd5b82b5f7d221a537e33886c09d1523ca54dbda29c6100106b90ce4e9
             env:
               PORT: &port 3000
               APP_URL: "https://{{ .Release.Name }}.${SECRET_DOMAIN}"
