@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: docker.elastic.co/elasticsearch/elasticsearch
-              tag: 8.19.14
+              tag: 9.4.1
             env:
               TZ: "${TIMEZONE}"
               ES_JAVA_OPTS: -Xms8G -Xmx8G
