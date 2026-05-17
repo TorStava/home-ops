@@ -28,7 +28,7 @@ spec:
           app:
             image:
               repository: docker.io/grafana/alloy
-              tag: v1.8.2
+              tag: v1.16.1
             command:
               - /bin/alloy
             args:
