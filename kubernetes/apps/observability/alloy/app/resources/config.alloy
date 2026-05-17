@@ -13,11 +13,10 @@ loki.source.kubernetes "pods" {
 }
 
 otelcol.receiver.tcplog "talos" {
-  listen_address     = "0.0.0.0:12345"
-  add_attributes     = true
-  encoding           = "utf-8"
-  max_log_size       = "1MiB"
-  one_log_per_record = false
+  listen_address = "0.0.0.0:12345"
+  add_attributes = true
+  encoding       = "utf-8"
+  max_log_size   = "1MiB"
 
   output {
     logs = [otelcol.processor.transform.talos.input]
