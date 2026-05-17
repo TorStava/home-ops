@@ -125,6 +125,11 @@ spec:
             folder: 'Data'
             options:
               path: /var/lib/grafana/dashboards/data
+          - <<: *provider
+            name: hpe-ilo
+            folder: 'HPE iLO'
+            options:
+              path: /var/lib/grafana/dashboards/hpe-ilo
     dashboards:
       default:
         node-exporter-full:
@@ -137,12 +142,35 @@ spec:
           gnetId: 15141
           revision: 1
           datasource: Loki
-        hpe-ilo-redfish:
-          # jenningsloy318/redfish_exporter metrics (redfish_up, redfish_chassis_*, redfish_system_*)
-          # revision: bump when kubernetes/apps/observability/grafana/dashboards/hpe-ilo-redfish.json changes
-          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-redfish.json
+      hpe-ilo:
+        hpe-ilo-overview:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-overview.json
           datasource: Prometheus
-          revision: 3
+          revision: 1
+        hpe-ilo-power-thermal:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-power-thermal.json
+          datasource: Prometheus
+          revision: 1
+        hpe-ilo-cooling:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-cooling.json
+          datasource: Prometheus
+          revision: 1
+        hpe-ilo-memory:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-memory.json
+          datasource: Prometheus
+          revision: 1
+        hpe-ilo-compute:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-compute.json
+          datasource: Prometheus
+          revision: 1
+        hpe-ilo-storage:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-storage.json
+          datasource: Prometheus
+          revision: 1
+        hpe-ilo-network:
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-network.json
+          datasource: Prometheus
+          revision: 1
       kubernetes:
         k8s-addons-prometheus:
           url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-addons-prometheus.json
