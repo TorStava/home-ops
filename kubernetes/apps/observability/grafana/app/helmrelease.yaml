@@ -138,9 +138,8 @@ spec:
           revision: 1
           datasource: Loki
         hpe-ilo-redfish:
-          # Community Redfish / iLO metrics (tune panels if metric names differ)
-          gnetId: 20769
-          revision: 3
+          # jenningsloy318/redfish_exporter metrics (redfish_up, redfish_chassis_*, redfish_system_*)
+          url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-redfish.json
           datasource: Prometheus
       kubernetes:
         k8s-addons-prometheus:

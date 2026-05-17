@@ -1,5 +1,7 @@
 ---
 # yaml-language-server: $schema=https://schemas.tholinka.dev/monitoring.coreos.com/podmonitor_v1.json
+# Scrape /redfish?target=<iLO> per https://github.com/jenningsloy318/redfish_exporter#prometheus-configuration
+# Target IP comes from pod label redfish.io/target (set via Helm valuesFrom + Bitwarden secret).
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
@@ -12,7 +14,15 @@ spec:
       app.kubernetes.io/name: redfish-exporter
   podMetricsEndpoints:
     - port: http
-      path: /metrics
+      path: /redfish
       interval: 60s
-      scrapeTimeout: 30s
+      scrapeTimeout: 45s
+      relabelings:
+        - action: replace
+          sourceLabels: [__meta_kubernetes_pod_label_redfish_io_target]
+          targetLabel: __param_target
+        - sourceLabels: [__param_target]
+          targetLabel: instance
+        - sourceLabels: [__param_target]
+          targetLabel: host
   fallbackScrapeProtocol: PrometheusText0.0.4

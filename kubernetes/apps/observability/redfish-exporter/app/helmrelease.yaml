@@ -20,6 +20,11 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 3
+  valuesFrom:
+    - kind: Secret
+      name: redfish-exporter-config
+      valuesKey: REDFISH_HOST
+      targetPath: defaultPodOptions.labels.redfish\.io/target
   values:
     controllers:
       redfish-exporter:
@@ -66,6 +71,11 @@ spec:
                 cpu: 50m
                 memory: 64Mi
     defaultPodOptions:
+      # iLO/BMC is often on a management VLAN reachable from the node, not the pod overlay (Cilium).
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      labels:
+        redfish.io/target: ""
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

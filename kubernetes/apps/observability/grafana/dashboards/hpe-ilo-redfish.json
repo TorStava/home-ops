@@ -1,0 +1,201 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "index": 0, "text": "Down" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "index": 1, "text": "Up" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Redfish scrape",
+      "type": "stat",
+      "targets": [{ "expr": "redfish_up{instance=~\"$instance\"}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "1": { "color": "green", "text": "OK" } }, "type": "value" },
+            { "options": { "2": { "color": "yellow", "text": "Warning" } }, "type": "value" },
+            { "options": { "3": { "color": "red", "text": "Critical" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "System health",
+      "type": "stat",
+      "targets": [{ "expr": "redfish_system_health_state{instance=~\"$instance\"}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "1": { "color": "green", "text": "OK" } }, "type": "value" },
+            { "options": { "2": { "color": "yellow", "text": "Warning" } }, "type": "value" },
+            { "options": { "3": { "color": "red", "text": "Critical" } }, "type": "value" }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Chassis health",
+      "type": "stat",
+      "targets": [{ "expr": "max by (chassis_id) (redfish_chassis_health{instance=~\"$instance\"})", "legendFormat": "{{chassis_id}}", "refId": "A" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "celsius" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Chassis temperature",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "redfish_chassis_temperature_celsius{instance=~\"$instance\"}",
+          "legendFormat": "{{sensor_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "watt" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Power draw",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "redfish_chassis_power_average_consumed_watts{instance=~\"$instance\"}",
+          "legendFormat": "{{chassis_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": { "defaults": { "unit": "rpm" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Fan speed",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "redfish_chassis_fan_rpm{instance=~\"$instance\"}",
+          "legendFormat": "{{fan_id}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "1": { "color": "green", "text": "OK" } }, "type": "value" },
+            { "options": { "2": { "color": "yellow", "text": "Warning" } }, "type": "value" },
+            { "options": { "3": { "color": "red", "text": "Critical" } }, "type": "value" }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 7,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Power supply health",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "redfish_chassis_power_powersupply_health{instance=~\"$instance\"}",
+          "legendFormat": "{{powersupply_id}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["hpe", "ilo", "redfish", "hardware"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Datasource",
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(redfish_up, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "iLO host",
+        "multi": true,
+        "name": "instance",
+        "query": { "query": "label_values(redfish_up, instance)", "refId": "A" },
+        "refresh": 2,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "HPE iLO / Redfish",
+  "uid": "hpe-ilo-redfish",
+  "version": 1
+}

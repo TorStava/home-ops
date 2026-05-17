@@ -227,36 +227,36 @@ spec:
             rules:
               - alert: RedfishExporterScrapeFailed
                 annotations:
-                  summary: Redfish exporter scrape failed in {{ $labels.namespace }}
-                expr: up{namespace="observability", pod=~"redfish-exporter.*"} == 0
+                  summary: Prometheus cannot scrape redfish-exporter for {{ $labels.instance }}
+                expr: up{job=~".*redfish-exporter.*", namespace="observability"} == 0
                 for: 5m
                 labels:
                   severity: critical
               - alert: RedfishTargetUnreachable
                 annotations:
-                  summary: iLO Redfish target {{ $labels.host }} unreachable
+                  summary: iLO Redfish target {{ $labels.instance }} unreachable (redfish_up=0)
                 expr: redfish_up == 0
                 for: 5m
                 labels:
                   severity: critical
               - alert: RedfishSystemHealthDegraded
                 annotations:
-                  summary: iLO reports system health {{ $labels.status }} on {{ $labels.host }}
-                expr: redfish_system_health{status!="OK"} == 1
+                  summary: iLO system health degraded on {{ $labels.instance }} (state={{ $value }})
+                expr: redfish_system_health_state > 1
                 for: 2m
                 labels:
                   severity: critical
               - alert: RedfishChassisTemperatureHigh
                 annotations:
-                  summary: iLO chassis temperature {{ $value }}°C on {{ $labels.host }}
+                  summary: iLO chassis temperature {{ $value }}°C on {{ $labels.instance }}
                 expr: redfish_chassis_temperature_celsius > 85
                 for: 5m
                 labels:
                   severity: warning
               - alert: RedfishPowerSupplyUnhealthy
                 annotations:
-                  summary: iLO PSU {{ $labels.powersupply }} health {{ $labels.status }}
-                expr: redfish_power_powersupply_health{status!="OK"} == 1
+                  summary: iLO PSU {{ $labels.powersupply_id }} health degraded on {{ $labels.instance }}
+                expr: redfish_chassis_power_powersupply_health > 1
                 for: 2m
                 labels:
                   severity: critical
