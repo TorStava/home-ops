@@ -42,6 +42,10 @@ spec:
               - /usr/local/bin/redfish_exporter
             args:
               - --config.file=/config/config.yml
+            ports:
+              - containerPort: 9610
+                name: http
+                protocol: TCP
             probes:
               liveness:
                 enabled: true
@@ -74,8 +78,6 @@ spec:
       # iLO/BMC is often on a management VLAN reachable from the node, not the pod overlay (Cilium).
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
-      labels:
-        redfish.io/target: ""
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

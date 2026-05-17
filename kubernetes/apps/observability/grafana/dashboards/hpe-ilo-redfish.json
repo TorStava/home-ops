@@ -18,7 +18,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -43,7 +43,7 @@
       "targets": [{ "expr": "redfish_up{instance=~\"$instance\"}", "refId": "A" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -70,7 +70,7 @@
       "targets": [{ "expr": "redfish_system_health_state{instance=~\"$instance\"}", "refId": "A" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -89,7 +89,7 @@
       "targets": [{ "expr": "max by (chassis_id) (redfish_chassis_health{instance=~\"$instance\"})", "legendFormat": "{{chassis_id}}", "refId": "A" }]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "celsius" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "id": 4,
@@ -105,7 +105,7 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "watt" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "id": 5,
@@ -121,23 +121,23 @@
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": { "defaults": { "unit": "rpm" }, "overrides": [] },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "id": 6,
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
-      "title": "Fan speed",
+      "title": "Fan speed (% of max)",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "redfish_chassis_fan_rpm{instance=~\"$instance\"}",
+          "expr": "redfish_chassis_fan_rpm_percentage{instance=~\"$instance\"}",
           "legendFormat": "{{fan_id}}",
           "refId": "A"
         }
       ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -169,17 +169,7 @@
     "list": [
       {
         "current": {},
-        "hide": 0,
-        "label": "Datasource",
-        "name": "datasource",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "type": "datasource"
-      },
-      {
-        "current": {},
-        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
         "definition": "label_values(redfish_up, instance)",
         "hide": 0,
         "includeAll": true,
