@@ -12,9 +12,11 @@ spec:
   driftDetection:
     mode: enabled
   install:
+    timeout: 10m
     remediation:
-      retries: -1
+      retries: 3
   upgrade:
+    timeout: 10m
     cleanupOnFail: true
     remediation:
       retries: 3
@@ -42,7 +44,7 @@ spec:
                 spec:
                   httpGet:
                     path: /metrics
-                    port: metrics
+                    port: &metricsPort 9610
                   initialDelaySeconds: 30
                   periodSeconds: 30
               readiness:
@@ -51,7 +53,7 @@ spec:
                 spec:
                   httpGet:
                     path: /metrics
-                    port: metrics
+                    port: *metricsPort
                   initialDelaySeconds: 10
                   periodSeconds: 10
             securityContext:

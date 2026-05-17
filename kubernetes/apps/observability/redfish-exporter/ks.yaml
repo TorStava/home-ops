@@ -16,11 +16,6 @@ spec:
       namespace: external-secrets
     - name: kube-prometheus-stack
       namespace: *namespace
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: *app
-      namespace: *namespace
   interval: 1h
   path: ./kubernetes/apps/observability/redfish-exporter/app
   postBuild:
@@ -33,4 +28,5 @@ spec:
     name: flux-system
     namespace: flux-system
   targetNamespace: *namespace
-  timeout: 5m
+  timeout: 15m
+  wait: false
