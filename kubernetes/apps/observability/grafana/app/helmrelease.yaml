@@ -139,8 +139,10 @@ spec:
           datasource: Loki
         hpe-ilo-redfish:
           # jenningsloy318/redfish_exporter metrics (redfish_up, redfish_chassis_*, redfish_system_*)
+          # revision: bump when kubernetes/apps/observability/grafana/dashboards/hpe-ilo-redfish.json changes
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-redfish.json
           datasource: Prometheus
+          revision: 3
       kubernetes:
         k8s-addons-prometheus:
           url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-addons-prometheus.json

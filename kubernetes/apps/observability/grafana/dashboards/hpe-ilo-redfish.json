@@ -54,7 +54,7 @@
       "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "System health",
       "type": "stat",
-      "targets": [{ "expr": "max by (hostname) (redfish_system_health_state{instance=~\"$instance\"})", "legendFormat": "{{hostname}}", "refId": "A" }]
+      "targets": [{ "expr": "max(redfish_system_health_state{instance=~\"$instance\"})", "legendFormat": "odin", "refId": "A" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -73,7 +73,7 @@
       "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Chassis health",
       "type": "stat",
-      "targets": [{ "expr": "max by (chassis_id) (redfish_chassis_health{instance=~\"$instance\"})", "legendFormat": "Chassis {{chassis_id}}", "refId": "A" }]
+      "targets": [{ "expr": "max(redfish_chassis_health{instance=~\"$instance\"})", "legendFormat": "Chassis", "refId": "A" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -101,7 +101,8 @@
           "mappings": [
             { "options": { "0": { "text": "Off" } }, "type": "value" },
             { "options": { "1": { "text": "On" } }, "type": "value" }
-          ]
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
         },
         "overrides": []
       },
@@ -110,19 +111,19 @@
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "System power",
       "type": "stat",
-      "targets": [{ "expr": "max(redfish_system_power_state{instance=~\"$instance\"})", "legendFormat": "{{hostname}}", "refId": "A" }]
+      "targets": [{ "expr": "max(redfish_system_power_state{instance=~\"$instance\"})", "legendFormat": "Host", "refId": "A" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "celsius" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
       "id": 4,
-      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" } },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true } },
       "title": "Temperatures",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "redfish_chassis_temperature_celsius{instance=~\"$instance\"}",
+          "expr": "max by (sensor) (redfish_chassis_temperature_celsius{instance=~\"$instance\"})",
           "legendFormat": "{{sensor}}",
           "refId": "A"
         }
@@ -133,17 +134,17 @@
       "fieldConfig": { "defaults": { "unit": "watt" }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
       "id": 5,
-      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" } },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true } },
       "title": "Chassis power draw",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "redfish_chassis_power_average_consumed_watts{instance=~\"$instance\"}",
-          "legendFormat": "Total",
+          "expr": "max(redfish_chassis_power_average_consumed_watts{instance=~\"$instance\"})",
+          "legendFormat": "Total chassis",
           "refId": "A"
         },
         {
-          "expr": "redfish_chassis_power_powersupply_last_power_output_watts{instance=~\"$instance\"}",
+          "expr": "max by (power_supply_id) (redfish_chassis_power_powersupply_last_power_output_watts{instance=~\"$instance\"})",
           "legendFormat": "PSU {{power_supply_id}}",
           "refId": "B"
         }
@@ -154,12 +155,12 @@
       "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "min": 0 }, "overrides": [] },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
       "id": 6,
-      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom" } },
+      "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true } },
       "title": "Fan speed (% of max RPM)",
       "type": "timeseries",
       "targets": [
         {
-          "expr": "redfish_chassis_fan_rpm_percentage{instance=~\"$instance\"}",
+          "expr": "max by (fan) (redfish_chassis_fan_rpm_percentage{instance=~\"$instance\"})",
           "legendFormat": "{{fan}}",
           "refId": "A"
         }
@@ -179,12 +180,12 @@
       },
       "gridPos": { "h": 8, "w": 6, "x": 12, "y": 12 },
       "id": 7,
-      "options": { "colorMode": "value", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": { "colorMode": "background", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Power supply health",
       "type": "stat",
       "targets": [
         {
-          "expr": "redfish_chassis_power_powersupply_health{instance=~\"$instance\"}",
+          "expr": "max by (power_supply_id) (redfish_chassis_power_powersupply_health{instance=~\"$instance\"})",
           "legendFormat": "PSU {{power_supply_id}}",
           "refId": "A"
         }
@@ -204,12 +205,12 @@
       },
       "gridPos": { "h": 8, "w": 6, "x": 18, "y": 12 },
       "id": 10,
-      "options": { "colorMode": "value", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": { "colorMode": "background", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Fan health",
       "type": "stat",
       "targets": [
         {
-          "expr": "redfish_chassis_fan_health{instance=~\"$instance\"}",
+          "expr": "max by (fan) (redfish_chassis_fan_health{instance=~\"$instance\"})",
           "legendFormat": "{{fan}}",
           "refId": "A"
         }
@@ -229,12 +230,12 @@
       },
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 20 },
       "id": 11,
-      "options": { "colorMode": "value", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": { "colorMode": "background", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Processor health",
       "type": "stat",
       "targets": [
         {
-          "expr": "redfish_system_processor_health_state{instance=~\"$instance\"}",
+          "expr": "max by (processor_id) (redfish_system_processor_health_state{instance=~\"$instance\"})",
           "legendFormat": "CPU {{processor_id}}",
           "refId": "A"
         }
@@ -248,35 +249,54 @@
             { "options": { "1": { "color": "green", "text": "OK" } }, "type": "value" },
             { "options": { "2": { "color": "yellow", "text": "Warning" } }, "type": "value" },
             { "options": { "3": { "color": "red", "text": "Critical" } }, "type": "value" }
-          ]
+          ],
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Health" },
+            "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background" } }]
+          }
+        ]
       },
-      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 20 },
+      "gridPos": { "h": 6, "w": 10, "x": 8, "y": 20 },
       "id": 12,
-      "options": { "colorMode": "value", "graphMode": "none", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Storage drive health",
-      "type": "stat",
+      "options": { "showHeader": true, "sortBy": [{ "desc": false, "displayName": "Drive" }] },
+      "title": "Storage drives",
+      "type": "table",
       "targets": [
         {
-          "expr": "redfish_system_storage_drive_health_state{instance=~\"$instance\"}",
-          "legendFormat": "{{drive_id}}",
+          "expr": "max by (drive, drive_id) (redfish_system_storage_drive_health_state{instance=~\"$instance\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
           "refId": "A"
         }
+      ],
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns", "keepLabels": ["drive", "drive_id"] } },
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "instance": true, "job": true, "hostname": true, "resource": true, "container": true, "endpoint": true, "namespace": true, "pod": true, "host": true, "system_id": true }, "renameByName": { "Value": "Health", "drive": "Drive", "drive_id": "ID" } } }
       ]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "gibibytes" }, "overrides": [] },
-      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 20 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "gibibytes",
+          "decimals": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 20 },
       "id": 13,
       "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Total memory",
+      "title": "Installed RAM",
       "type": "stat",
       "targets": [
         {
           "expr": "sum(redfish_system_memory_capacity{instance=~\"$instance\"}) / 1024",
-          "legendFormat": "Installed RAM",
+          "legendFormat": "Total",
           "refId": "A"
         }
       ]
@@ -284,7 +304,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["hpe", "ilo", "redfish", "hardware"],
+  "tags": ["hpe", "ilo", "redfish", "hardware", "proliant"],
   "templating": {
     "list": [
       {
@@ -306,5 +326,5 @@
   "timezone": "browser",
   "title": "HPE iLO / Redfish",
   "uid": "hpe-ilo-redfish",
-  "version": 2
+  "version": 3
 }
