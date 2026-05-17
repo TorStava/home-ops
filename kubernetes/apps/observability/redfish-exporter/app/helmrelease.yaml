@@ -30,7 +30,7 @@ spec:
             image:
               # Upstream jenningsloy318/redfish_exporter has no Docker Hub image; mattgoble builds 0.11.0 from that project.
               repository: docker.io/mattgoble/redfish_exporter
-              tag: 0.11.0@sha256:dda1dd1ccef4e765a5c244ed11d7d05e87b6cfeff232a4f497a34ab562343be0
+              tag: 1.0.2@sha256:9dff4562faf3517da776fe6655395f86e2f25b61dfd46e9aba03e8cafbce3529
             command:
               - /usr/local/bin/redfish_exporter
             args:
