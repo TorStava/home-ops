@@ -1,0 +1,51 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+
+loki.source.kubernetes "pods" {
+  targets    = discovery.kubernetes.pods.targets
+  forward_to = [loki.write.default.receiver]
+}
+
+otelcol.receiver.tcplog "talos" {
+  listen_address     = "0.0.0.0:12345"
+  add_attributes     = true
+  encoding           = "utf-8"
+  max_log_size       = "1MiB"
+  one_log_per_record = false
+
+  output {
+    logs = [otelcol.processor.transform.talos.input]
+  }
+}
+
+otelcol.processor.transform "talos" {
+  error_mode = "ignore"
+
+  log_statements {
+    context = "log"
+    statements = [
+      `set(attributes["job"], "talos")`,
+      `set(attributes["cluster"], "kubernetes")`,
+    ]
+  }
+
+  output {
+    logs = [otelcol.exporter.loki.talos.input]
+  }
+}
+
+otelcol.exporter.loki "talos" {
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki-headless.observability.svc.cluster.local:3100/loki/api/v1/push"
+  }
+}

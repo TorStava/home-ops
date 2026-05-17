@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/monitoring.coreos.com/podmonitor_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: alloy
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy
+  podMetricsEndpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 60s
+  fallbackScrapeProtocol: PrometheusText0.0.4

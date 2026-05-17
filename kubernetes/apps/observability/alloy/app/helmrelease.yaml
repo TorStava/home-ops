@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://schemas.tholinka.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -8,7 +8,9 @@ spec:
   interval: 1h
   chartRef:
     kind: OCIRepository
-    name: alloy
+    name: app-template
+  driftDetection:
+    mode: enabled
   install:
     remediation:
       retries: -1
@@ -17,83 +19,75 @@ spec:
     remediation:
       retries: 3
   values:
-    crds:
-      create: false
-    alloy:
-      clustering:
-        enabled: false
-      mounts:
-        varlog: false
-      configMap:
-        create: true
-        content: |
-          logging {
-            level  = "info"
-            format = "logfmt"
-          }
-
-          discovery.kubernetes "pods" {
-            role = "pod"
-          }
-
-          loki.source.kubernetes "pods" {
-            targets    = discovery.kubernetes.pods.targets
-            forward_to = [loki.write.default.receiver]
-          }
-
-          otelcol.receiver.tcplog "talos" {
-            listen_address     = "0.0.0.0:12345"
-            add_attributes     = true
-            encoding           = "utf-8"
-            max_log_size       = "1MiB"
-            one_log_per_record = false
-
-            output {
-              logs = [otelcol.processor.transform.talos.input]
-            }
-          }
-
-          otelcol.processor.transform "talos" {
-            error_mode = "ignore"
-
-            log_statements {
-              context = "log"
-              statements = [
-                `set(attributes["job"], "talos")`,
-                `set(attributes["cluster"], "kubernetes")`,
-              ]
-            }
-
-            output {
-              logs = [otelcol.exporter.loki.talos.input]
-            }
-          }
-
-          otelcol.exporter.loki "talos" {
-            forward_to = [loki.write.default.receiver]
-          }
-
-          loki.write "default" {
-            endpoint {
-              url = "http://loki-headless.observability.svc.cluster.local:3100/loki/api/v1/push"
-            }
-          }
-      extraPorts:
-        - name: talos-logs
-          port: 12345
-          targetPort: 12345
-          protocol: TCP
-      resources:
-        requests:
-          cpu: 50m
-          memory: 128Mi
-    controller:
-      type: daemonset
-      hostNetwork: false
-      hostPID: false
+    controllers:
+      alloy:
+        type: daemonset
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/grafana/alloy
+              tag: v1.8.2
+            args:
+              - run
+              - /etc/alloy/config.alloy
+              - --storage.path=/tmp/alloy
+              - --server.http.listen-addr=0.0.0.0:12346
+            ports:
+              - containerPort: 12345
+                name: talos-logs
+                protocol: TCP
+              - containerPort: 12346
+                name: http-metrics
+                protocol: TCP
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /-/healthy
+                    port: http-metrics
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /-/ready
+                    port: http-metrics
+                  initialDelaySeconds: 10
+                  periodSeconds: 10
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: ["ALL"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+    defaultPodOptions:
+      serviceAccount:
+        name: alloy
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 473
+        runAsGroup: 473
+        fsGroup: 473
     service:
-      enabled: false
-    serviceMonitor:
-      enabled: true
-      labels:
-        release: kube-prometheus-stack
+      app:
+        ports:
+          http-metrics:
+            port: 12346
+    persistence:
+      config:
+        type: configMap
+        name: alloy-config
+        advancedMounts:
+          alloy:
+            app:
+              - path: /etc/alloy
+                readOnly: true
