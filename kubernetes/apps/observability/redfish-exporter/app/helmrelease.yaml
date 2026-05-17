@@ -44,7 +44,7 @@ spec:
                 spec:
                   httpGet:
                     path: /metrics
-                    port: *metricsPort
+                    port: 9610
                   initialDelaySeconds: 30
                   periodSeconds: 30
               readiness:
@@ -53,7 +53,7 @@ spec:
                 spec:
                   httpGet:
                     path: /metrics
-                    port: *metricsPort
+                    port: 9610
                   initialDelaySeconds: 10
                   periodSeconds: 10
             securityContext:
@@ -76,7 +76,7 @@ spec:
         ports:
           # Port key must not be "metrics" — app-template rewrites probe ports to the service port name.
           http:
-            port: &metricsPort 9610
+            port: 9610
     persistence:
       config:
         type: secret
