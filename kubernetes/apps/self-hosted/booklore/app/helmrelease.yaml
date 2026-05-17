@@ -77,7 +77,7 @@ spec:
           booklore:
             image:
               repository: ghcr.io/booklore-app/booklore
-              tag: v2.0.5@sha256:805c387c5e8e99bc3d2277f85f26a28a22ee58546a85438f4fb2f8e174657c1e
+              tag: v2.3.0@sha256:10474742a0e704ec48540a3e5559cf27c16bcf0c021c494ba5bf3cc25b16b887
             command:
               - java
             args:
