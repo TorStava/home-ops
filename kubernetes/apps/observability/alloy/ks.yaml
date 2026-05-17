@@ -12,11 +12,6 @@ spec:
   dependsOn:
     - name: loki
       namespace: *namespace
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: *app
-      namespace: *namespace
   interval: 1h
   path: ./kubernetes/apps/observability/alloy/app
   prune: true
@@ -27,3 +22,4 @@ spec:
     namespace: flux-system
   targetNamespace: *namespace
   timeout: 10m
+  wait: false
