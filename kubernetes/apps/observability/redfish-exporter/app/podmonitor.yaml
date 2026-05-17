@@ -11,7 +11,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: redfish-exporter
   podMetricsEndpoints:
-    - port: metrics
+    - port: http
       path: /metrics
       interval: 60s
       scrapeTimeout: 30s
