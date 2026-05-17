@@ -29,12 +29,14 @@ spec:
             image:
               repository: docker.io/grafana/alloy
               tag: v1.8.2
+            command:
+              - /bin/alloy
             args:
+              - --stability.level=experimental
               - run
               - /etc/alloy/config.alloy
               - --storage.path=/tmp/alloy
               - --server.http.listen-addr=0.0.0.0:12346
-              - --stability.level=experimental
             ports:
               - containerPort: 12345
                 name: talos-logs
