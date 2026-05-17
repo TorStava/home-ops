@@ -19,13 +19,13 @@ birdseye:
   mode: continuous
 
 # Use both Corals for detection; they share a common queue (load-balanced).
-detectors:
-  coral1:
-    type: edgetpu
-    device: pci:0
-  coral2:
-    type: edgetpu
-    device: pci:1
+# detectors:
+  # coral1:
+  #   type: edgetpu
+  #   device: pci:0
+  # coral2:
+  #   type: edgetpu
+  #   device: pci:1
 
 semantic_search:
   enabled: true
