@@ -1,0 +1,7 @@
+---
+# Surface kernel faults as panics (clean reboot + pstore) instead of silent hangs recovered by iLO ASR.
+machine:
+  sysctls:
+    kernel.unknown_nmi_panic: "1"
+    kernel.panic_on_oops: "1"
+    kernel.panic: "10"

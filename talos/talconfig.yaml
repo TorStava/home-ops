@@ -51,6 +51,8 @@ patches:
   - "@./patches/global/machine-time.yaml"
   - "@./patches/global/machine-features.yaml"
   - "@./patches/global/machine-kernel-modules.yaml"
+  - "@./patches/global/machine-logging.yaml"
+  - "@./patches/global/machine-kernel-watchdog.yaml"
 
 # Controller patches
 controlPlane:

@@ -9,6 +9,9 @@ customization:
         - -selinux
         - cpufreq.default_governor=performance
         - -talos.halt_if_installed
+        # Persist last-boot panic/oops in ACPI ERST (HPE bare metal). Requires installer rebuild + talosctl upgrade.
+        - pstore.backend=acpi_erst
+        - printk.time=1
     systemExtensions:
         officialExtensions:
             - siderolabs/gasket-driver

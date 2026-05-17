@@ -165,3 +165,98 @@ spec:
                 expr: node_zfs_zpool_state{state!="online"} > 0
                 labels:
                   severity: critical
+      node-reboot-rules:
+        groups:
+          - name: node-reboot
+            rules:
+              - alert: NodeRecentlyRebooted
+                annotations:
+                  summary: Node {{ $labels.instance }} rebooted recently (boot time {{ $value | humanizeDuration }} ago)
+                  description: Check iLO IML/AHS and Loki logs `{job="talos"}` for the minutes before this boot.
+                expr: time() - node_boot_time_seconds < 600
+                for: 1m
+                labels:
+                  severity: info
+              - alert: NodeFrequentReboots
+                annotations:
+                  summary: Node {{ $labels.instance }} has rebooted {{ $value }} times in 24h
+                expr: changes(node_boot_time_seconds[24h]) >= 2
+                for: 5m
+                labels:
+                  severity: critical
+      host-hardware-rules:
+        groups:
+          - name: host-hardware
+            rules:
+              - alert: NodeHighCPUThermalThrottle
+                annotations:
+                  summary: CPU thermal throttling detected on {{ $labels.instance }}
+                expr: rate(node_cpu_core_throttles_total[10m]) > 0
+                for: 10m
+                labels:
+                  severity: warning
+              - alert: NodeMemoryEDACCorrectable
+                annotations:
+                  summary: Correctable memory errors on {{ $labels.instance }} (DIMM {{ $labels.dimm }})
+                expr: increase(node_edac_correctable_errors_total[1h]) > 0
+                for: 0m
+                labels:
+                  severity: warning
+              - alert: NodeMemoryEDACUncorrectable
+                annotations:
+                  summary: Uncorrectable memory errors on {{ $labels.instance }} — investigate DIMMs via iLO
+                expr: node_edac_uncorrectable_errors_total > 0
+                for: 0m
+                labels:
+                  severity: critical
+              - alert: NodeHwmonTemperatureHigh
+                annotations:
+                  summary: High hardware temperature on {{ $labels.instance }} sensor {{ $labels.chip }}
+                expr: |
+                  node_hwmon_temp_crit_alarm_celsius == 1
+                  or (
+                    node_hwmon_temp_crit_celsius > 0
+                    and node_hwmon_temp_celsius > node_hwmon_temp_crit_celsius * 0.9
+                  )
+                for: 5m
+                labels:
+                  severity: warning
+      ilo-redfish-rules:
+        groups:
+          - name: ilo-redfish
+            rules:
+              - alert: RedfishExporterScrapeFailed
+                annotations:
+                  summary: Redfish exporter scrape failed in {{ $labels.namespace }}
+                expr: up{namespace="observability", pod=~"redfish-exporter.*"} == 0
+                for: 5m
+                labels:
+                  severity: critical
+              - alert: RedfishTargetUnreachable
+                annotations:
+                  summary: iLO Redfish target {{ $labels.host }} unreachable
+                expr: redfish_up == 0
+                for: 5m
+                labels:
+                  severity: critical
+              - alert: RedfishSystemHealthDegraded
+                annotations:
+                  summary: iLO reports system health {{ $labels.status }} on {{ $labels.host }}
+                expr: redfish_system_health{status!="OK"} == 1
+                for: 2m
+                labels:
+                  severity: critical
+              - alert: RedfishChassisTemperatureHigh
+                annotations:
+                  summary: iLO chassis temperature {{ $value }}°C on {{ $labels.host }}
+                expr: redfish_chassis_temperature_celsius > 85
+                for: 5m
+                labels:
+                  severity: warning
+              - alert: RedfishPowerSupplyUnhealthy
+                annotations:
+                  summary: iLO PSU {{ $labels.powersupply }} health {{ $labels.status }}
+                expr: redfish_power_powersupply_health{status!="OK"} == 1
+                for: 2m
+                labels:
+                  severity: critical

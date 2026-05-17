@@ -127,6 +127,21 @@ spec:
               path: /var/lib/grafana/dashboards/data
     dashboards:
       default:
+        node-exporter-full:
+          # renovate: depName="Node Exporter Full"
+          gnetId: 1860
+          revision: 37
+          datasource: Prometheus
+        loki-kubernetes-logs:
+          # renovate: depName="Logs / Kubernetes"
+          gnetId: 15141
+          revision: 1
+          datasource: Loki
+        hpe-ilo-redfish:
+          # Community Redfish / iLO metrics (tune panels if metric names differ)
+          gnetId: 20769
+          revision: 3
+          datasource: Prometheus
       kubernetes:
         k8s-addons-prometheus:
           url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-addons-prometheus.json

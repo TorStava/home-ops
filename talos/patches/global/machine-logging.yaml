@@ -1,0 +1,11 @@
+---
+# Ship Talos service logs to Grafana Alloy (TCP JSON lines) for persistence across reboots.
+# Alloy LoadBalancer listens on 192.168.1.5:12345 (see kubernetes/apps/observability/alloy).
+machine:
+  logging:
+    destinations:
+      - endpoint: tcp://192.168.1.5:12345/
+        format: json_lines
+        extraTags:
+          host: k3s
+          cluster: kubernetes
