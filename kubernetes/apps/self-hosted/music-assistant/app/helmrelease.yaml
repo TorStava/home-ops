@@ -44,11 +44,11 @@ spec:
         externalTrafficPolicy: Cluster
         ports:
           http:
-            port: &port 8095
-          stream:
-            port: 8097
-          sendspin:
-            port: 8927
+            port: 8095
+          http2:
+            port: 1780
+          snapserver:
+            port: 1704
     route:
       app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
