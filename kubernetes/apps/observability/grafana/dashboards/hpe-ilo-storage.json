@@ -86,31 +86,21 @@
         "defaults": {
           "mappings": [
             {
+              "type": "value",
               "options": {
                 "1": {
-                  "color": "green",
-                  "text": "OK"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "OK",
+                  "color": "green"
+                },
                 "2": {
-                  "color": "yellow",
-                  "text": "Warning"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "Warning",
+                  "color": "yellow"
+                },
                 "3": {
-                  "color": "red",
-                  "text": "Critical"
+                  "text": "Critical",
+                  "color": "red"
                 }
-              },
-              "type": "value"
+              }
             }
           ],
           "thresholds": {
@@ -193,35 +183,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "1": {
-                  "color": "green",
-                  "text": "OK"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "2": {
-                  "color": "yellow",
-                  "text": "Warning"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "3": {
-                  "color": "red",
-                  "text": "Critical"
-                }
-              },
-              "type": "value"
-            }
-          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [

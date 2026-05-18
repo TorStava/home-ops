@@ -97,55 +97,24 @@
       },
       "fieldConfig": {
         "defaults": {
-          "defaults": {
-            "mappings": [
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "options": {
-                  "1": {
-                    "color": "green",
-                    "text": "OK"
-                  }
-                },
-                "type": "value"
+                "color": "green",
+                "value": null
               },
               {
-                "options": {
-                  "2": {
-                    "color": "yellow",
-                    "text": "Warning"
-                  }
-                },
-                "type": "value"
+                "color": "yellow",
+                "value": 2
               },
               {
-                "options": {
-                  "3": {
-                    "color": "red",
-                    "text": "Critical"
-                  }
-                },
-                "type": "value"
+                "color": "red",
+                "value": 3
               }
-            ],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "yellow",
-                  "value": 2
-                },
-                {
-                  "color": "red",
-                  "value": 3
-                }
-              ]
-            },
-            "unit": "gibibytes"
-          }
+            ]
+          },
+          "unit": "gibibytes"
         },
         "overrides": []
       },
@@ -182,55 +151,24 @@
       },
       "fieldConfig": {
         "defaults": {
-          "defaults": {
-            "mappings": [
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
               {
-                "options": {
-                  "1": {
-                    "color": "green",
-                    "text": "OK"
-                  }
-                },
-                "type": "value"
+                "color": "green",
+                "value": null
               },
               {
-                "options": {
-                  "2": {
-                    "color": "yellow",
-                    "text": "Warning"
-                  }
-                },
-                "type": "value"
+                "color": "yellow",
+                "value": 2
               },
               {
-                "options": {
-                  "3": {
-                    "color": "red",
-                    "text": "Critical"
-                  }
-                },
-                "type": "value"
+                "color": "red",
+                "value": 3
               }
-            ],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "yellow",
-                  "value": 2
-                },
-                {
-                  "color": "red",
-                  "value": 3
-                }
-              ]
-            },
-            "unit": "decmbytes"
-          }
+            ]
+          },
+          "unit": "decmbytes"
         },
         "overrides": []
       },
@@ -267,53 +205,41 @@
       },
       "fieldConfig": {
         "defaults": {
-          "defaults": {
-            "mappings": [
-              {
-                "options": {
-                  "1": {
-                    "color": "green",
-                    "text": "OK"
-                  }
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "OK",
+                  "color": "green"
                 },
-                "type": "value"
-              },
-              {
-                "options": {
-                  "2": {
-                    "color": "yellow",
-                    "text": "Warning"
-                  }
+                "2": {
+                  "text": "Warning",
+                  "color": "yellow"
                 },
-                "type": "value"
-              },
-              {
-                "options": {
-                  "3": {
-                    "color": "red",
-                    "text": "Critical"
-                  }
-                },
-                "type": "value"
-              }
-            ],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "yellow",
-                  "value": 2
-                },
-                {
-                  "color": "red",
-                  "value": 3
+                "3": {
+                  "text": "Critical",
+                  "color": "red"
                 }
-              ]
+              }
             }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
           }
         },
         "overrides": []
@@ -351,53 +277,41 @@
       },
       "fieldConfig": {
         "defaults": {
-          "defaults": {
-            "mappings": [
-              {
-                "options": {
-                  "1": {
-                    "color": "green",
-                    "text": "OK"
-                  }
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "OK",
+                  "color": "green"
                 },
-                "type": "value"
-              },
-              {
-                "options": {
-                  "2": {
-                    "color": "yellow",
-                    "text": "Warning"
-                  }
+                "2": {
+                  "text": "Warning",
+                  "color": "yellow"
                 },
-                "type": "value"
-              },
-              {
-                "options": {
-                  "3": {
-                    "color": "red",
-                    "text": "Critical"
-                  }
-                },
-                "type": "value"
-              }
-            ],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "yellow",
-                  "value": 2
-                },
-                {
-                  "color": "red",
-                  "value": 3
+                "3": {
+                  "text": "Critical",
+                  "color": "red"
                 }
-              ]
+              }
             }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
           }
         },
         "overrides": []
@@ -437,31 +351,21 @@
         "defaults": {
           "mappings": [
             {
+              "type": "value",
               "options": {
                 "1": {
-                  "color": "green",
-                  "text": "OK"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "OK",
+                  "color": "green"
+                },
                 "2": {
-                  "color": "yellow",
-                  "text": "Warning"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "Warning",
+                  "color": "yellow"
+                },
                 "3": {
-                  "color": "red",
-                  "text": "Critical"
+                  "text": "Critical",
+                  "color": "red"
                 }
-              },
-              "type": "value"
+              }
             }
           ],
           "thresholds": {
@@ -545,31 +449,53 @@
         "defaults": {
           "mappings": [
             {
+              "type": "value",
               "options": {
                 "1": {
-                  "color": "green",
-                  "text": "OK"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "Enabled",
+                  "color": "green"
+                },
                 "2": {
-                  "color": "yellow",
-                  "text": "Warning"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
+                  "text": "Disabled",
+                  "color": "text"
+                },
                 "3": {
-                  "color": "red",
-                  "text": "Critical"
+                  "text": "Standby offline",
+                  "color": "blue"
+                },
+                "4": {
+                  "text": "Standby spare",
+                  "color": "blue"
+                },
+                "5": {
+                  "text": "In test",
+                  "color": "blue"
+                },
+                "6": {
+                  "text": "Starting",
+                  "color": "blue"
+                },
+                "7": {
+                  "text": "Absent",
+                  "color": "text"
+                },
+                "8": {
+                  "text": "Unavailable offline",
+                  "color": "orange"
+                },
+                "9": {
+                  "text": "Deferring",
+                  "color": "yellow"
+                },
+                "10": {
+                  "text": "Quiesced",
+                  "color": "blue"
+                },
+                "11": {
+                  "text": "Updating",
+                  "color": "blue"
                 }
-              },
-              "type": "value"
+              }
             }
           ],
           "thresholds": {
@@ -580,12 +506,12 @@
                 "value": null
               },
               {
-                "color": "yellow",
+                "color": "text",
                 "value": 2
               },
               {
-                "color": "red",
-                "value": 3
+                "color": "orange",
+                "value": 8
               }
             ]
           }
@@ -651,35 +577,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "1": {
-                  "color": "green",
-                  "text": "OK"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "2": {
-                  "color": "yellow",
-                  "text": "Warning"
-                }
-              },
-              "type": "value"
-            },
-            {
-              "options": {
-                "3": {
-                  "color": "red",
-                  "text": "Critical"
-                }
-              },
-              "type": "value"
-            }
-          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [

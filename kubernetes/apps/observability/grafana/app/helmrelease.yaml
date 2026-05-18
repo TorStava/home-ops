@@ -146,31 +146,31 @@ spec:
         hpe-ilo-overview:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-overview.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-power-thermal:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-power-thermal.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-cooling:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-cooling.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-memory:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-memory.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-compute:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-compute.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-storage:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-storage.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
         hpe-ilo-network:
           url: https://raw.githubusercontent.com/TorStava/home-ops/refs/heads/main/kubernetes/apps/observability/grafana/dashboards/hpe-ilo-network.json
           datasource: Prometheus
-          revision: 1
+          revision: 2
       kubernetes:
         k8s-addons-prometheus:
           url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-addons-prometheus.json
