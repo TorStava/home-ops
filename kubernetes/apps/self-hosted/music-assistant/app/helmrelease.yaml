@@ -46,6 +46,8 @@ spec:
             port: &port 8095
           stream:
             port: 8097
+          sendspin:
+            port: 8927
     route:
       app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
