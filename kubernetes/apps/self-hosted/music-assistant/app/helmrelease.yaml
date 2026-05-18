@@ -28,7 +28,6 @@ spec:
               tag: 2.8.3@sha256:b25d12126259c9dfb643236a3b5361b7b63fd9dbb0370a5b607a4dfaf316a909
             env:
               TZ: ${TIMEZONE}
-              XDG_CACHE_HOME: /cache
     defaultPodOptions:
       securityContext:
         runAsNonRoot: true
@@ -54,10 +53,6 @@ spec:
           - name: internal
             namespace: kube-system
             sectionName: https
-        rules:
-          - backendRefs:
-              - name: *app
-                port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
           gethomepage.dev/group: Media
@@ -68,12 +63,11 @@ spec:
     persistence:
       data:
         existingClaim: *app
-        advancedMounts:
-          *app :
-            *app :
-              - path: /data
-                subPath: data
-              - path: /cache
-                subPath: cache
       tmp:
         type: emptyDir
+      media:
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data
+        globalMounts:
+          - path: /mnt/data
