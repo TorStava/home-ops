@@ -29,6 +29,7 @@ spec:
             env:
               TZ: ${TIMEZONE}
     defaultPodOptions:
+      hostNetwork: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
