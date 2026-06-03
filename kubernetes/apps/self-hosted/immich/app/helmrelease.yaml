@@ -165,28 +165,3 @@ spec:
         cache:
           type: persistentVolumeClaim
           existingClaim: immich-ml-cache
-
-    pet-tagger:
-      controllers:
-        main:
-          containers:
-            main:
-              image:
-                repository: ghcr.io/tedornitier/immich-pet-tagger
-                tag: cpu
-              env:
-                IMMICH_URL: http://immich-server.self-hosted.svc.cluster.local:2283
-                IMMICH_EXTERNAL_URL: https://photos.${SECRET_DOMAIN}
-                IMMICH_API_KEY:
-                  valueFrom:
-                    secretKeyRef:
-                      name: immich-pet-tagger
-                      key: IMMICH_API_KEY
-                POLL_INTERVAL: "300"
-                GPU_WORKERS: "1"
-                YOLO_INPUT_SIZE: "640"
-                THRESHOLD: "0.8"
-      persistence:
-        data:
-          type: persistentVolumeClaim
-          existingClaim: immich-pet-tagger
