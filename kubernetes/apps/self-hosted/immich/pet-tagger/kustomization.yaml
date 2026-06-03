@@ -5,9 +5,4 @@ kind: Kustomization
 resources:
   - ./externalsecret.yaml
   - ./pvc.yaml
-  - ./httproute.yaml
   - ./helmrelease.yaml
-  - ./helmrelease-pet-tagger.yaml
-  # - ./volsync.yaml
-  - ./loadbalancer.yaml
-  - ./ocirepository.yaml
