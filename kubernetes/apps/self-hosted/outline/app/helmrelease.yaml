@@ -59,6 +59,10 @@ spec:
             envFrom:
               - secretRef:
                   name: *app
+            securityContext:
+              runAsNonRoot: true
+              fsGroup: 1001
+              fsGroupChangePolicy: OnRootMismatch
             probes:
               liveness:
                 enabled: true
