@@ -45,6 +45,10 @@ spec:
               PORT: &port 3000
               REDIS_URL: redis://dragonfly-cluster.database.svc.cluster.local:6379
               ENABLE_UPDATES: "false"
+              FILE_STORAGE: "local"
+              FILE_STORAGE_UPLOAD_MAX_SIZE: "104857600"
+              FILE_STORAGE_IMPORT_MAX_SIZE: ""
+              FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE: ""
               OIDC_AUTH_URI: "https://auth.${SECRET_DOMAIN}/application/o/authorize/"
               OIDC_DISPLAY_NAME: Authentik
               OIDC_SCOPES: openid profile email
