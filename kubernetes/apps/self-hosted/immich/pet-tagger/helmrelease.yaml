@@ -3,7 +3,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: immich-pet-tagger
+  name: &app immich-pet-tagger
 spec:
   interval: 1h
   chartRef:
@@ -20,7 +20,7 @@ spec:
       retries: 3
   values:
     controllers:
-      immich-pet-tagger:
+      *app :
         annotations:
           reloader.stakater.com/auto: 'true'
         containers:
@@ -34,17 +34,38 @@ spec:
               IMMICH_API_KEY:
                 valueFrom:
                   secretKeyRef:
-                    name: immich-pet-tagger
+                    name: *app
                     key: IMMICH_API_KEY
               POLL_INTERVAL: "300"
               GPU_WORKERS: "1"
               YOLO_INPUT_SIZE: "640"
               THRESHOLD: "0.8"
 
+    route:
+      app:
+        hostnames:
+          - "{{ .Release.Name }}.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: Immich Pet Tagger
+          gethomepage.dev/icon: immich.svg
+
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: 8000
+
     persistence:
       data:
         type: persistentVolumeClaim
-        existingClaim: immich-pet-tagger
+        existingClaim: *app
         globalMounts:
           - path: /data
       model-cache:
