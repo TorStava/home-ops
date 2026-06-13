@@ -36,7 +36,7 @@ spec:
         controller: *app
         ports:
           http:
-            port: &port 5006
+            port: *port
     route:
       *app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
@@ -44,13 +44,9 @@ spec:
           - name: internal
             namespace: kube-system
             sectionName: https
-        rules:
-          - backendRefs:
-              - name: *app
-                port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
-          gethomepage.dev/group: HOME
+          gethomepage.dev/group: Home
           gethomepage.dev/name: FreshRSS
           gethomepage.dev/description: Personal news reader
           gethomepage.dev/icon: freshrss.svg
