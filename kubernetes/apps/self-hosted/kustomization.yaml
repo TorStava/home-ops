@@ -26,6 +26,7 @@ resources:
   - ./immich/ks.yaml
   - ./it-tools/ks.yaml
   - ./jellyfin/ks.yaml
+  - ./karakeep/ks.yaml
   - ./kavita/ks.yaml
   - ./komga/ks.yaml
   - ./linkwarden/ks.yaml
