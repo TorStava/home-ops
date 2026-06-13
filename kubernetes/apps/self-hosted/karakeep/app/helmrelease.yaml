@@ -122,6 +122,10 @@ spec:
           gethomepage.dev/description: KaraKeep is a self-hosted knowledge management platform that allows you to organize and store your knowledge in a structured and efficient way.
           gethomepage.dev/icon: karakeep.png
           gethomepage.dev/app: *app
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: http
     service:
       app:
         controller: *app
