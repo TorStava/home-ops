@@ -19,6 +19,7 @@ resources:
   - ./drawio/ks.yaml
   - ./excalidraw/ks.yaml
   - ./firefly-iii/ks.yaml
+  - ./freshrss/ks.yaml
   - ./frigate/ks.yaml
   - ./homebox/ks.yaml
   - ./homepage/ks.yaml
