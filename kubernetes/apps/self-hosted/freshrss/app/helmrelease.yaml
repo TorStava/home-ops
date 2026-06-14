@@ -38,7 +38,7 @@ spec:
           main:
             image:
               repository: freshrss/freshrss
-              tag: 1.29.1-alpine
+              tag: 1.29.1  # Debian variant: bundles mod_auth_openidc (alpine does not)
             env:
               CRON_MIN: "*"
               TZ: ${TIMEZONE}
