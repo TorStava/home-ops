@@ -36,17 +36,19 @@ spec:
               tag: 0.32.0@sha256:64d6a9bbf2d37b5c808cf06b5d87f1f1c7846fdd3844724145a9741aeb06fd31
             env:
               BROWSER_WEB_URL: http://karakeep-chrome.self-hosted.svc.cluster.local:9222
-              CRAWLER_DOWNLOAD_BANNER_IMAGE: true
-              CRAWLER_ENABLE_ADBLOCKER: true
-              CRAWLER_STORE_SCREENSHOT: true
+              CRAWLER_DOWNLOAD_BANNER_IMAGE: "true"
+              CRAWLER_ENABLE_ADBLOCKER: "true"
+              CRAWLER_STORE_SCREENSHOT: "true"
               DATA_DIR: /data
-              DISABLE_SIGNUPS: true
+              DISABLE_SIGNUPS: "true"
+              DISABLE_PASSWORD_AUTH: "true"
               MEILI_ADDR: http://karakeep-meilisearch.self-hosted.svc.cluster.local:7700
               NEXTAUTH_URL: https://karakeep.${SECRET_DOMAIN}
-              OAUTH_PROVIDER_NAME=authentik
-              OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING=true
-              DISABLE_NEW_RELEASE_CHECK: true
-              COREPACK_INTEGRITY_KEYS: 0
+              OAUTH_PROVIDER_NAME: authentik
+              OAUTH_ALLOW_DANGEROUS_EMAIL_ACCOUNT_LINKING: "true"
+              OAUTH_AUTO_REDIRECT: "true"
+              DISABLE_NEW_RELEASE_CHECK: "true"
+              COREPACK_INTEGRITY_KEYS: "0"
             envFrom:
               - secretRef:
                   name: *app
