@@ -64,7 +64,10 @@ spec:
               OIDC_PROVIDER_METADATA_URL: https://auth.${SECRET_DOMAIN}/application/o/freshrss/.well-known/openid-configuration
               OIDC_REMOTE_USER_CLAIM: preferred_username
               OIDC_SCOPES: openid profile email
-              OIDC_X_FORWARDED_HEADERS: X-Forwarded-Host X-Forwarded-Port X-Forwarded-Proto
+              # Cilium/Envoy gateway only sends X-Forwarded-Proto; mod_auth_openidc
+              # uses the Host header for host and omits the standard 443 port, so the
+              # redirect_uri is https://freshrss.${SECRET_DOMAIN}/i/oidc/ (no port).
+              OIDC_X_FORWARDED_HEADERS: X-Forwarded-Proto
             envFrom:
               - secretRef:
                   name: *app
