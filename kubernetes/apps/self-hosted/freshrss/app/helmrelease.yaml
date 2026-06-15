@@ -109,6 +109,10 @@ spec:
           gethomepage.dev/description: Personal news reader
           gethomepage.dev/icon: freshrss.svg
           gethomepage.dev/app: *app
+        rules:
+          - backendRefs:
+              - identifier: main
+                port: http
 
       mkfd:
         hostnames:
