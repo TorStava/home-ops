@@ -71,12 +71,30 @@ spec:
             envFrom:
               - secretRef:
                   name: *app
+      mkfd:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/tbosk/mkfd
+              tag: 2.1.2@sha256:ad67d546aa2017f18af90429386dc351335a2abc953d7e47208030abd165445f
+            env:
+              SSL: "false"
+            envFrom:
+              - secretRef:
+                  name: mkfd
     service:
       main:
         controller: *app
         ports:
           http:
             port: *port
+      mkfd:
+        controller: mkfd
+        ports:
+          http:
+            port: 5000
     route:
       *app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
@@ -92,6 +110,23 @@ spec:
           gethomepage.dev/icon: freshrss.svg
           gethomepage.dev/app: *app
 
+      mkfd:
+        hostnames:
+          - "mkfd.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: mkfd
+          gethomepage.dev/description: Self-hosted feed generation toolkit
+          gethomepage.dev/icon: mdi-rss-box
+        rules:
+          - backendRefs:
+              - identifier: mkfd
+                port: http
     persistence:
       data:
         existingClaim: *app
@@ -104,6 +139,12 @@ spec:
               - path: /var/www/FreshRSS/extensions
                 subPath: extensions
                 readOnly: false
+      mkfd-configs:
+        existingClaim: mkfd
+        advancedMounts:
+          mkfd:
+            app:
+              - path: /app/configs
       tmpfs:
         type: emptyDir
         advancedMounts:
