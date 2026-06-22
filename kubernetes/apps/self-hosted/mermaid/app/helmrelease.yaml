@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: ghcr.io/mermaid-js/mermaid-live-editor
-              tag: latest@sha256:798435ab51c5144ea9f1faf31078a60fbe59132fc651365ac695df80d4734a5e
+              tag: latest@sha256:ad7343dceb607c04aa211f02c356e8caddc8a383759266fdc5b3f91e6a91f3f8
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: false
