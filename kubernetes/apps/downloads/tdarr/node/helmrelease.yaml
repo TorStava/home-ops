@@ -54,7 +54,7 @@ spec:
           node:
             image:
               repository: haveagitgat/tdarr_node
-              tag: 2.68.01@sha256:6359991d297ec23e2a5fe3a6b5b19c65d9eabdc63172d2cbe6aa576bbe5356c2
+              tag: 2.84.01@sha256:9d8d3a24c88cc0ff2121565bb774ddd082694be3b6fb7cc0b5c9391e2c550db9
             env:
               TZ: ${TIMEZONE}
               PUID: "568"
