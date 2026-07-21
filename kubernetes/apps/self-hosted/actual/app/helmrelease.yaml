@@ -26,7 +26,7 @@ spec:
           main:
             image:
               repository: ghcr.io/actualbudget/actual-server
-              tag: 26.5.0@sha256:b733ae30c70a66dc4d03577526e53575a0c04eab4f3ab6ace30934776251058c
+              tag: 26.7.0@sha256:e18b7fbfec6157a368fad4146563f397502e9da70a120aeaeac63b4977405d1c
             env:
               GENERIC_TIMEZONE: ${TIMEZONE}
             envFrom:
