@@ -40,7 +40,7 @@ spec:
           main:
             image:
               repository: ghcr.io/tandoorrecipes/recipes
-              tag: 2.6.6@sha256:441688076c5acaa68cee039b789d081daa326e645e717267a1068f0e8d9dd67e
+              tag: 2.6.13@sha256:f6c58afdea7a721d079ebd6ee5483f2c9da77dd1e709e16d60a82c218e80a451
             env:
               TZ: ${TIMEZONE}
             envFrom:
