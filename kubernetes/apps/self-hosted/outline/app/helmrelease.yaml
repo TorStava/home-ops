@@ -43,7 +43,7 @@ spec:
           app:
             image:
               repository: outlinewiki/outline
-              tag: 1.6.1@sha256:a750f764080ce28d4a7393176011c8e2e4170b41689a8f6d91327dadf4904eb6
+              tag: 1.9.2@sha256:32d76719c378931dd65d93945930ca380d8376a0337d98a991fcc12b266f33cf
             env:
               URL: https://outline.${SECRET_DOMAIN}
               PORT: &port 3000
