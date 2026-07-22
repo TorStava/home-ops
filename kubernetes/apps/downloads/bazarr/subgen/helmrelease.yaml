@@ -29,7 +29,7 @@ spec:
           app:
             image:
               repository: mccloud/subgen
-              tag: 2026.05.3-cpu@sha256:513fbfd77715aab7702f3e6c3f27dcc358c8e843f30873b47b04cb4185c63c01
+              tag: 2026.07.1-cpu@sha256:743901efc708256d1f5826f865eb2e335408b83569dece47c37f6e84769bd3c6
             env:
               TZ: "${TIMEZONE}"
 
