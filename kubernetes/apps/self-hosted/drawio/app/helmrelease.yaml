@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: jgraph/drawio
-              tag: latest@sha256:231cb64a4dc8169190830935b60b0793e52c0689c6f511d52e994f1e6113cdb5
+              tag: latest@sha256:a3384902221ca45e14678b64b1026154331bf498000d37215b5bb0cf0b2c222b
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: false
