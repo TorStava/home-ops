@@ -79,9 +79,11 @@ spec:
     defaultPodOptions:
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
+        # joplin/server image bakes in a "joplin" user at uid/gid 1001 and chowns
+        # /opt/pm2 (PM2_HOME) to it; any other uid gets EACCES writing pm2.log.
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
         fsGroupChangePolicy: OnRootMismatch
     service:
       app:
