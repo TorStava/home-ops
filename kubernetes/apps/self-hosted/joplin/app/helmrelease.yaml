@@ -48,6 +48,9 @@ spec:
               - secretRef:
                   name: *app
             probes:
+              # Joplin server 404s any request whose Host header doesn't match
+              # APP_BASE_URL's host (see isValidOrigin() in routeUtils.ts) — the
+              # kubelet probe hits the pod IP directly, so it needs a Host override.
               liveness: &joplinProbes
                 enabled: true
                 custom: true
@@ -55,6 +58,9 @@ spec:
                   httpGet:
                     path: /api/ping
                     port: *port
+                    httpHeaders:
+                      - name: Host
+                        value: joplin.${SECRET_DOMAIN}
                   periodSeconds: 10
                   timeoutSeconds: 3
                   failureThreshold: 3
@@ -66,6 +72,9 @@ spec:
                   httpGet:
                     path: /api/ping
                     port: *port
+                    httpHeaders:
+                      - name: Host
+                        value: joplin.${SECRET_DOMAIN}
                   failureThreshold: 30
                   periodSeconds: 5
                   timeoutSeconds: 3
