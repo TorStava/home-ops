@@ -39,7 +39,7 @@ spec:
           migration:
             image:
               repository: ghcr.io/toeverything/affine
-              tag: 0.26.6@sha256:d1c65f5d545d3e0a51c1696c482739915fbf402ba37cefb31539a1de095531e8
+              tag: 0.27.3@sha256:d9d145f9f47b862d1fa96e2a887052b5762846237f75fbb077be990ef646e05c
             command: ["sh", "-c", "node ./scripts/self-host-predeploy.js"]
             env:
               REDIS_SERVER_HOST: dragonfly-cluster.database.svc.cluster.local
@@ -52,7 +52,7 @@ spec:
           app:
             image:
               repository: ghcr.io/toeverything/affine
-              tag: 0.26.6@sha256:d1c65f5d545d3e0a51c1696c482739915fbf402ba37cefb31539a1de095531e8
+              tag: 0.27.3@sha256:d9d145f9f47b862d1fa96e2a887052b5762846237f75fbb077be990ef646e05c
             env:
               AFFINE_SERVER_HOST: affine.${SECRET_DOMAIN}
               AFFINE_SERVER_HTTPS: "true"
