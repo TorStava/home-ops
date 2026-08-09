@@ -35,6 +35,86 @@ jobs:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
+      # cluster-secrets is populated at runtime by an ExternalSecret (Bitwarden),
+      # which CI has no access to. Without it, postBuild substitutions resolve to
+      # null and fail chart schema validation (e.g. persistence.*.type: nfs) for
+      # reasons unrelated to the change under test. This fixture only exists in
+      # the ephemeral CI checkout and is never committed or applied to the cluster.
+      - name: Inject CI-only substitution fixture
+        run: |
+          cat <<'EOF' > kubernetes/components/common/ci-fixture-secret.yaml
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: cluster-secrets
+          type: Opaque
+          stringData:
+            ADMIN_API_PASSWORD: "test-password"
+            ADMIN_PASSWORD: "test-password"
+            AUTH_SVC: "test-auth-svc"
+            CLOUDFLARE_S3_ENDPOINT: "https://example.r2.cloudflarestorage.com"
+            CLUSTER_LB_IMMICH: "192.0.2.10"
+            CLUSTER_LB_TDARR: "192.0.2.11"
+            CNPG_DISABLED_SERVICES: ""
+            CNPG_IMAGE: "ghcr.io/cloudnative-pg/postgresql:16"
+            CNPG_LIMITS_MEMORY: "512Mi"
+            CNPG_LIMITS_MEMORY_HUGEPAGES: "0"
+            CNPG_MAX_CONNECTIONS: "100"
+            CNPG_REPLICAS: "1"
+            CNPG_REQUESTS_CPU: "100m"
+            CNPG_REQUESTS_MEMORY: "256Mi"
+            CNPG_SHARED_BUFFERS: "256MB"
+            CNPG_SIZE: "10Gi"
+            CNPG_VERSION: "16"
+            DB_PASSWORD: "test-password"
+            DRAGONFLY_ARGS_THREADS: "2"
+            DRAGONFLY_LIMITS_MEMORY: "512Mi"
+            DRAGONFLY_REQUESTS_CPU: "100m"
+            GATUS_PATH: "/"
+            GATUS_STATUS: "200"
+            GATUS_SUBDOMAIN: "status"
+            HOMEASSISTANT_IP: "192.0.2.20"
+            MARIADB_ROOT_PASSWORD: "test-password"
+            NAS_IP: "192.0.2.1"
+            NAS_PATH: "/mnt/test"
+            NEXTCLOUD_IP: "192.0.2.21"
+            PLEX_IP: "192.0.2.22"
+            S3_POSTGRES_BUCKET: "test-bucket"
+            SCALER_API_VERSION: "v2"
+            SCALER_CPU_TARGET: "80"
+            SCALER_IGNORE_NULL: "true"
+            SCALER_MAX_REPLICAS: "3"
+            SCALER_MIN_REPLICAS: "1"
+            SCALER_NAME: "cpu"
+            SCALER_QUERY: ""
+            SCALER_SILENT: "false"
+            SCALER_THRESHOLD: "80"
+            SCALER_TYPE: "cpu"
+            SECRET_DOMAIN: "example.com"
+            TIMEZONE: "Etc/UTC"
+            TZ: "Etc/UTC"
+            VOLSYNC_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_CACHE_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_CACHE_CAPACITY: "2Gi"
+            VOLSYNC_CAPACITY: "10Gi"
+            VOLSYNC_PGID: "1000"
+            VOLSYNC_PUID: "1000"
+            VOLSYNC_SNAPSHOT_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_SNAPSHOTCLASS: "test-snapshotclass"
+            WEB_PORT: "8080"
+            ZIGBEE2MQTT_IP: "192.0.2.23"
+          EOF
+          python3 - <<'PY'
+          import yaml
+
+          path = "kubernetes/components/common/kustomization.yaml"
+          with open(path) as f:
+              data = yaml.safe_load(f)
+          data.setdefault("resources", []).append("./ci-fixture-secret.yaml")
+          with open(path, "w") as f:
+              yaml.safe_dump(data, f, sort_keys=False)
+          PY
+
       - name: Run flux-local test
         uses: docker://ghcr.io/allenporter/flux-local:v8.2.0
         with:
@@ -64,6 +144,89 @@ jobs:
         with:
           ref: "${{ github.event.repository.default_branch }}"
           path: default
+
+      # cluster-secrets is populated at runtime by an ExternalSecret (Bitwarden),
+      # which CI has no access to. Without it, postBuild substitutions resolve to
+      # null and fail chart schema validation (e.g. persistence.*.type: nfs) for
+      # reasons unrelated to the change under test. This fixture only exists in
+      # the ephemeral CI checkouts and is never committed or applied to the cluster.
+      - name: Inject CI-only substitution fixture
+        run: |
+          for root in pull default; do
+            cat <<'EOF' > "$root/kubernetes/components/common/ci-fixture-secret.yaml"
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: cluster-secrets
+          type: Opaque
+          stringData:
+            ADMIN_API_PASSWORD: "test-password"
+            ADMIN_PASSWORD: "test-password"
+            AUTH_SVC: "test-auth-svc"
+            CLOUDFLARE_S3_ENDPOINT: "https://example.r2.cloudflarestorage.com"
+            CLUSTER_LB_IMMICH: "192.0.2.10"
+            CLUSTER_LB_TDARR: "192.0.2.11"
+            CNPG_DISABLED_SERVICES: ""
+            CNPG_IMAGE: "ghcr.io/cloudnative-pg/postgresql:16"
+            CNPG_LIMITS_MEMORY: "512Mi"
+            CNPG_LIMITS_MEMORY_HUGEPAGES: "0"
+            CNPG_MAX_CONNECTIONS: "100"
+            CNPG_REPLICAS: "1"
+            CNPG_REQUESTS_CPU: "100m"
+            CNPG_REQUESTS_MEMORY: "256Mi"
+            CNPG_SHARED_BUFFERS: "256MB"
+            CNPG_SIZE: "10Gi"
+            CNPG_VERSION: "16"
+            DB_PASSWORD: "test-password"
+            DRAGONFLY_ARGS_THREADS: "2"
+            DRAGONFLY_LIMITS_MEMORY: "512Mi"
+            DRAGONFLY_REQUESTS_CPU: "100m"
+            GATUS_PATH: "/"
+            GATUS_STATUS: "200"
+            GATUS_SUBDOMAIN: "status"
+            HOMEASSISTANT_IP: "192.0.2.20"
+            MARIADB_ROOT_PASSWORD: "test-password"
+            NAS_IP: "192.0.2.1"
+            NAS_PATH: "/mnt/test"
+            NEXTCLOUD_IP: "192.0.2.21"
+            PLEX_IP: "192.0.2.22"
+            S3_POSTGRES_BUCKET: "test-bucket"
+            SCALER_API_VERSION: "v2"
+            SCALER_CPU_TARGET: "80"
+            SCALER_IGNORE_NULL: "true"
+            SCALER_MAX_REPLICAS: "3"
+            SCALER_MIN_REPLICAS: "1"
+            SCALER_NAME: "cpu"
+            SCALER_QUERY: ""
+            SCALER_SILENT: "false"
+            SCALER_THRESHOLD: "80"
+            SCALER_TYPE: "cpu"
+            SECRET_DOMAIN: "example.com"
+            TIMEZONE: "Etc/UTC"
+            TZ: "Etc/UTC"
+            VOLSYNC_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_CACHE_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_CACHE_CAPACITY: "2Gi"
+            VOLSYNC_CAPACITY: "10Gi"
+            VOLSYNC_PGID: "1000"
+            VOLSYNC_PUID: "1000"
+            VOLSYNC_SNAPSHOT_ACCESSMODES: "ReadWriteOnce"
+            VOLSYNC_SNAPSHOTCLASS: "test-snapshotclass"
+            WEB_PORT: "8080"
+            ZIGBEE2MQTT_IP: "192.0.2.23"
+          EOF
+            python3 - "$root/kubernetes/components/common/kustomization.yaml" <<'PY'
+          import sys
+          import yaml
+
+          path = sys.argv[1]
+          with open(path) as f:
+              data = yaml.safe_load(f)
+          data.setdefault("resources", []).append("./ci-fixture-secret.yaml")
+          with open(path, "w") as f:
+              yaml.safe_dump(data, f, sort_keys=False)
+          PY
+          done
 
       - name: Run flux-local diff
         uses: docker://ghcr.io/allenporter/flux-local:v8.2.0
