@@ -22,21 +22,104 @@ spec:
       *app :
         annotations:
           reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            env:
+              INIT_POSTGRES_DBNAME: *app
+              INIT_POSTGRES_HOST: postgres-cluster-rw.database.svc.cluster.local
+              INIT_POSTGRES_USER: *app
+            envFrom:
+              - secretRef:
+                  name: freshrss-initdb
         containers:
           main:
             image:
               repository: freshrss/freshrss
-              tag: 1.29.1-alpine
+              tag: 1.29.1  # Debian variant: bundles mod_auth_openidc (alpine does not)
             env:
               CRON_MIN: "*"
+              TZ: ${TIMEZONE}
               DOMAIN: freshrss.${SECRET_DOMAIN}
               LISTEN: &port 8080
+              FRESHRSS_INSTALL: |-
+                --api-enabled
+                --base-url https://freshrss.${SECRET_DOMAIN}
+                --default-user tor
+                --auth-type http_auth
+                --language en
+                --db-type pgsql
+                --db-host postgres-cluster-rw.database.svc.cluster.local
+                --db-base freshrss
+                --db-user freshrss
+                --db-password $${DB_PASSWORD}
+              FRESHRSS_USER: |-
+                --user tor
+                --password $${ADMIN_PASSWORD}
+                --api-password $${ADMIN_API_PASSWORD}
+              # OIDC / Authentik (mod_auth_openidc)
+              OIDC_ENABLED: "1"
+              OIDC_PROVIDER_METADATA_URL: https://auth.${SECRET_DOMAIN}/application/o/freshrss/.well-known/openid-configuration
+              OIDC_REMOTE_USER_CLAIM: preferred_username
+              OIDC_SCOPES: openid profile email
+              # Cilium/Envoy gateway only sends X-Forwarded-Proto; mod_auth_openidc
+              # uses the Host header for host and omits the standard 443 port, so the
+              # redirect_uri is https://freshrss.${SECRET_DOMAIN}/i/oidc/ (no port).
+              OIDC_X_FORWARDED_HEADERS: X-Forwarded-Proto
+            envFrom:
+              - secretRef:
+                  name: *app
+      fivefilters:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            runAsGroup: 0
+            fsGroup: 0
+        containers:
+          app:
+            image:
+              repository: docker.io/heussd/fivefilters-full-text-rss
+              tag: 3.8.1@sha256:de26a84334b2a95533cf2817953c1360144a1c8c4cac6482114d82a968ae6d9c
+            env:
+              FTR_ADMIN_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: fivefilters
+                    key: FTR_ADMIN_PASSWORD
+      mkfd:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/tbosk/mkfd
+              tag: 2.1.2@sha256:ad67d546aa2017f18af90429386dc351335a2abc953d7e47208030abd165445f
+            env:
+              SSL: "false"
+            envFrom:
+              - secretRef:
+                  name: mkfd
     service:
       main:
         controller: *app
         ports:
           http:
-            port: &port 5006
+            port: *port
+      fivefilters:
+        controller: fivefilters
+        ports:
+          http:
+            port: 80
+      mkfd:
+        controller: mkfd
+        ports:
+          http:
+            port: 5000
     route:
       *app :
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
@@ -44,18 +127,52 @@ spec:
           - name: internal
             namespace: kube-system
             sectionName: https
-        rules:
-          - backendRefs:
-              - name: *app
-                port: *port
         annotations:
           gethomepage.dev/enabled: 'true'
-          gethomepage.dev/group: HOME
+          gethomepage.dev/group: Home
           gethomepage.dev/name: FreshRSS
           gethomepage.dev/description: Personal news reader
           gethomepage.dev/icon: freshrss.svg
           gethomepage.dev/app: *app
+        rules:
+          - backendRefs:
+              - identifier: main
+                port: http
 
+      fivefilters:
+        hostnames:
+          - "fivefilters.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: Full-Text RSS
+          gethomepage.dev/description: FiveFilters Full-Text RSS extracts full article content and converts summary feeds into full-text feeds.
+          gethomepage.dev/icon: mdi-rss
+        rules:
+          - backendRefs:
+              - identifier: fivefilters
+                port: http
+      mkfd:
+        hostnames:
+          - "mkfd.${SECRET_DOMAIN}"
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: mkfd
+          gethomepage.dev/description: Self-hosted feed generation toolkit
+          gethomepage.dev/icon: mdi-rss-box
+        rules:
+          - backendRefs:
+              - identifier: mkfd
+                port: http
     persistence:
       data:
         existingClaim: *app
@@ -68,6 +185,18 @@ spec:
               - path: /var/www/FreshRSS/extensions
                 subPath: extensions
                 readOnly: false
+      fivefilters-cache:
+        type: emptyDir
+        advancedMounts:
+          fivefilters:
+            app:
+              - path: /var/www/html/cache/rss
+      mkfd-configs:
+        existingClaim: mkfd
+        advancedMounts:
+          mkfd:
+            app:
+              - path: /app/configs
       tmpfs:
         type: emptyDir
         advancedMounts:
