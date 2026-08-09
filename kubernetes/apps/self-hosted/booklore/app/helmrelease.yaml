@@ -37,7 +37,7 @@ spec:
           mariadb:
             image:
               repository: public.ecr.aws/docker/library/mariadb
-              tag: 12.2.2-noble
+              tag: 12.3.2-noble
             env:
               TZ: "${TIMEZONE}"
               MARIADB_DATABASE: *app
