@@ -110,9 +110,12 @@ spec:
               resources: ['events']
               verbs: ['create', 'patch']
             - apiGroups: ['']
-              resources: ['pods', 'services']
+              resources: ['configmaps', 'pods', 'services']
               verbs:
                 ['create', 'delete', 'get', 'list', 'patch', 'update', 'watch']
+            - apiGroups: ['']
+              resources: ['pods/status']
+              verbs: ['get', 'patch', 'update']
             - apiGroups: ['apps']
               resources: ['statefulsets']
               verbs:
