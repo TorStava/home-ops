@@ -163,6 +163,7 @@ spec:
       GATUS_SUBDOMAIN: photos
       SCALER_NAME: immich-server
       SCALER_MAX_REPLICAS: '5'
+      SCALER_SILENT: ""
   prune: true
   sourceRef:
     kind: GitRepository
