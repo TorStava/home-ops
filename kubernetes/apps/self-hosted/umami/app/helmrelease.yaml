@@ -37,7 +37,7 @@ spec:
           app:
             image:
               repository: ghcr.io/umami-software/umami
-              tag: postgresql-3.0.0@sha256:818105b05d6b460d5526b2d426017fa1664025e87b1a4f03770b613df5fca6e1
+              tag: 3.2.0@sha256:8edfe4beaef13f9d1300619fa264ef250a3688df9cc54d24ca830ca31cb475ec
             env:
               PORT: &port 3000
               DISABLE_TELEMETRY: "true"
