@@ -1,0 +1,100 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app umami
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            env:
+              INIT_POSTGRES_DBNAME: *app
+              INIT_POSTGRES_HOST: postgres-cluster-rw.database.svc.cluster.local
+              INIT_POSTGRES_USER: *app
+            envFrom:
+              - secretRef:
+                  name: umami-initdb
+        containers:
+          app:
+            image:
+              repository: ghcr.io/umami-software/umami
+              tag: postgresql-3.0.0@sha256:818105b05d6b460d5526b2d426017fa1664025e87b1a4f03770b613df5fca6e1
+            env:
+              PORT: &port 3000
+              DISABLE_TELEMETRY: "true"
+            envFrom:
+              - secretRef:
+                  name: *app
+            probes:
+              liveness: &umamiProbes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/heartbeat
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *umamiProbes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/heartbeat
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 5
+                  timeoutSeconds: 3
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Home
+          gethomepage.dev/name: Umami
+          gethomepage.dev/icon: umami.png
+          gethomepage.dev/app: *app
