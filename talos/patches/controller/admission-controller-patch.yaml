@@ -1,2 +1,8 @@
-- op: remove
-  path: /cluster/apiServer/admissionControl
+---
+# Remove the default PodSecurity admission config (was a JSON6902 remove, which
+# talhelper no longer supports with multi-document machine configs)
+cluster:
+  apiServer:
+    admissionControl:
+      - name: PodSecurity
+        $$patch: delete

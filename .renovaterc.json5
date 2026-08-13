@@ -6,9 +6,12 @@
     "helpers:pinGitHubActionDigests",
     ":automergeBranch",
     ":dependencyDashboard",
-    ":disableRateLimiting",
     ":semanticCommits",
   ],
+  // Spread update branches out instead of landing a backlog in one burst
+  // (2026-08-09: ~80 queued bumps merged in 13min caused node DiskPressure)
+  prHourlyLimit: 4,
+  prConcurrentLimit: 10,
   dependencyDashboard: true,
   dependencyDashboardTitle: "Renovate Dashboard 🤖",
   schedule: ["every weekend"],
@@ -29,6 +32,15 @@
     managerFilePatterns: ["/^kustomization\\.ya?ml(?:\\.j2)?$/"],
   },
   packageRules: [
+    {
+      description: "Talos/Kubernetes bumps change talenv.yaml only; the node needs a manual talos:upgrade-node / upgrade-k8s, so never automerge and label clearly",
+      matchPackageNames: [
+        "ghcr.io/siderolabs/installer",
+        "ghcr.io/siderolabs/kubelet",
+      ],
+      automerge: false,
+      labels: ["upgrade/talos-manual"],
+    },
     {
       description: "Override Helmfile Dependency Name",
       matchDatasources: ["docker"],
