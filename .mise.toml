@@ -7,6 +7,7 @@ TALOSCONFIG = "{{config_root}}/talos/clusterconfig/talosconfig"
 [tools]
 "python" = "3.14.7"
 "pipx:makejinja" = "2.8.2"
+"aqua:bitwarden/sdk-sm" = "2.1.0"
 "aqua:budimanjojo/talhelper" = "3.1.16"
 "aqua:cilium/cilium-cli" = "0.19.7"
 "aqua:cli/cli" = "2.97.0"
