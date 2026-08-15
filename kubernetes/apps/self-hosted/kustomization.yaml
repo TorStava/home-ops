@@ -35,6 +35,7 @@ resources:
   - ./mermaid/ks.yaml
   - ./music-assistant/ks.yaml
   - ./n8n/ks.yaml
+  - ./ntfy/ks.yaml
   - ./ollama/ks.yaml
   - ./outline/ks.yaml
   - ./paperless/ks.yaml
