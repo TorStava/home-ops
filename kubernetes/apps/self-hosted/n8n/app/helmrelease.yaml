@@ -62,6 +62,13 @@ spec:
               N8N_RUNNERS_TASK_TIMEOUT: 300
               N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES: 2147483648
               N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES: 5000
+              # n8n 2.0 disables ExecuteCommand + LocalFileTrigger by default
+              # (arbitrary shell exec / arbitrary local file triggers). Re-enable
+              # only ExecuteCommand — needed by the reddit-monitor workflow to
+              # shell out to wget, since Reddit's anti-bot system fingerprints
+              # and blocks Node's own HTTP client at the TLS layer. Keep
+              # LocalFileTrigger disabled.
+              NODES_EXCLUDE: '["n8n-nodes-base.localFileTrigger"]'
               DB_TYPE: postgresdb
               DB_POSTGRESDB_DATABASE: *app
               DB_POSTGRESDB_HOST: postgres-cluster-rw.database.svc.cluster.local
