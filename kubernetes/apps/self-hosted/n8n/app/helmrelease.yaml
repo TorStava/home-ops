@@ -69,6 +69,18 @@ spec:
               # and blocks Node's own HTTP client at the TLS layer. Keep
               # LocalFileTrigger disabled.
               NODES_EXCLUDE: '["n8n-nodes-base.localFileTrigger"]'
+              # Read/Write Files From Disk blocks writes inside n8nFolder
+              # (/home/node/.n8n) by default, to stop workflows tampering
+              # with n8n's own config/DB files. The reddit-monitor workflow's
+              # dedupe cache lives there (the only persistent volume mounted),
+              # written via that node instead of a shell heredoc after the
+              # heredoc approach hit a Linux argv-size limit ("spawn E2BIG")
+              # once the cache grew past ~130KB. Not a meaningful capability
+              # increase here: ExecuteCommand (arbitrary shell) is already
+              # enabled above and already writes to this same path
+              # unrestricted, so this just makes the purpose-built node
+              # consistent with what shell access already permits.
+              BLOCK_FILE_ACCESS_TO_N8N_FILES: 'false'
               DB_TYPE: postgresdb
               DB_POSTGRESDB_DATABASE: *app
               DB_POSTGRESDB_HOST: postgres-cluster-rw.database.svc.cluster.local
