@@ -84,7 +84,7 @@ spec:
           app:
             image:
               repository: docker.io/heussd/fivefilters-full-text-rss
-              tag: 3.8.1@sha256:de26a84334b2a95533cf2817953c1360144a1c8c4cac6482114d82a968ae6d9c
+              tag: 3.8.1@sha256:0e0c3714ccce513e989e3671bc20bd6e8550a83777f4e18e4110249979307b0e
             env:
               FTR_ADMIN_PASSWORD:
                 valueFrom:
