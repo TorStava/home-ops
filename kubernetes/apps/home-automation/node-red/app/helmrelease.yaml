@@ -32,7 +32,7 @@ spec:
           app:
             image:
               repository: ghcr.io/node-red/node-red
-              tag: 4.1.12@sha256:c81912d66cb3639170484395ada550c94dfe0a56289cfaec3c8e6dec31f0d164
+              tag: 5.0.7@sha256:a649dd711d55490151a2c39a8e48ad0c44325488fbc0e66315f2d2e19e5e1ace
             env:
               TZ: ${TIMEZONE}
               NODE_RED_ENABLE_PROJECTS: "true"
