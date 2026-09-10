@@ -26,7 +26,7 @@ spec:
           app:
             image:
               repository: docker.io/ollama/ollama
-              tag: latest@sha256:b88c73ace3e115f8ec53dc8761ae1c0aabfa675406e3681786b98757ce050f42
+              tag: latest@sha256:684d8674b4315fa18f4f0e973a118ec2652ed96f67563277839985175858e0ba
             env:
               OLLAMA_HOST: 0.0.0.0
               OLLAMA_ORIGINS: "*"
