@@ -71,7 +71,7 @@ spec:
           cronjob:
             image:
               repository: public.ecr.aws/docker/library/alpine
-              tag: 3.24.1
+              tag: 3.24.2
               pullPolicy: IfNotPresent
             command:
               - sh
