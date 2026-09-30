@@ -89,6 +89,12 @@ spec:
               # access already permits.
               N8N_BLOCK_FILE_ACCESS_TO_N8N_FILES: 'false'
               N8N_RESTRICT_FILE_ACCESS_TO: '~/.n8n-files;/home/node/.n8n'
+              # Code-node expressions can read process.env by default, which
+              # exposes N8N_ENCRYPTION_KEY and the DB password to anything
+              # that can edit a workflow. Block it; shell env inherited by
+              # ExecuteCommand child processes is unaffected. If a workflow
+              # uses {{ $env.* }} expressions it will break and needs rework.
+              N8N_BLOCK_ENV_ACCESS_IN_NODE: 'true'
               DB_TYPE: postgresdb
               DB_POSTGRESDB_DATABASE: *app
               DB_POSTGRESDB_HOST: postgres-cluster-rw.database.svc.cluster.local
@@ -138,6 +144,26 @@ spec:
           gethomepage.dev/name: n8n
           gethomepage.dev/icon: n8n.png
           gethomepage.dev/app: *app
+      # External exposure is limited to the instance-level MCP server
+      # (Settings > Instance-level MCP) so claude.ai can connect. The UI,
+      # /rest, /api and webhooks stay internal-only: same hostname resolves
+      # to the internal gateway on LAN (pihole) and to the Cloudflare tunnel
+      # publicly (cloudflare-dns only publishes external-gateway routes).
+      # Unmatched paths 404 at the gateway. The OAuth consent page needs the
+      # UI, so connecting a new MCP client must be done from the LAN.
+      mcp:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - matches:
+              - path: {type: PathPrefix, value: /mcp-server}
+              - path: {type: PathPrefix, value: /mcp-oauth}
+              - path: {type: PathPrefix, value: /.well-known/oauth-authorization-server}
+              - path: {type: PathPrefix, value: /.well-known/oauth-protected-resource}
+            backendRefs: [{}]
 
     persistence:
       data:
