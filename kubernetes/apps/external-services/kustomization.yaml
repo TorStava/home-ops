@@ -7,6 +7,7 @@ components:
   - ../../components/common
 resources:
   - ./home-assistant/ks.yaml
+  - ./garage/ks.yaml
   - ./nextcloud/ks.yaml
   - ./plex/ks.yaml
   - ./truenas/ks.yaml
