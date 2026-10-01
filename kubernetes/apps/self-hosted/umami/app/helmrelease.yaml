@@ -41,6 +41,7 @@ spec:
             env:
               PORT: &port 3000
               DISABLE_TELEMETRY: "true"
+              MCP_ENABLED: "1"
             envFrom:
               - secretRef:
                   name: *app
