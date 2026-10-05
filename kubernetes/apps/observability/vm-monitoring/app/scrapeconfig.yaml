@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+# node-exporter on VMs running on TrueNAS (outside the cluster). Each VM runs the
+# Debian/Ubuntu prometheus-node-exporter package with extra vmstat fields so the
+# virtio balloon size is visible:
+#   ARGS="--collector.vmstat.fields=^(oom_kill|pgpg|pswp|pg.*fault|nr_balloon).*"
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: vm-node-exporter
+spec:
+  jobName: vm-node-exporter
+  scrapeInterval: 30s
+  staticConfigs:
+    # MintVM (TrueNAS vps_mint): static MAC 00:a0:98:68:77:2b, Kea reservation on pfSense.
+    - targets: ["192.168.1.170:9100"]
+      labels:
+        vm: mint-vm
+        hypervisor: truenas
+  relabelings:
+    - action: replace
+      sourceLabels: [vm]
+      targetLabel: instance

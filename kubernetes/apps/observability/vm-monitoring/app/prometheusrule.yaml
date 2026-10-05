@@ -1,0 +1,94 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vm-rules
+spec:
+  groups:
+    - name: vm.rules
+      rules:
+        - alert: VmExporterDown
+          expr: up{job="vm-node-exporter"} == 0
+          for: 15m
+          annotations:
+            summary: >-
+              Cannot scrape node-exporter on VM {{ $labels.instance }} (VM down or exporter stopped)
+          labels:
+            severity: warning
+
+        # The 5 Oct 2026 MintVM slowdown: TrueNAS started the VM ballooned to
+        # half its RAM. With memory == min_memory the balloon should stay at 0.
+        - alert: VmMemoryBallooned
+          expr: node_vmstat_nr_balloon_pages{job="vm-node-exporter"} * 4096 > 512 * 1024 * 1024
+          for: 15m
+          annotations:
+            summary: >-
+              Hypervisor has reclaimed {{ $value | humanize1024 }}B from VM {{ $labels.instance }} via the virtio balloon
+            description: >-
+              VM {{ $labels.instance }} has {{ $value | humanize1024 }}B held by the memory balloon.
+              Check the VM's Memory / Minimum Memory in TrueNAS; set them equal to disable ballooning.
+          labels:
+            severity: warning
+
+        - alert: VmMemoryPressure
+          expr: rate(node_pressure_memory_waiting_seconds_total{job="vm-node-exporter"}[5m]) > 0.10
+          for: 10m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }}: tasks stalled on memory {{ $value | humanizePercentage }} of the time
+          labels:
+            severity: warning
+
+        - alert: VmMemoryThrashing
+          expr: rate(node_pressure_memory_stalled_seconds_total{job="vm-node-exporter"}[5m]) > 0.10
+          for: 5m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }} is thrashing: all tasks stalled on memory {{ $value | humanizePercentage }} of the time
+            description: >-
+              VM {{ $labels.instance }} is out of memory and thrashing; desktop/RDP will be very slow.
+              Check the balloon (node_vmstat_nr_balloon_pages) and top memory users.
+          labels:
+            severity: critical
+
+        - alert: VmLowMemoryAvailable
+          expr: |
+            node_memory_MemAvailable_bytes{job="vm-node-exporter"}
+              / node_memory_MemTotal_bytes{job="vm-node-exporter"} < 0.10
+          for: 15m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }} has only {{ $value | humanizePercentage }} memory available
+          labels:
+            severity: warning
+
+        - alert: VmSwapNearlyFull
+          expr: |
+            (1 - node_memory_SwapFree_bytes{job="vm-node-exporter"}
+                   / node_memory_SwapTotal_bytes{job="vm-node-exporter"}) > 0.90
+            and node_memory_SwapTotal_bytes{job="vm-node-exporter"} > 0
+          for: 15m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }} swap is {{ $value | humanizePercentage }} full
+          labels:
+            severity: warning
+
+        - alert: VmCpuPressure
+          expr: rate(node_pressure_cpu_waiting_seconds_total{job="vm-node-exporter"}[5m]) > 0.50
+          for: 15m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }}: tasks waiting for CPU {{ $value | humanizePercentage }} of the time
+          labels:
+            severity: warning
+
+        - alert: VmIoPressure
+          expr: rate(node_pressure_io_stalled_seconds_total{job="vm-node-exporter"}[5m]) > 0.20
+          for: 10m
+          annotations:
+            summary: >-
+              VM {{ $labels.instance }}: all tasks stalled on disk I/O {{ $value | humanizePercentage }} of the time
+          labels:
+            severity: warning
