@@ -5,4 +5,6 @@ kind: Kustomization
 resources:
   - ./endpointslice.yaml
   - ./httproute.yaml
+  - ./prometheusrule.yaml
+  - ./scrapeconfig.yaml
   - ./service.yaml

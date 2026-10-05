@@ -1,0 +1,121 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/prometheusrule_v1.json
+# Pool health (degraded/faulted) is covered by ZfsUnexpectedPoolState in kube-prometheus-stack.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: truenas-rules
+spec:
+  groups:
+    - name: truenas.rules
+      rules:
+        - alert: TrueNasExporterDown
+          expr: up{job=~"truenas-.*"} == 0
+          for: 10m
+          annotations:
+            summary: >-
+              Cannot scrape {{ $labels.job }} on TrueNAS (host down or the "exporters" app stopped)
+          labels:
+            severity: warning
+
+        - alert: TrueNasPoolSpaceLow
+          expr: |
+            node_filesystem_avail_bytes{job="truenas-node-exporter", fstype="zfs", mountpoint=~"/mnt/[^/]+"}
+              / node_filesystem_size_bytes{job="truenas-node-exporter", fstype="zfs", mountpoint=~"/mnt/[^/]+"} < 0.15
+          for: 30m
+          annotations:
+            summary: >-
+              TrueNAS pool {{ $labels.device }} has only {{ $value | humanizePercentage }} free
+          labels:
+            severity: warning
+
+        - alert: TrueNasPoolSpaceCritical
+          expr: |
+            node_filesystem_avail_bytes{job="truenas-node-exporter", fstype="zfs", mountpoint=~"/mnt/[^/]+"}
+              / node_filesystem_size_bytes{job="truenas-node-exporter", fstype="zfs", mountpoint=~"/mnt/[^/]+"} < 0.05
+          for: 10m
+          annotations:
+            summary: >-
+              TrueNAS pool {{ $labels.device }} has only {{ $value | humanizePercentage }} free
+          labels:
+            severity: critical
+
+        # ZFS ARC is not counted as available memory, so use PSI rather than MemAvailable.
+        - alert: TrueNasMemoryPressure
+          expr: rate(node_pressure_memory_stalled_seconds_total{job="truenas-node-exporter"}[5m]) > 0.05
+          for: 10m
+          annotations:
+            summary: >-
+              TrueNAS: all tasks stalled on memory {{ $value | humanizePercentage }} of the time (VMs and apps will suffer)
+          labels:
+            severity: warning
+
+        - alert: TrueNasCpuPressure
+          expr: rate(node_pressure_cpu_waiting_seconds_total{job="truenas-node-exporter"}[5m]) > 0.50
+          for: 15m
+          annotations:
+            summary: >-
+              TrueNAS: tasks waiting for CPU {{ $value | humanizePercentage }} of the time
+          labels:
+            severity: warning
+
+        - alert: TrueNasIoPressure
+          expr: rate(node_pressure_io_stalled_seconds_total{job="truenas-node-exporter"}[5m]) > 0.30
+          for: 15m
+          annotations:
+            summary: >-
+              TrueNAS: all tasks stalled on disk I/O {{ $value | humanizePercentage }} of the time
+          labels:
+            severity: warning
+
+        - alert: TrueNasDiskSmartFailed
+          expr: smartctl_device_smart_status{job="truenas-smartctl-exporter"} != 1
+          for: 0m
+          annotations:
+            summary: >-
+              TrueNAS disk {{ $labels.device }} reports SMART health FAILED
+          labels:
+            severity: critical
+
+        - alert: TrueNasDiskMissing
+          expr: |
+            smartctl_devices{job="truenas-smartctl-exporter"}
+              < max_over_time(smartctl_devices{job="truenas-smartctl-exporter"}[1d])
+          for: 15m
+          annotations:
+            summary: >-
+              TrueNAS sees {{ $value }} disks, fewer than in the last 24h
+          labels:
+            severity: critical
+
+        - alert: TrueNasDiskTemperatureHigh
+          expr: |
+            smartctl_device_temperature{job="truenas-smartctl-exporter", temperature_type="current"}
+              >= ignoring(temperature_type)
+            (smartctl_device_temperature{job="truenas-smartctl-exporter", temperature_type="drive_trip"} - 5)
+          for: 15m
+          annotations:
+            summary: >-
+              TrueNAS disk {{ $labels.device }} is at {{ $value }}°C, within 5°C of its trip point
+          labels:
+            severity: warning
+
+        - alert: TrueNasDiskGrownDefects
+          expr: increase(smartctl_scsi_grown_defect_list{job="truenas-smartctl-exporter"}[24h]) > 0
+          for: 0m
+          annotations:
+            summary: >-
+              TrueNAS disk {{ $labels.device }} grew {{ $value }} new defects in 24h
+          labels:
+            severity: warning
+
+        - alert: TrueNasDiskUncorrectedErrors
+          expr: |
+            increase(smartctl_read_total_uncorrected_errors{job="truenas-smartctl-exporter"}[1h]) > 0
+            or increase(smartctl_write_total_uncorrected_errors{job="truenas-smartctl-exporter"}[1h]) > 0
+          for: 0m
+          annotations:
+            summary: >-
+              TrueNAS disk {{ $labels.device }} logged uncorrected read/write errors in the last hour
+          labels:
+            severity: critical

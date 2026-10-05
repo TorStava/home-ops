@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+# Exporters run on TrueNAS as the custom app "exporters" (Apps > exporters):
+# node-exporter (host, ZFS, PSI) on :9100 and smartctl-exporter (disk SMART) on :9633.
+# Compose file: kubernetes/apps/observability/kube-prometheus-stack/README.md.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: truenas-node-exporter
+spec:
+  jobName: truenas-node-exporter
+  scrapeInterval: 30s
+  staticConfigs:
+    - targets: ["${NAS_IP}:9100"]
+      labels:
+        instance: truenas
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: truenas-smartctl-exporter
+spec:
+  jobName: truenas-smartctl-exporter
+  # smartctl-exporter itself only re-reads the disks every 300s.
+  scrapeInterval: 60s
+  scrapeTimeout: 30s
+  staticConfigs:
+    - targets: ["${NAS_IP}:9633"]
+      labels:
+        instance: truenas
