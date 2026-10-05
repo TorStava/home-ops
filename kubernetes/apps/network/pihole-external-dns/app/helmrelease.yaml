@@ -31,6 +31,12 @@ spec:
     extraArgs:
       - --pihole-api-version=6
       - --pihole-server=http://pihole-0.pihole.network.svc.cluster.local
+      # Lets a route opt out of LAN DNS. Needed when one hostname has both an
+      # internal and an external route (e.g. n8n): without it both CNAMEs are
+      # generated, external-dns warns "Only one CNAME per name", and LAN
+      # clients can end up on the external gateway. `notin` also matches
+      # resources without the annotation, so nothing else is affected.
+      - --annotation-filter=pihole.external-dns/ignore notin (true)
     triggerLoopOnEvent: true
     policy: sync
     sources:

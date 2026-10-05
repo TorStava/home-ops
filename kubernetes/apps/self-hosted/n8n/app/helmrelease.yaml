@@ -151,7 +151,11 @@ spec:
       # publicly (cloudflare-dns only publishes external-gateway routes).
       # Unmatched paths 404 at the gateway. The OAuth consent page needs the
       # UI, so connecting a new MCP client must be done from the LAN.
+      # pihole-external-dns must skip this route, or LAN DNS gets a second
+      # CNAME to external.<domain> and the UI 404s on the LAN.
       mcp:
+        annotations:
+          pihole.external-dns/ignore: 'true'
         hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
         parentRefs:
           - name: external
