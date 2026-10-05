@@ -1,0 +1,32 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/scrapeconfig_v1alpha1.json
+# Multi-target pattern: /redfish?target=<iLO> per
+# https://github.com/jenningsloy318/redfish_exporter#prometheus-configuration
+# Both iLOs use the same read-only "redfish-exporter" account (the "default" entry
+# in config.yml). Addresses are Kea reservations on pfSense.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: redfish-exporter
+spec:
+  jobName: redfish-exporter
+  metricsPath: /redfish
+  scrapeInterval: 60s
+  scrapeTimeout: 45s
+  fallbackScrapeProtocol: PrometheusText0.0.4
+  staticConfigs:
+    - targets: ["192.168.1.190"]
+      labels:
+        server: odin # k3s / Talos node
+    - targets: ["192.168.1.191"]
+      labels:
+        server: mimir # TrueNAS
+  relabelings:
+    - sourceLabels: [__address__]
+      targetLabel: __param_target
+    - sourceLabels: [__param_target]
+      targetLabel: instance
+    - sourceLabels: [__param_target]
+      targetLabel: host
+    - targetLabel: __address__
+      replacement: redfish-exporter.observability.svc.cluster.local:9610

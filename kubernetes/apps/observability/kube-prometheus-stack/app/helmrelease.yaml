@@ -228,7 +228,7 @@ spec:
               - alert: RedfishExporterScrapeFailed
                 annotations:
                   summary: Prometheus cannot scrape redfish-exporter for {{ $labels.instance }}
-                expr: up{job=~".*redfish-exporter.*", namespace="observability"} == 0
+                expr: up{job="redfish-exporter"} == 0
                 for: 5m
                 labels:
                   severity: critical

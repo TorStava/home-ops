@@ -20,11 +20,6 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 3
-  valuesFrom:
-    - kind: Secret
-      name: redfish-exporter-config
-      valuesKey: REDFISH_HOST
-      targetPath: defaultPodOptions.labels.redfish\.io/target
   values:
     controllers:
       redfish-exporter:
