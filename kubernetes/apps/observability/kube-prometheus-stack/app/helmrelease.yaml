@@ -255,7 +255,7 @@ spec:
                   severity: warning
               - alert: RedfishPowerSupplyUnhealthy
                 annotations:
-                  summary: iLO PSU {{ $labels.powersupply_id }} health degraded on {{ $labels.instance }}
+                  summary: iLO PSU {{ $labels.power_supply_id }} (0-based; 1 = PSU 2) health degraded on {{ $labels.server }} ({{ $labels.instance }})
                 expr: redfish_chassis_power_powersupply_health > 1
                 for: 2m
                 labels:
