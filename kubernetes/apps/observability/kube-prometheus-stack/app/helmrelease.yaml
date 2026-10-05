@@ -260,3 +260,47 @@ spec:
                 for: 2m
                 labels:
                   severity: critical
+              # Per-component health, so a new fault still alerts while the system
+              # rollup is already degraded (e.g. a PSU deliberately left unplugged).
+              - alert: RedfishFanUnhealthy
+                annotations:
+                  summary: iLO fan {{ $labels.fan }} health degraded on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_chassis_fan_health > 1
+                for: 5m
+                labels:
+                  severity: warning
+              - alert: RedfishMemoryUnhealthy
+                annotations:
+                  summary: iLO memory {{ $labels.memory }} health degraded on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_system_memory_health_state > 1
+                for: 5m
+                labels:
+                  severity: critical
+              - alert: RedfishProcessorUnhealthy
+                annotations:
+                  summary: iLO processor {{ $labels.processor_id }} health degraded on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_system_processor_health_state > 1
+                for: 5m
+                labels:
+                  severity: critical
+              - alert: RedfishDriveUnhealthy
+                annotations:
+                  summary: iLO drive {{ $labels.drive }} health degraded on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_system_storage_drive_health_state > 1
+                for: 5m
+                labels:
+                  severity: critical
+              - alert: RedfishManagerUnhealthy
+                annotations:
+                  summary: iLO itself reports degraded health on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_manager_health_state > 1
+                for: 10m
+                labels:
+                  severity: warning
+              - alert: RedfishNetworkInterfaceUnhealthy
+                annotations:
+                  summary: iLO network interface {{ $labels.ethernet_interface_id }} health degraded on {{ $labels.server }} ({{ $labels.instance }})
+                expr: redfish_system_ethernet_interface_health_state > 1
+                for: 10m
+                labels:
+                  severity: warning
