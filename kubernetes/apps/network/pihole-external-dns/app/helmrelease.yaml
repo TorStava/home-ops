@@ -30,6 +30,10 @@ spec:
             key: *name
     extraArgs:
       - --pihole-server=http://pihole-0.pihole.network.svc.cluster.local
+      # external-dns v0.22.0 changed the default prefix to external-dns.kubernetes.io/
+      # with no fallback; this repo's gateway target and controller annotations
+      # still use the alpha prefix.
+      - --annotation-prefix=external-dns.alpha.kubernetes.io/
       # Lets a route opt out of LAN DNS. Needed when one hostname has both an
       # internal and an external route (e.g. n8n): without it both CNAMEs are
       # generated, external-dns warns "Only one CNAME per name", and LAN
