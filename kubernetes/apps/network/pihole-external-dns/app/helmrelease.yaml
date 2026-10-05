@@ -41,9 +41,9 @@ spec:
     sources:
       - gateway-httproute
       - gateway-grpcroute
-      - gateway-tlsroute
-      - gateway-tcproute
-      - gateway-udproute
+      # No TLS/TCP/UDP routes exist, and external-dns >= v0.22.0 watches
+      # TLSRoute v1, which the cluster's Gateway API v1.3 CRDs don't serve
+      # (only v1alpha2), so the informer never syncs and the pod exits.
       - service
     # Pihole only supports A/AAAA/CNAME records so there is no mechanism to track ownership.
     # You don't need to set this flag, but if you leave it unset, you will receive warning
