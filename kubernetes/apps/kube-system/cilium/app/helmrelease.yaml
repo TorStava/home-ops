@@ -13,6 +13,9 @@ spec:
     remediation:
       retries: -1
   upgrade:
+    # TEMPORARY: lets the post-upgrade certgen hook run while hubble-relay is
+    # down on expired certs. Remove once hubble-server-certs is renewed.
+    disableWait: true
     cleanupOnFail: true
     remediation:
       retries: 3
