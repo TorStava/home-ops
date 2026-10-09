@@ -57,6 +57,11 @@ spec:
           enabled: true
         dashboards:
           enabled: true
+      tls:
+        auto:
+          # helm method only re-issues certs on a chart upgrade; they silently
+          # expired on 2026-09-16. certgen CronJob renews them on schedule.
+          method: cronJob
       relay:
         enabled: true
         rollOutPods: true

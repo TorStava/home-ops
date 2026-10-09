@@ -26,7 +26,8 @@ spec:
         annotations:
           reloader.stakater.com/auto: "true"
         replicas: 1
-        strategy: RollingUpdate
+        # hostNetwork binds :9610 on the node, so old and new pods can't overlap.
+        strategy: Recreate
         containers:
           app:
             image:
