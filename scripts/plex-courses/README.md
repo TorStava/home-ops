@@ -46,14 +46,16 @@ idempotent and only ever deletes inside the mirror.
 
 ## Plex library
 
-- Type **TV Shows**, scanner **Plex TV Series**, agent **Plex NFO Series**
+- Type **TV Shows**, scanner **Plex TV Series**, agent **Plex NFO Series**,
+  advanced setting **Use season titles** on
 - Folder: `/mnt/data/tutorials-plex`. The TrueNAS Plex app mounts
   `/mnt/tank/data` as `/mnt/data`.
 
 ## Known limits
 
-- Section names show as "Season N". Plex's NFO agent ignores `namedseason`
-  and `season.nfo` (tested on PMS 1.43.4).
+- Section names come from `<namedseason>` in `tvshow.nfo`. They show only
+  with the library's advanced setting **Use season titles** on (tested on
+  PMS 1.43.4). `season.nfo` is not read.
 - `review.tsv` flags courses whose order can't be fully derived from names,
   so check those by hand:
   - `duplicate-lesson-numbers`
