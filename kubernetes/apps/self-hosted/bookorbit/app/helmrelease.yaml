@@ -62,7 +62,6 @@ spec:
               POSTGRES_PORT: "5432"
               POSTGRES_USER: *app
               POSTGRES_DB: *app
-              LIBRARY_BROWSE_ROOT: /books
               BOOKORBIT_FIX_PERMISSIONS: "false"
             envFrom:
               - secretRef:
@@ -137,7 +136,7 @@ spec:
           *app :
             app:
               - path: /tmp
-      # Shared with booklore; read-only until BookOrbit's write-back behaviour is known.
+      # Shared with booklore and calibre; read-only until BookOrbit's write-back behaviour is known.
       books:
         type: nfs
         server: ${NAS_IP}
@@ -147,4 +146,9 @@ spec:
             app:
               - path: /books
                 subPath: library/books
+                readOnly: true
+              # Calibre libraries (CalibreDB, CalibreDB_fiction, ...). Read-only:
+              # calibre / calibre-web-automated own these files.
+              - path: /ebooks
+                subPath: ebooks
                 readOnly: true
