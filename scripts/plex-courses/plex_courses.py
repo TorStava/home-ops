@@ -27,7 +27,9 @@ MANIFEST = ".plex-courses-manifest.tsv"
 WRAPPER = re.compile(r"^~?\s*get your (files|course)s? here", re.I)
 # Junk that release groups put into names.
 JUNK = re.compile(r"-*\s*\[\s*[\w.\- ]+\.(com|net|me|org|io|cc)\s*\]\s*-*|\s-\s*[\w-]+\.(com|net|me)\s*$|\s*-?\s*\[\s*(ftu|fco|tp|video)\s*\]", re.I)
-SECTIONISH = re.compile(r"^\s*(\d|(section|module|part|week|day|chapter|lesson|lecture|unit|session|step|level|phase|ch|s)\s*[-_. ]?\d)", re.I)
+SECTIONISH = re.compile(r"^\s*(\d|(section|module|part|week|day|chapter|lesson|lecture|unit|session|step|level|phase|ch|s)\s*[-_. ]?\d|(bonus|extras?|dvd|disc|cd)\b|dvdrip)", re.I)
+# Bonus material plays after the main lessons, whatever its name sorts as.
+BONUS = re.compile(r"^\s*(bonus|extras?)\b", re.I)
 LEADNUM = re.compile(r"^\s*(\d+)")
 STRIP_LEAD = re.compile(r"^\s*\d+(\.\d+)*\s*[-_.)\]:]*\s*")
 
@@ -38,7 +40,7 @@ def natkey(s):
 
 
 def pathkey(rel):
-    return [natkey(p) for p in rel.split("/")] if rel else []
+    return [(bool(BONUS.match(p)), natkey(p)) for p in rel.split("/")] if rel else []
 
 
 def clean(name):
@@ -71,7 +73,11 @@ def join(a, b):
 def find_courses(tree, d, depth, out, label=None):
     node = tree[d]
     kids = sorted(node["dirs"], key=natkey)
-    if depth <= 1:  # library root and subject folders are never courses
+    if depth == 1 and len(kids) >= 2 and sum(1 for k in kids if SECTIONISH.match(k)) * 2 >= len(kids):
+        # a course sitting directly at the top ("How to play the drums/1 - Introduction/...")
+        out.append((d, "course", label))
+        return
+    if depth <= 1:  # library root and subject folders
         if node["files"] and depth == 1:
             out.append((d, "loose", None))
         for k in kids:
@@ -117,7 +123,9 @@ def plan_course(tree, cdir, kind):
     groups = collections.OrderedDict()
     for d in dirs:
         g = d
-        if kind != "loose" and d != cdir and len(tree[d]["files"]) == 1 and d.rsplit("/", 1)[0] in lesson_parents:
+        # all lesson folders under such a parent, including the odd multi-video
+        # one, form one season so "25 - x" (2 videos) still plays before "26 - y"
+        if kind != "loose" and d != cdir and d.rsplit("/", 1)[0] in lesson_parents:
             g = d.rsplit("/", 1)[0]
             if not SECTIONISH.match(d.rsplit("/", 1)[1]):
                 flags.add("unnumbered-lesson-folders")
