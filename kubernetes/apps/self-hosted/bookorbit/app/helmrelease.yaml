@@ -1,0 +1,150 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app bookorbit
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          init-db:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            env:
+              INIT_POSTGRES_DBNAME: *app
+              INIT_POSTGRES_HOST: &pgHost postgres-cluster-rw.database.svc.cluster.local
+              INIT_POSTGRES_USER: *app
+            envFrom:
+              - secretRef:
+                  name: bookorbit-initdb
+          # pgvector is not a trusted extension, so the app's own migration
+          # (running as the bookorbit role) can't create it. Do it as superuser.
+          init-extensions:
+            dependsOn: init-db
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17
+            command: ["sh", "-c"]
+            args:
+              - PGUSER="$INIT_POSTGRES_SUPER_USER" PGPASSWORD="$INIT_POSTGRES_SUPER_PASS" psql -v ON_ERROR_STOP=1 -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+            env:
+              PGHOST: *pgHost
+              PGDATABASE: *app
+            envFrom:
+              - secretRef:
+                  name: bookorbit-initdb
+        containers:
+          app:
+            image:
+              repository: ghcr.io/bookorbit/bookorbit
+              tag: 3.3.0@sha256:4c2a1b957a3c8aeb9f59bb27a7d8efb18fa42c758afed3dcfc62620c5bcd1831
+            env:
+              TZ: "${TIMEZONE}"
+              PORT: &port 3000
+              APP_URL: "https://{{ .Release.Name }}.${SECRET_DOMAIN}"
+              POSTGRES_HOST: *pgHost
+              POSTGRES_PORT: "5432"
+              POSTGRES_USER: *app
+              POSTGRES_DB: *app
+              LIBRARY_BROWSE_ROOT: /books
+              BOOKORBIT_FIX_PERMISSIONS: "false"
+            envFrom:
+              - secretRef:
+                  name: *app
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/health
+                    port: *port
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/v1/health
+                    port: *port
+                  periodSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+    route:
+      app:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/group: Media
+          gethomepage.dev/name: BookOrbit
+          gethomepage.dev/icon: mdi-book-open-page-variant
+          gethomepage.dev/app: *app
+    persistence:
+      data:
+        existingClaim: *app
+        advancedMounts:
+          *app :
+            app:
+              - path: /data
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          *app :
+            app:
+              - path: /tmp
+      # Shared with booklore; read-only until BookOrbit's write-back behaviour is known.
+      books:
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data
+        advancedMounts:
+          *app :
+            app:
+              - path: /books
+                subPath: library/books
+                readOnly: true
