@@ -169,7 +169,10 @@ def make_plan(rel_files):
 def dest_rel(show, s, e, title, ext):
     sw = 3 if len(show["seasons"]) > 99 else 2
     ew = max(2, len(str(max(x[1] for x in show["eps"]))))
-    fname = f"{show['name'][:80]} - s{s:0{sw}d}e{e:0{ew}d} - {title}{ext}"
+    # Bare sNNeNN: dates in course names ("Updated 6-2022") derail Plex's
+    # parser, and it silently skips files named like "...Sample..." or
+    # "...-Video1". The lesson title comes from the episode .nfo instead.
+    fname = f"s{s:0{sw}d}e{e:0{ew}d}{ext}"
     return f"{show['name']}/Season {s:0{sw}d}/{fname}"
 
 
@@ -239,6 +242,7 @@ def cmd_apply(a):
     wanted, texts, made, kept = {}, {}, 0, 0
     for sh in shows:
         texts[f"{sh['name']}/tvshow.nfo"] = tvshow_nfo(sh)
+        texts[f"{sh['name']}/.plexmatch"] = f"title: {sh['name']}\npattern: Season */s{{s}}e{{e}}.*\n"
         for s, e, rel, title in sh["eps"]:
             base, ext = os.path.splitext(rel)
             wanted[dest_rel(sh, s, e, title, ext.lower())] = rel
