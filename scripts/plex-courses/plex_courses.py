@@ -8,7 +8,7 @@ under DEST, plus a manifest and a tvshow.nfo per show.
 
   plan  SRC [--from-list FILE] [--out DIR]   dry run: mapping.tsv + review.tsv
   apply SRC DEST [--prune | --only REGEX]    create/refresh the hardlink tree
-  posters DEST [--host HOST] [--force]       poster.jpg for shows without cover art
+  posters DEST [--host HOST] [--force]       poster.jpg + fanart.jpg where missing
 
 Stdlib only; plan/apply run on TrueNAS SCALE's python3. `posters` needs
 ffmpeg, which TrueNAS lacks: run it elsewhere with --host to reach DEST.
@@ -287,7 +287,8 @@ def cmd_apply(a):
     for sh in shows:
         texts[f"{sh['name']}/tvshow.nfo"] = tvshow_nfo(sh)
         texts[f"{sh['name']}/.plexmatch"] = f"title: {sh['name']}\npattern: Season */s{{s}}e{{e}}.*\n"
-        # Plex's NFO agent never fetches artwork: the show poster must be a local file.
+        # Plex's NFO agent never fetches artwork: poster and background must be local files.
+        keep.add(f"{sh['name']}/fanart.jpg")  # made by the `posters` command
         cover = course_cover(src, sh)
         if cover:
             wanted[f"{sh['name']}/poster{os.path.splitext(cover)[1].lower()}"] = cover
@@ -341,11 +342,11 @@ def cmd_apply(a):
             if root != dest and not os.listdir(root):
                 os.rmdir(root)
     print(f"shows: {len(shows)}  links created: {made}  unchanged: {kept}  nfo written: {written}  pruned: {pruned}")
-    if keep:
-        print(f"{len(keep)} shows have no cover image: run `posters` to generate them")
+    print("run `posters` to make poster.jpg/fanart.jpg for new shows")
 
 
 POSTER_W, POSTER_H = 1000, 1500
+FANART_W, FANART_H = 1920, 1080
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 
@@ -366,13 +367,13 @@ class Dest:
         with open(p) as fh:
             return fh.read()
 
-    def posters(self):
-        """Show folders that already have a poster."""
+    def having(self, art):
+        """Show folders that already have <art>.* (poster, fanart)."""
         if self.host:
-            out = self.ssh(f"find {shlex.quote(self.path)} -mindepth 2 -maxdepth 2 -iname 'poster.*' -printf '%P\\n'")
+            out = self.ssh(f"find {shlex.quote(self.path)} -mindepth 2 -maxdepth 2 -iname '{art}.*' -printf '%P\\n'")
             return {l.split("/")[0] for l in out.decode().splitlines()}
         return {d for d in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, d))
-                and any(f.lower().startswith("poster.") for f in os.listdir(os.path.join(self.path, d)))}
+                and any(f.lower().startswith(art + ".") for f in os.listdir(os.path.join(self.path, d)))}
 
     def url(self, rel):
         p = os.path.join(self.path, rel)
@@ -388,8 +389,37 @@ class Dest:
             os.replace(p + ".tmp", p)
 
 
-def render_poster(name, lessons, out, tmp):
-    """Lesson frame over a blurred copy of itself, course title below; a title card if no lesson decodes."""
+def ffmpeg(args, out, timeout=300):
+    """One still image: args are the inputs and filters, out the image file."""
+    return subprocess.run(["ffmpeg", "-v", "error", "-y", *args, "-frames:v", "1", "-q:v", "3", out],
+                          capture_output=True, timeout=timeout)
+
+
+def grab_frame(lessons, out):
+    """A representative frame from the first lesson that decodes, past its intro card."""
+    for url in lessons:
+        probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", url],
+                               capture_output=True, text=True, timeout=120)
+        try:
+            at = min(float(probe.stdout.strip()) * 0.2, 120)  # past the intro card, before the end
+        except ValueError:
+            continue
+        if ffmpeg(["-ss", f"{at:.1f}", "-i", url, "-vf", "thumbnail=60"], out).returncode == 0 and os.path.getsize(out):
+            return True
+    return False
+
+
+def render_fanart(frame, out):
+    """The frame as 16:9 background art, fitted over a blurred fill so 4:3 lessons aren't cropped."""
+    graph = (f"[0:v]split[a][b];[a]scale={FANART_W}:{FANART_H}:force_original_aspect_ratio=increase,"
+             f"crop={FANART_W}:{FANART_H},gblur=sigma=40,eq=brightness=-0.3[bg];"
+             f"[b]scale={FANART_W}:{FANART_H}:force_original_aspect_ratio=decrease[fg];"
+             f"[bg][fg]overlay=(W-w)/2:(H-h)/2")
+    ffmpeg(["-i", frame, "-filter_complex", graph], out).check_returncode()
+
+
+def render_poster(name, frame, out, tmp):
+    """Lesson frame over a blurred copy of itself, course title below; a title card without a frame."""
     lines = textwrap.wrap(name, 20)
     size = 76
     if len(lines) > 4:
@@ -401,24 +431,15 @@ def render_poster(name, lessons, out, tmp):
         fh.write("\n".join(lines))
     text = (f"drawtext=fontfile={FONT}:textfile={textfile}:fontsize={size}:fontcolor=white:line_spacing=14:"
             f"text_align=C:x=(w-text_w)/2:shadowcolor=black@0.7:shadowx=3:shadowy=3")
-    for url in lessons:
-        probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", url],
-                               capture_output=True, text=True, timeout=120)
-        try:
-            at = min(float(probe.stdout.strip()) * 0.2, 120)  # past the intro card, before the end
-        except ValueError:
-            continue
-        graph = (f"[0:v]thumbnail=60,split[a][b];"
+    if frame:
+        graph = (f"[0:v]split[a][b];"
                  f"[a]scale={POSTER_W}:{POSTER_H}:force_original_aspect_ratio=increase,crop={POSTER_W}:{POSTER_H},"
                  f"gblur=sigma=40,eq=brightness=-0.3[bg];[b]scale={POSTER_W - 80}:-2[fg];"
                  f"[bg][fg]overlay=(W-w)/2:220,{text}:y=880")
-        r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{at:.1f}", "-i", url, "-filter_complex", graph,
-                            "-frames:v", "1", "-q:v", "3", out], capture_output=True, timeout=300)
-        if r.returncode == 0 and os.path.getsize(out):
-            return "frame"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c=0x24324a:s={POSTER_W}x{POSTER_H}",
-                    "-vf", f"{text}:y=(h-text_h)/2", "-frames:v", "1", "-q:v", "3", out],
-                   capture_output=True, check=True, timeout=60)
+        ffmpeg(["-i", frame, "-filter_complex", graph], out).check_returncode()
+        return "frame"
+    ffmpeg(["-f", "lavfi", "-i", f"color=c=0x24324a:s={POSTER_W}x{POSTER_H}", "-vf", f"{text}:y=(h-text_h)/2"], out,
+           timeout=60).check_returncode()
     return "title card"
 
 
@@ -429,28 +450,43 @@ def cmd_posters(a):
         tgt = line.split("\t")[0]
         if is_video(os.path.basename(tgt)):
             shows[tgt.split("/")[0]].append(tgt)
-    have = set() if a.force else dest.posters()
-    todo = sorted(s for s in shows if s not in have and (not a.only or re.search(a.only, s, re.I)))
-    print(f"shows: {len(shows)}  with poster: {len(have & set(shows))}  to make: {len(todo)}", flush=True)
+    shows = {s: t for s, t in shows.items() if not a.only or re.search(a.only, s, re.I)}
+    poster_ok, fanart_ok = (set(), set()) if a.force else (dest.having("poster"), dest.having("fanart"))
+    todo = sorted(s for s in shows if s not in poster_ok or s not in fanart_ok)
+    print(f"shows: {len(shows)}  with poster: {len(poster_ok & set(shows))}  with fanart: "
+          f"{len(fanart_ok & set(shows))}  to do: {len(todo)}", flush=True)
 
     def make(show):
+        """Grab one lesson frame, then render whichever of poster/fanart the show lacks."""
+        done = []
         with tempfile.TemporaryDirectory() as tmp:
-            out = os.path.join(tmp, "poster.jpg")
-            lessons = [dest.url(t) for t in sorted(shows[show], key=natkey)[:3]]
-            how = render_poster(show, lessons, out, tmp)
-            with open(out, "rb") as fh:
-                dest.put(f"{show}/poster.jpg", fh.read())
-            return how
+            frame = os.path.join(tmp, "frame.png")
+            if not grab_frame([dest.url(t) for t in sorted(shows[show], key=natkey)[:3]], frame):
+                frame = None
+            if show not in poster_ok:
+                out = os.path.join(tmp, "poster.jpg")
+                done.append(f"poster ({render_poster(show, frame, out, tmp)})")
+                with open(out, "rb") as fh:
+                    dest.put(f"{show}/poster.jpg", fh.read())
+            if show not in fanart_ok:
+                if not frame:
+                    return done + ["no fanart (no lesson decodes)"]
+                out = os.path.join(tmp, "fanart.jpg")
+                render_fanart(frame, out)
+                with open(out, "rb") as fh:
+                    dest.put(f"{show}/fanart.jpg", fh.read())
+                done.append("fanart")
+        return done
 
     made = collections.Counter()
     with concurrent.futures.ThreadPoolExecutor(a.jobs) as pool:
         for show, fut in zip(todo, [pool.submit(make, s) for s in todo]):
             try:
-                made[fut.result()] += 1
+                made.update(fut.result())
             except Exception as e:  # one broken course must not stop the rest
                 made["failed"] += 1
                 print(f"  failed: {show}: {e}", file=sys.stderr)
-    print("posters: " + "  ".join(f"{k}: {v}" for k, v in made.items()))
+    print("made: " + "  ".join(f"{k}: {v}" for k, v in made.items()))
 
 
 def main():
@@ -468,7 +504,7 @@ def main():
     po = sp.add_parser("posters")
     po.add_argument("dest")
     po.add_argument("--host", help="DEST lives on this ssh host; ffmpeg reads it over sftp")
-    po.add_argument("--force", action="store_true", help="remake posters that already exist")
+    po.add_argument("--force", action="store_true", help="remake posters and fanart that already exist")
     po.add_argument("--only", help="regex on the show name")
     po.add_argument("--jobs", type=int, default=4)
     a = p.parse_args()

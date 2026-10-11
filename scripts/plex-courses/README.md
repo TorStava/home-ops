@@ -45,6 +45,11 @@ show: a lesson frame over a blurred copy, with the course title. If no lesson
 in the first three decodes, it makes a title card. `apply --prune` keeps
 those generated posters. A cover added to the course later replaces one.
 
+`posters` also writes `fanart.jpg`, the same frame at 1920×1080, which Plex
+shows as the course page background. Shows whose lessons don't decode get
+none. Show tiles stay portrait: a TV Shows library always uses 2:3 posters,
+and only "Other Videos" libraries use landscape tiles (rejected: no play-next).
+
 ## Run (on mimir)
 
 ```sh
@@ -56,7 +61,7 @@ python3 plex_courses.py apply ... --only 'SOLIDWORKS'   # pilot a few courses (n
 Re-run `apply --prune` after adding, renaming or removing courses. It is
 idempotent and only ever deletes inside the mirror.
 
-Then make posters for new courses. TrueNAS has no ffmpeg, so run this on a
+Then make posters and fanart for new courses. TrueNAS has no ffmpeg, so run this on a
 machine that has it; it reads and writes the mirror over ssh/sftp:
 
 ```sh
