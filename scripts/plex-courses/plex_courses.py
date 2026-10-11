@@ -24,6 +24,8 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import urllib.request
+import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 
 VIDEO = {".mp4", ".mkv", ".avi", ".webm", ".mov", ".flv", ".wmv", ".m4v", ".ts", ".mpg", ".mpeg"}
@@ -347,7 +349,7 @@ def cmd_apply(a):
 
 POSTER_W, POSTER_H = 1000, 1500
 FANART_W, FANART_H = 1920, 1080
-FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FONT = os.environ.get("PLEX_COURSES_FONT", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
 
 
 class Dest:
@@ -478,15 +480,44 @@ def cmd_posters(a):
                 done.append("fanart")
         return done
 
-    made = collections.Counter()
+    made, changed = collections.Counter(), []
     with concurrent.futures.ThreadPoolExecutor(a.jobs) as pool:
         for show, fut in zip(todo, [pool.submit(make, s) for s in todo]):
             try:
-                made.update(fut.result())
+                done = fut.result()
+                made.update(done)
+                if any(d.startswith(("poster", "fanart")) for d in done):
+                    changed.append(show)
             except Exception as e:  # one broken course must not stop the rest
                 made["failed"] += 1
                 print(f"  failed: {show}: {e}", file=sys.stderr)
     print("made: " + "  ".join(f"{k}: {v}" for k, v in made.items()))
+    if a.plex:
+        plex_update(a.plex, a.plex_section, changed)
+    if made["failed"]:
+        sys.exit(1)
+
+
+def plex_update(url, section, changed):
+    """Scan the library (new lessons, new shows), and reload art for shows Plex already has.
+
+    A plain scan only reads artwork for shows it creates; a show that gets a
+    new poster or fanart later needs a forced refresh of that show.
+    """
+    headers = {"X-Plex-Token": os.environ["PLEX_TOKEN"], "Accept": "application/xml"}
+
+    def call(path, method="GET"):
+        req = urllib.request.Request(url.rstrip("/") + path, headers=headers, method=method)
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return r.read()
+
+    keys = {d.get("title"): d.get("ratingKey")
+            for d in ET.fromstring(call(f"/library/sections/{section}/all")).iter("Directory")}
+    refreshed = [s for s in changed if s in keys]
+    for show in refreshed:
+        call(f"/library/metadata/{keys[show]}/refresh?force=1", "PUT")
+    call(f"/library/sections/{section}/refresh")  # new shows are created with their art already in place
+    print(f"plex: refreshed {len(refreshed)} shows, scan of section {section} started")
 
 
 def main():
@@ -507,6 +538,8 @@ def main():
     po.add_argument("--force", action="store_true", help="remake posters and fanart that already exist")
     po.add_argument("--only", help="regex on the show name")
     po.add_argument("--jobs", type=int, default=4)
+    po.add_argument("--plex", help="Plex URL: afterwards scan the library and reload changed shows (PLEX_TOKEN env)")
+    po.add_argument("--plex-section", default="37", help="library section id of Courses")
     a = p.parse_args()
     {"plan": cmd_plan, "apply": cmd_apply, "posters": cmd_posters}[a.cmd](a)
 

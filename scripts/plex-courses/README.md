@@ -50,7 +50,23 @@ shows as the course page background. Shows whose lessons don't decode get
 none. Show tiles stay portrait: a TV Shows library always uses 2:3 posters,
 and only "Other Videos" libraries use landscape tiles (rejected: no play-next).
 
-## Run (on mimir)
+## Nightly job
+
+`kubernetes/apps/downloads/plex-courses` runs everything at 04:00 as a
+CronJob. It runs `apply --prune`, then `posters --plex`, which also has Plex
+scan the library and force-refresh the shows that got new art. Nothing needs
+to be run by hand after adding a course.
+
+- The script is mounted from this folder through a ConfigMap, so a change
+  here ships with the next Flux sync.
+- It uses python:alpine plus a static ffmpeg build (with DejaVu fonts)
+  mounted as a Kubernetes image volume. That image is not tracked by
+  Renovate.
+- `tank/data` is mounted over NFS, which squashes every client to `apps`
+  (568). The job sets `umask 002` so `tor` can still run it by hand.
+- The Plex token comes from the Bitwarden item `plex`.
+
+## Run by hand (on mimir)
 
 ```sh
 python3 plex_courses.py plan  /mnt/tank/data/tutorials --out /tmp/plan    # dry run: mapping.tsv + review.tsv
@@ -65,11 +81,12 @@ Then make posters and fanart for new courses. TrueNAS has no ffmpeg, so run this
 machine that has it; it reads and writes the mirror over ssh/sftp:
 
 ```sh
-python3 plex_courses.py posters /mnt/tank/data/tutorials-plex --host mimir   # --force remakes all
+PLEX_TOKEN=$(cat ~/.config/secrets/plex.token) python3 plex_courses.py posters \
+  /mnt/tank/data/tutorials-plex --host mimir --plex http://192.168.1.21:32400   # --force remakes all
 ```
 
-Plex only picks up new posters for existing shows on a metadata refresh
-(library → Refresh All Metadata), not on a plain scan.
+A plain Plex scan picks up art only for shows it creates. Shows that get new
+art later need a forced refresh, which `--plex` does for exactly those shows.
 
 ## Plex library
 

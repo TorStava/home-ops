@@ -1,0 +1,101 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: plex-courses
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      plex-courses:
+        # Nightly: refresh the Courses hardlink mirror, make poster/fanart for new
+        # courses, then have Plex scan and reload them. See scripts/plex-courses.
+        type: cronjob
+        cronjob:
+          schedule: '0 4 * * *'
+          timeZone: ${TIMEZONE}
+          backoffLimit: 0
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          ttlSecondsAfterFinished: 86400
+        containers:
+          app:
+            image:
+              repository: docker.io/library/python
+              tag: 3.13.16-alpine@sha256:2d9aefe2fef018a7eb2c13064c89c71929800fd2e5dccdbf52ea5da5bb8d929a
+            command: ['sh', '-c']
+            args:
+              # umask: keep files group-writable for manual runs as tor (NFS squashes us to apps)
+              - >-
+                umask 002 &&
+                python3 /app/plex_courses.py apply /mnt/data/tutorials /mnt/data/tutorials-plex --prune &&
+                python3 /app/plex_courses.py posters /mnt/data/tutorials-plex --plex http://${PLEX_IP}:32400
+            env:
+              # static ffmpeg + DejaVu fonts come from the image volume below
+              PATH: /opt/ffmpeg:/usr/local/bin:/usr/bin:/bin
+              PLEX_COURSES_FONT: /opt/ffmpeg/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf
+              PYTHONDONTWRITEBYTECODE: '1'
+            envFrom:
+              - secretRef:
+                  name: plex-courses
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ['ALL'] }
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+        pod:
+          restartPolicy: Never
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 568
+        runAsGroup: 568
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+    persistence:
+      script:
+        type: configMap
+        name: plex-courses-script
+        globalMounts:
+          - path: /app/plex_courses.py
+            subPath: plex_courses.py
+            readOnly: true
+      data:
+        # hardlinks need tutorials/ and tutorials-plex/ on one mount (same ZFS dataset)
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/data
+        globalMounts:
+          - path: /mnt/data
+      ffmpeg:
+        # Kubernetes image volume: a static ffmpeg build, no custom image needed.
+        # Not tracked by Renovate; bump by hand.
+        type: custom
+        volumeSpec:
+          image:
+            reference: docker.io/mwader/static-ffmpeg:7.1.1@sha256:11a44711684c0b9f754c047dcd64235b8b52deab251bd0e0a86f22faa160749c
+            pullPolicy: IfNotPresent
+        globalMounts:
+          - path: /opt/ffmpeg
+            readOnly: true
+      tmp:
+        type: emptyDir
