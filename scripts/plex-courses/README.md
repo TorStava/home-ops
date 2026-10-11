@@ -33,6 +33,18 @@ Titles come from the metadata files instead:
 
 Subtitles (`.srt`/`.vtt`) are linked next to their lesson.
 
+`.ts` files count as lessons only when they are MPEG-TS (first byte `0x47`).
+Programming courses also ship TypeScript sources (`*.d.ts` etc.), which once
+showed up as unplayable episodes named "global.d".
+
+**Show posters.** The NFO agent never fetches artwork, so a show without a
+local `poster.*` is a blank tile. `apply` links a cover image from the course
+root (`poster|cover|folder|show.jpg|png`) as `poster.<ext>`. That covered 23
+of 648 courses on 11 Oct 2026. `posters` makes a `poster.jpg` for every other
+show: a lesson frame over a blurred copy, with the course title. If no lesson
+in the first three decodes, it makes a title card. `apply --prune` keeps
+those generated posters. A cover added to the course later replaces one.
+
 ## Run (on mimir)
 
 ```sh
@@ -43,6 +55,16 @@ python3 plex_courses.py apply ... --only 'SOLIDWORKS'   # pilot a few courses (n
 
 Re-run `apply --prune` after adding, renaming or removing courses. It is
 idempotent and only ever deletes inside the mirror.
+
+Then make posters for new courses. TrueNAS has no ffmpeg, so run this on a
+machine that has it; it reads and writes the mirror over ssh/sftp:
+
+```sh
+python3 plex_courses.py posters /mnt/tank/data/tutorials-plex --host mimir   # --force remakes all
+```
+
+Plex only picks up new posters for existing shows on a metadata refresh
+(library → Refresh All Metadata), not on a plain scan.
 
 ## Plex library
 

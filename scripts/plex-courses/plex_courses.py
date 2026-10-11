@@ -8,20 +8,29 @@ under DEST, plus a manifest and a tvshow.nfo per show.
 
   plan  SRC [--from-list FILE] [--out DIR]   dry run: mapping.tsv + review.tsv
   apply SRC DEST [--prune | --only REGEX]    create/refresh the hardlink tree
+  posters DEST [--host HOST] [--force]       poster.jpg for shows without cover art
 
-Stdlib only; runs on TrueNAS SCALE's python3.
+Stdlib only; plan/apply run on TrueNAS SCALE's python3. `posters` needs
+ffmpeg, which TrueNAS lacks: run it elsewhere with --host to reach DEST.
 """
 import argparse
 import collections
+import concurrent.futures
 import functools
 import os
 import re
+import shlex
+import subprocess
 import sys
+import tempfile
+import textwrap
 from xml.sax.saxutils import escape
 
 VIDEO = {".mp4", ".mkv", ".avi", ".webm", ".mov", ".flv", ".wmv", ".m4v", ".ts", ".mpg", ".mpeg"}
 SUBS = {".srt", ".vtt", ".ass", ".ssa"}
 MANIFEST = ".plex-courses-manifest.tsv"
+# Course cover art at the course root, linked into the show folder as poster.<ext>.
+COVER = re.compile(r"^(poster|cover|folder|show)\.(jpe?g|png)$", re.I)
 
 # Folders that only wrap the real content (torrent/site packaging).
 WRAPPER = re.compile(r"^~?\s*get your (files|course)s? here", re.I)
@@ -184,14 +193,41 @@ def dest_rel(show, s, e, title, ext):
     return f"{show['name']}/Season {s:0{sw}d}/{fname}"
 
 
+def is_video(name, path=None):
+    """By extension, except .ts: TypeScript (*.d.ts and friends) shares it with MPEG-TS."""
+    ext = os.path.splitext(name)[1].lower()
+    if ext not in VIDEO or name.startswith("._") or name.lower().endswith(".d.ts"):
+        return False
+    if ext == ".ts" and path:
+        try:
+            with open(path, "rb") as fh:
+                return fh.read(1) == b"\x47"  # MPEG-TS sync byte
+        except OSError:
+            return False
+    return True
+
+
 def walk(src):
     out = []
     for root, dirs, files in os.walk(src):
         dirs[:] = [d for d in dirs if not d.startswith(".")]
         for f in files:
-            if os.path.splitext(f)[1].lower() in VIDEO and not f.startswith("._"):
+            if is_video(f, os.path.join(root, f)):
                 out.append(os.path.relpath(os.path.join(root, f), src).replace(os.sep, "/"))
     return out
+
+
+def course_cover(src, show):
+    """A cover image at the course root (or inside its "Get your files here" wrapper)."""
+    if show["kind"] != "course":
+        return None
+    base = os.path.join(src, show["src"])
+    for d in [base] + [os.path.join(base, k) for k in sorted(os.listdir(base)) if WRAPPER.search(k)]:
+        if os.path.isdir(d):
+            for f in sorted(os.listdir(d)):
+                if COVER.match(f) and os.path.isfile(os.path.join(d, f)):
+                    return os.path.relpath(os.path.join(d, f), src)
+    return None
 
 
 def season_title(rel):
@@ -216,7 +252,7 @@ def episode_nfo(title, s, e, rel):
 
 def cmd_plan(a):
     files = [l.rstrip("\n").removeprefix("./") for l in open(a.from_list)] if a.from_list else walk(a.src)
-    files = [f for f in files if os.path.splitext(f)[1].lower() in VIDEO]
+    files = [f for f in files if is_video(os.path.basename(f))]
     shows = make_plan(files)
     os.makedirs(a.out, exist_ok=True)
     with open(os.path.join(a.out, "mapping.tsv"), "w") as m:
@@ -247,10 +283,16 @@ def cmd_apply(a):
     if a.only:
         shows = [sh for sh in shows if re.search(a.only, sh["src"], re.I)]
     listdir = functools.lru_cache(maxsize=4096)(os.listdir)
-    wanted, texts, made, kept = {}, {}, 0, 0
+    wanted, texts, keep, made, kept = {}, {}, set(), 0, 0
     for sh in shows:
         texts[f"{sh['name']}/tvshow.nfo"] = tvshow_nfo(sh)
         texts[f"{sh['name']}/.plexmatch"] = f"title: {sh['name']}\npattern: Season */s{{s}}e{{e}}.*\n"
+        # Plex's NFO agent never fetches artwork: the show poster must be a local file.
+        cover = course_cover(src, sh)
+        if cover:
+            wanted[f"{sh['name']}/poster{os.path.splitext(cover)[1].lower()}"] = cover
+        else:
+            keep.add(f"{sh['name']}/poster.jpg")  # made by the `posters` command
         for s, e, rel, title in sh["eps"]:
             base, ext = os.path.splitext(rel)
             wanted[dest_rel(sh, s, e, title, ext.lower())] = rel
@@ -293,12 +335,122 @@ def cmd_apply(a):
         for root, dirs, files in os.walk(dest, topdown=False):
             for f in files:
                 rel = os.path.relpath(os.path.join(root, f), dest).replace(os.sep, "/")
-                if rel not in wanted and rel != MANIFEST and rel not in texts:
+                if rel not in wanted and rel != MANIFEST and rel not in texts and rel not in keep:
                     os.unlink(os.path.join(root, f))
                     pruned += 1
             if root != dest and not os.listdir(root):
                 os.rmdir(root)
     print(f"shows: {len(shows)}  links created: {made}  unchanged: {kept}  nfo written: {written}  pruned: {pruned}")
+    if keep:
+        print(f"{len(keep)} shows have no cover image: run `posters` to generate them")
+
+
+POSTER_W, POSTER_H = 1000, 1500
+FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+
+class Dest:
+    """The mirror, on this machine or on --host via ssh/sftp (TrueNAS has no ffmpeg)."""
+
+    def __init__(self, path, host=None):
+        self.path, self.host = path.rstrip("/"), host
+
+    def ssh(self, cmd, data=None):
+        return subprocess.run(["ssh", "-o", "BatchMode=yes", self.host, cmd], input=data,
+                              capture_output=True, check=True).stdout
+
+    def read(self, rel):
+        p = os.path.join(self.path, rel)
+        if self.host:
+            return self.ssh(f"cat {shlex.quote(p)}").decode()
+        with open(p) as fh:
+            return fh.read()
+
+    def posters(self):
+        """Show folders that already have a poster."""
+        if self.host:
+            out = self.ssh(f"find {shlex.quote(self.path)} -mindepth 2 -maxdepth 2 -iname 'poster.*' -printf '%P\\n'")
+            return {l.split("/")[0] for l in out.decode().splitlines()}
+        return {d for d in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, d))
+                and any(f.lower().startswith("poster.") for f in os.listdir(os.path.join(self.path, d)))}
+
+    def url(self, rel):
+        p = os.path.join(self.path, rel)
+        return f"sftp://{self.host}{p}" if self.host else p  # ffmpeg's sftp takes the raw path, not %-escapes
+
+    def put(self, rel, data):
+        p = os.path.join(self.path, rel)
+        if self.host:
+            self.ssh(f"cat > {shlex.quote(p + '.tmp')} && mv {shlex.quote(p + '.tmp')} {shlex.quote(p)}", data)
+        else:
+            with open(p + ".tmp", "wb") as fh:
+                fh.write(data)
+            os.replace(p + ".tmp", p)
+
+
+def render_poster(name, lessons, out, tmp):
+    """Lesson frame over a blurred copy of itself, course title below; a title card if no lesson decodes."""
+    lines = textwrap.wrap(name, 20)
+    size = 76
+    if len(lines) > 4:
+        lines, size = textwrap.wrap(name, 26), 56
+    if len(lines) > 6:
+        lines = lines[:5] + [lines[5][:24] + "…"]
+    textfile = os.path.join(tmp, "title.txt")
+    with open(textfile, "w") as fh:
+        fh.write("\n".join(lines))
+    text = (f"drawtext=fontfile={FONT}:textfile={textfile}:fontsize={size}:fontcolor=white:line_spacing=14:"
+            f"text_align=C:x=(w-text_w)/2:shadowcolor=black@0.7:shadowx=3:shadowy=3")
+    for url in lessons:
+        probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", url],
+                               capture_output=True, text=True, timeout=120)
+        try:
+            at = min(float(probe.stdout.strip()) * 0.2, 120)  # past the intro card, before the end
+        except ValueError:
+            continue
+        graph = (f"[0:v]thumbnail=60,split[a][b];"
+                 f"[a]scale={POSTER_W}:{POSTER_H}:force_original_aspect_ratio=increase,crop={POSTER_W}:{POSTER_H},"
+                 f"gblur=sigma=40,eq=brightness=-0.3[bg];[b]scale={POSTER_W - 80}:-2[fg];"
+                 f"[bg][fg]overlay=(W-w)/2:220,{text}:y=880")
+        r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{at:.1f}", "-i", url, "-filter_complex", graph,
+                            "-frames:v", "1", "-q:v", "3", out], capture_output=True, timeout=300)
+        if r.returncode == 0 and os.path.getsize(out):
+            return "frame"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", f"color=c=0x24324a:s={POSTER_W}x{POSTER_H}",
+                    "-vf", f"{text}:y=(h-text_h)/2", "-frames:v", "1", "-q:v", "3", out],
+                   capture_output=True, check=True, timeout=60)
+    return "title card"
+
+
+def cmd_posters(a):
+    dest = Dest(a.dest, a.host)
+    shows = collections.defaultdict(list)
+    for line in dest.read(MANIFEST).splitlines():
+        tgt = line.split("\t")[0]
+        if is_video(os.path.basename(tgt)):
+            shows[tgt.split("/")[0]].append(tgt)
+    have = set() if a.force else dest.posters()
+    todo = sorted(s for s in shows if s not in have and (not a.only or re.search(a.only, s, re.I)))
+    print(f"shows: {len(shows)}  with poster: {len(have & set(shows))}  to make: {len(todo)}", flush=True)
+
+    def make(show):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "poster.jpg")
+            lessons = [dest.url(t) for t in sorted(shows[show], key=natkey)[:3]]
+            how = render_poster(show, lessons, out, tmp)
+            with open(out, "rb") as fh:
+                dest.put(f"{show}/poster.jpg", fh.read())
+            return how
+
+    made = collections.Counter()
+    with concurrent.futures.ThreadPoolExecutor(a.jobs) as pool:
+        for show, fut in zip(todo, [pool.submit(make, s) for s in todo]):
+            try:
+                made[fut.result()] += 1
+            except Exception as e:  # one broken course must not stop the rest
+                made["failed"] += 1
+                print(f"  failed: {show}: {e}", file=sys.stderr)
+    print("posters: " + "  ".join(f"{k}: {v}" for k, v in made.items()))
 
 
 def main():
@@ -313,8 +465,14 @@ def main():
     ap.add_argument("dest")
     ap.add_argument("--prune", action="store_true")
     ap.add_argument("--only", help="regex on the course's source folder (pilot runs)")
+    po = sp.add_parser("posters")
+    po.add_argument("dest")
+    po.add_argument("--host", help="DEST lives on this ssh host; ffmpeg reads it over sftp")
+    po.add_argument("--force", action="store_true", help="remake posters that already exist")
+    po.add_argument("--only", help="regex on the show name")
+    po.add_argument("--jobs", type=int, default=4)
     a = p.parse_args()
-    cmd_plan(a) if a.cmd == "plan" else cmd_apply(a)
+    {"plan": cmd_plan, "apply": cmd_apply, "posters": cmd_posters}[a.cmd](a)
 
 
 if __name__ == "__main__":
