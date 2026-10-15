@@ -87,3 +87,11 @@ spec:
         path: ${NAS_PATH}/data
         globalMounts:
           - path: /data
+      library:
+        # tank/library (reorg 2026-10): language audio courses live in courses/audio
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/library
+        globalMounts:
+          - path: /library
+            readOnly: true

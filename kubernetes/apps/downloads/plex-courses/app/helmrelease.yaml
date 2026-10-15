@@ -43,7 +43,9 @@ spec:
               - >-
                 umask 002 &&
                 python3 /app/plex_courses.py apply /mnt/data/tutorials /mnt/data/tutorials-plex --prune &&
-                python3 /app/plex_courses.py posters /mnt/data/tutorials-plex --plex http://${PLEX_IP}:32400
+                python3 /app/plex_courses.py posters /mnt/data/tutorials-plex --plex http://${PLEX_IP}:32400 &&
+                python3 /app/plex_courses.py apply /mnt/library/courses/video /mnt/library/_plex/courses-video --prune &&
+                python3 /app/plex_courses.py posters /mnt/library/_plex/courses-video --plex http://${PLEX_IP}:32400
             env:
               # static ffmpeg + DejaVu fonts come from the image volume below
               PATH: /opt/ffmpeg:/usr/local/bin:/usr/bin:/bin
@@ -86,6 +88,14 @@ spec:
         path: ${NAS_PATH}/data
         globalMounts:
           - path: /mnt/data
+      library:
+        # language video courses (tank/library/courses/video, reorg 2026-10); their mirror sits in the
+        # same dataset at _plex/courses-video because hardlinks can't cross datasets
+        type: nfs
+        server: ${NAS_IP}
+        path: ${NAS_PATH}/library
+        globalMounts:
+          - path: /mnt/library
       ffmpeg:
         # Kubernetes image volume: a static ffmpeg build, no custom image needed.
         # Not tracked by Renovate; bump by hand.
