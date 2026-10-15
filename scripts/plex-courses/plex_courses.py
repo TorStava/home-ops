@@ -282,6 +282,9 @@ def cmd_apply(a):
     if a.only and a.prune:
         sys.exit("--prune cannot be combined with --only (it would remove every other course)")
     shows = make_plan(walk(src))
+    if a.genre:  # one category for the whole tree (language courses sit under per-language folders)
+        for sh in shows:
+            sh["subject"] = a.genre
     if a.only:
         shows = [sh for sh in shows if re.search(a.only, sh["src"], re.I)]
     listdir = functools.lru_cache(maxsize=4096)(os.listdir)
@@ -532,6 +535,7 @@ def main():
     ap.add_argument("dest")
     ap.add_argument("--prune", action="store_true")
     ap.add_argument("--only", help="regex on the course's source folder (pilot runs)")
+    ap.add_argument("--genre", help="genre for every show (default: the top-level subject folder)")
     po = sp.add_parser("posters")
     po.add_argument("dest")
     po.add_argument("--host", help="DEST lives on this ssh host; ffmpeg reads it over sftp")

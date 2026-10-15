@@ -44,7 +44,7 @@ spec:
                 umask 002 &&
                 python3 /app/plex_courses.py apply /mnt/data/tutorials /mnt/data/tutorials-plex --prune &&
                 python3 /app/plex_courses.py posters /mnt/data/tutorials-plex --plex http://${PLEX_IP}:32400 &&
-                python3 /app/plex_courses.py apply /mnt/library/courses/video /mnt/library/_plex/courses-video --prune &&
+                python3 /app/plex_courses.py apply /mnt/library/courses/video /mnt/library/_plex/courses-video --prune --genre Language &&
                 python3 /app/plex_courses.py posters /mnt/library/_plex/courses-video --plex http://${PLEX_IP}:32400
             env:
               # static ffmpeg + DejaVu fonts come from the image volume below
