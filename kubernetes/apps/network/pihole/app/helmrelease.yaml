@@ -79,7 +79,7 @@ spec:
             env:
               FTLCONF_dns_listeningMode: all
               FTLCONF_dns_dnssec: 'false'
-              FTLCONF_dns_upstreams: 192.168.1.3;10.43.0.10  # dnscrypt-proxy;coredns
+              FTLCONF_dns_upstreams: 192.168.1.3;1.1.1.1  # dnscrypt-proxy, plain fallback (strict-order); cluster.local goes to coredns via 02-custom.conf
               FTLCONF_webserver_interface_boxed: false
               FTLCONF_webserver_interface_theme: default-auto
               FTLCONF_webserver_port: &pihole-port 80
@@ -98,6 +98,10 @@ spec:
                       - /usr/bin/nslookup
                       - pihole
                       - '127.0.0.1'
+                  # default 1s timeout let a DNS burst stall the probe and kill LAN DNS (2026-10-29)
+                  timeoutSeconds: 5
+                  periodSeconds: 10
+                  failureThreshold: 3
               startup: *pihole-probes
               readiness: *pihole-probes
             securityContext:
@@ -206,6 +210,16 @@ spec:
             scrapeTimeout: 10s
 
     persistence:
+      # FTL keeps the last 24h of queries in /dev/shm; ~600k queries/day overflowed the
+      # 64MB pod default and crashed FTL ("realloc_shm(): No space left on device", 2026-10-30)
+      shm:
+        type: emptyDir
+        medium: Memory
+        sizeLimit: 512Mi
+        advancedMounts:
+          *app :
+            *app :
+              - path: /dev/shm
       #tmpfs:
       #  type: emptyDir
       #  advancedMounts:
