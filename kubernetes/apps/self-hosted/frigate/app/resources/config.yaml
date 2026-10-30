@@ -141,7 +141,9 @@ cameras:
         - package
     motion:
       mask:
-        - 0.743,0.051,0.981,0.051,0.983,0.099,0.741,0.098  # Timestamp
+        timestamp:
+          friendly_name: Timestamp
+          coordinates: 0.743,0.051,0.981,0.051,0.983,0.099,0.741,0.098
     live:
       streams:
         Main: garage_main
