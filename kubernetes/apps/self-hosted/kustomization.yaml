@@ -11,7 +11,6 @@ resources:
   - ./audiobookshelf/ks.yaml
   - ./bambu-studio/ks.yaml
   - ./bentopdf/ks.yaml
-  - ./booklore/ks.yaml
   - ./bookorbit/ks.yaml
   - ./browserless/ks.yaml
   - ./calibre/ks.yaml
