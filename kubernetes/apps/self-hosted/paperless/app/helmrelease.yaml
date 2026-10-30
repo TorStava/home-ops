@@ -107,8 +107,8 @@ spec:
                 memory: 256Mi
           tika:
             image:
-              repository: ghcr.io/paperless-ngx/tika
-              tag: 2.9.1-minimal
+              repository: docker.io/apache/tika
+              tag: 3.3.3.0@sha256:326b238b37904c94ff61fed87afe0af72e6a29fa715933b10af97b7d56f1d4cb
             ports:
               - containerPort: 9998
             resources:

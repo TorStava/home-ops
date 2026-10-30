@@ -36,8 +36,9 @@ spec:
       email:
         port: 587
         use_tls: true
-      redis:
-        host: dragonfly-authentik
+      web:
+        # Scheme + host only; required from 2026.11
+        base_url: https://auth.${SECRET_DOMAIN}
     server:
       initContainers:
         - name: init-db
