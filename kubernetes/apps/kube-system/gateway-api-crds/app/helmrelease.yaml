@@ -16,3 +16,14 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 3
+  # The CRDs live in the chart's templates/, so a Helm uninstall (e.g. this
+  # Kustomization being pruned) would delete them and every Gateway/HTTPRoute.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: CustomResourceDefinition
+            patch: |
+              - op: add
+                path: /metadata/annotations/helm.sh~1resource-policy
+                value: keep
