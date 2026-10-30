@@ -79,7 +79,7 @@ spec:
             env:
               FTLCONF_dns_listeningMode: all
               FTLCONF_dns_dnssec: 'false'
-              FTLCONF_dns_upstreams: 192.168.1.3;10.43.0.10  # dnscrypt-proxy;coredns
+              FTLCONF_dns_upstreams: 192.168.1.3  # dnscrypt-proxy; cluster.local goes to coredns via 02-custom.conf
               FTLCONF_webserver_interface_boxed: false
               FTLCONF_webserver_interface_theme: default-auto
               FTLCONF_webserver_port: &pihole-port 80
