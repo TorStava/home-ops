@@ -30,8 +30,9 @@ tasks:
 
   upgrade-node:
     desc: Upgrade Talos on a single node [IP=required]
+    # talosctl >=1.13 drains by default; on this single node the CNPG primary PDBs block it and a reboot stops pods anyway
     dir: '{{.TALOS_DIR}}'
-    cmd: talhelper gencommand upgrade --node {{.IP}} --extra-flags "--image='{{.TALOS_IMAGE}}:{{.TALOS_VERSION}}' --timeout=10m" | bash
+    cmd: talhelper gencommand upgrade --node {{.IP}} --extra-flags "--image='{{.TALOS_IMAGE}}:{{.TALOS_VERSION}}' --timeout=10m --drain=false" | bash
     vars:
       TALOS_IMAGE:
         sh: yq '.nodes[] | select(.ipAddress == "{{.IP}}") | .talosImageURL' {{.TALOS_DIR}}/talconfig.yaml
