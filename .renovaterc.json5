@@ -9,9 +9,12 @@
     ":semanticCommits",
   ],
   // Spread update branches out instead of landing a backlog in one burst
-  // (2026-08-09: ~80 queued bumps merged in 13min caused node DiskPressure)
+  // (2026-08-09: ~80 queued bumps merged in 13min caused node DiskPressure).
+  // prHourlyLimit is what paces merges; the concurrent caps only need to sit
+  // above the PRs parked for manual review, or the queue deadlocks (2026-10-29)
   prHourlyLimit: 4,
-  prConcurrentLimit: 10,
+  prConcurrentLimit: 25,
+  branchConcurrentLimit: 40,
   dependencyDashboard: true,
   dependencyDashboardTitle: "Renovate Dashboard 🤖",
   schedule: ["every weekend"],
@@ -32,6 +35,40 @@
     managerFilePatterns: ["/^kustomization\\.ya?ml(?:\\.j2)?$/"],
   },
   packageRules: [
+    {
+      description: "Auto-merge container image and OCI chart minor/patch/digest updates once Flux Local CI passes (CI only runs on PRs, so automergeType pr)",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["minor", "patch", "digest"],
+      automerge: true,
+      automergeType: "pr",
+      minimumReleaseAge: "3 days",
+    },
+    {
+      description: "Pre-1.0 minors are breaking by convention; leave them for manual review",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["minor"],
+      matchCurrentVersion: "/^v?0\\./",
+      automerge: false,
+    },
+    {
+      description: "Platform-critical and stateful components: a bad bump takes down Flux, auth, networking or databases, so always review",
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "/flux-operator/",
+        "/flux-instance/",
+        "/cilium/",
+        "/coredns/",
+        "/spegel/",
+        "/external-secrets/",
+        "/authentik/",
+        "/cloudnative-pg/",
+        "/postgres/",
+        "/dragonfly/",
+        "/elasticsearch/",
+        "/mariadb/",
+      ],
+      automerge: false,
+    },
     {
       description: "Talos/Kubernetes bumps change talenv.yaml only; the node needs a manual talos:upgrade-node / upgrade-k8s, so never automerge and label clearly",
       matchPackageNames: [
