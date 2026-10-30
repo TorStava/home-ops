@@ -136,7 +136,7 @@ spec:
           *app :
             app:
               - path: /tmp
-      # Shared with booklore and calibre; read-only until BookOrbit's write-back behaviour is known.
+      # Shared with calibre; read-only until BookOrbit's write-back behaviour is known.
       books:
         type: nfs
         server: ${NAS_IP}
