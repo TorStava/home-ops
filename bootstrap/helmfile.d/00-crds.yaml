@@ -8,16 +8,14 @@ helmDefaults:
   args:
     - --include-crds
     - --no-hooks
-  postRenderer: bash
-  postRendererArgs:
-    - -c
-    - yq eval-all --exit-status 'select(.kind == "CustomResourceDefinition")'
 
 releases:
   - name: cloudflare-dns
     namespace: network
     chart: oci://ghcr.io/home-operations/charts-mirror/external-dns
     version: 1.23.0
+    values:
+      - policy: sync # chart >=1.23 schema rejects a null policy
 
   - name: gateway-api-crds
     namespace: kube-system
