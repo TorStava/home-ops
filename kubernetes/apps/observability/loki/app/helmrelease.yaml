@@ -17,10 +17,13 @@ spec:
     remediation:
       retries: 3
   values:
-    deploymentMode: SingleBinary
+    deploymentMode: Monolithic
     fullnameOverride: loki
     loki:
       auth_enabled: false
+      # single replica: nothing to join, and the memberlist svc does not publish not-ready pods
+      extraMemberlistConfig:
+        abort_if_cluster_join_fails: false
       commonConfig:
         replication_factor: 1
       storage:
