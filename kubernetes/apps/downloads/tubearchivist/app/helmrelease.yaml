@@ -34,8 +34,6 @@ spec:
               tag: v0.6.0@sha256:0cbc18aa953c72ec7dfdd6f8fa7c2fe89b5d04489857d7baa354fecbd6181e69
             env:
               TZ: "${TIMEZONE}"
-              HOST_UID: 568
-              HOST_GID: 568
               ES_URL: http://tubearchivist-elasticsearch:9200
               REDIS_CON: redis://dragonfly-tubearchivist:6379
               # Space-separated URLs for Django ALLOWED_HOSTS; include in-cluster URL so
