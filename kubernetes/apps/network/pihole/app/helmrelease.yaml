@@ -30,9 +30,6 @@ spec:
           reloader.stakater.com/auto: 'true'
         replicas: 1
         strategy: RollingUpdate
-        rollingUpdate:
-          unavailable: 1
-          surge: 1
         pod:
           annotations:
             kubectl.kubernetes.io/default-container: pihole
