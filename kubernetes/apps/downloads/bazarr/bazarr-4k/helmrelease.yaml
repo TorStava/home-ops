@@ -65,6 +65,7 @@ spec:
               - --depth=1
               - --period=24h
               - --root=/add-ons
+              - --git-config=safe.directory:*
             resources:
               requests:
                 cpu: 10m
