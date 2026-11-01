@@ -39,7 +39,7 @@ spec:
           app:
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
-              tag: 2.20.15
+              tag: 3.4.1
             env:
               # Configure application
               PAPERLESS_URL: https://{{ .Release.Name }}.${SECRET_DOMAIN}
@@ -53,7 +53,10 @@ spec:
               PAPERLESS_EXPORT_DIR: /data/nas/export
               PAPERLESS_MEDIA_ROOT: /data/local/media
               # Configure folder importer
-              PAPERLESS_CONSUMER_POLLING: '60'
+              PAPERLESS_CONSUMER_POLLING_INTERVAL: '60'
+              # v3 defaults changed; keep v2 behaviour
+              PAPERLESS_CONSUMER_DELETE_DUPLICATES: 'true'
+              PAPERLESS_ARCHIVE_FILE_GENERATION: always
               PAPERLESS_CONSUMER_RECURSIVE: 'true'
               PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: 'true'
               # Configure OCR
