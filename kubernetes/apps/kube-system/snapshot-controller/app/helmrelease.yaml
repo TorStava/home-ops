@@ -20,6 +20,9 @@ spec:
       strategy: rollback
       retries: 3
   values:
+    # v5 templates the CRDs; keep them so a rollback or uninstall
+    # cannot delete every VolumeSnapshot
+    keepCRDs: true
     controller:
       serviceMonitor:
         create: true
