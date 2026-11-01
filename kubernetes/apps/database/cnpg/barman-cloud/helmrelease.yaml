@@ -54,6 +54,8 @@ spec:
               readOnlyRootFilesystem: true
 
     defaultPodOptions:
+      # app-template v5 defaults this to false; this app uses the k8s API
+      automountServiceAccountToken: true
       securityContext:
         runAsNonRoot: true
         runAsGroup: 10001
@@ -268,10 +270,10 @@ spec:
             identifier: plugin-barman-cloud
           subjects: *subject
     rawResources:
-      client: &cert
-        apiVersion: cert-manager.io/v1
-        kind: Certificate
-        spec:
+      client:
+        manifest:
+          apiVersion: cert-manager.io/v1
+          kind: Certificate
           spec: &certSpec
             commonName: barman-cloud-client
             duration: 2160h
@@ -285,8 +287,9 @@ spec:
             usages:
               - client auth
       server:
-        <<: *cert
-        spec:
+        manifest:
+          apiVersion: cert-manager.io/v1
+          kind: Certificate
           spec:
             <<: *certSpec
             commonName: barman-cloud

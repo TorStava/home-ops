@@ -74,6 +74,8 @@ spec:
     serviceAccount:
       alloy: {}
     defaultPodOptions:
+      # app-template v5 defaults this to false; this app uses the k8s API
+      automountServiceAccountToken: true
       securityContext:
         runAsNonRoot: true
         runAsUser: 473

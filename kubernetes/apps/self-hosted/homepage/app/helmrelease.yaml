@@ -19,6 +19,9 @@ spec:
     remediation:
       retries: 3
   values:
+    defaultPodOptions:
+      # app-template v5 defaults this to false; this app uses the k8s API
+      automountServiceAccountToken: true
     controllers:
       homepage:
         replicas: 1
