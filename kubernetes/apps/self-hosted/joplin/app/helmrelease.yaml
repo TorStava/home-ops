@@ -35,7 +35,7 @@ spec:
           app:
             image:
               repository: joplin/server
-              tag: 3.7.3@sha256:ed32018183f7771818f9d856b1bb9830b22424243496eae1ce08c957a42f296c
+              tag: 3.7.4@sha256:0c26bf7c0a48b557fd8b502c97ca9ecf538cda9576137a7f787d83fa20d32aad
             env:
               APP_PORT: &port 22300
               APP_BASE_URL: "https://{{ .Release.Name }}.${SECRET_DOMAIN}"
