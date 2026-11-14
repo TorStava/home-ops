@@ -54,7 +54,7 @@ spec:
           backend:
             image:
               repository: penpotapp/backend
-              tag: 2.18.6@sha256:121472d0ab4a9bdf450884159bde28805027022a230d14c8f3907c316623aea8
+              tag: 2.19.1@sha256:bc26c263b33f107a63868ed298bebd9089f252c3799872c31ec1266fef321d29
             env:
               PENPOT_PUBLIC_URI: https://penpot.${SECRET_DOMAIN}
               PENPOT_DATABASE_URI: postgresql://postgres-cluster-rw.database.svc.cluster.local/{{ .PENPOT_POSTGRES_DBNAME }}
