@@ -72,6 +72,16 @@ spec:
         existingSecret: forgejo-admin
         email: admin@${SECRET_DOMAIN}
         passwordMode: initialOnlyNoReset
+      # Login via Authentik (OAuth2/OpenID provider + application, slug "forgejo").
+      oauth:
+        - name: authentik
+          provider: openidConnect
+          existingSecret: forgejo-oauth
+          autoDiscoverUrl: https://auth.${SECRET_DOMAIN}/application/o/forgejo/.well-known/openid-configuration
+          iconUrl: https://auth.${SECRET_DOMAIN}/static/dist/assets/icons/icon.svg
+          scopes: openid email profile
+          groupClaimName: groups
+          adminGroup: authentik Admins
       metrics:
         enabled: true
         serviceMonitor:
@@ -97,7 +107,18 @@ spec:
           USER: forgejo
           SSL_MODE: disable
         service:
-          DISABLE_REGISTRATION: true
+          # Accounts are created only through Authentik sign-in; no local sign-up.
+          DISABLE_REGISTRATION: false
+          ALLOW_ONLY_EXTERNAL_REGISTRATION: true
+          SHOW_REGISTRATION_BUTTON: false
+        oauth2_client:
+          ENABLE_AUTO_REGISTRATION: true
+          USERNAME: nickname # Authentik's profile scope sends nickname = username
+          ACCOUNT_LINKING: auto
+          UPDATE_AVATAR: true
+        openid:
+          ENABLE_OPENID_SIGNIN: false
+          ENABLE_OPENID_SIGNUP: false
         repository:
           DEFAULT_BRANCH: main
         mirror:
