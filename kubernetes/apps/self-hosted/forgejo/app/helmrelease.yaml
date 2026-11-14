@@ -33,7 +33,7 @@ spec:
                   image: ghcr.io/home-operations/postgres-init:18
                   envFrom:
                     - secretRef:
-                        name: forgejo
+                        name: forgejo-db
                     - secretRef:
                         name: forgejo-initdb
   values:
@@ -90,7 +90,7 @@ spec:
         - name: FORGEJO__DATABASE__PASSWD
           valueFrom:
             secretKeyRef:
-              name: forgejo
+              name: forgejo-db
               key: FORGEJO__DATABASE__PASSWD
       config:
         APP_NAME: Forgejo
