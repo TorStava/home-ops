@@ -1,0 +1,102 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app collabora
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  driftDetection:
+    mode: enabled
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: 'true'
+        replicas: 1
+        strategy: RollingUpdate
+        containers:
+          app:
+            image:
+              repository: collabora/code
+              tag: 26.04.6.1.1@sha256:95f29f1c0a1778999125f53f058d968fe0afb37c95e32ebfb9f3444140faebd2
+            env:
+              # WOPI host allowed to open documents (Nextcloud on TrueNAS, public route)
+              aliasgroup1: https://nextcloud.${SECRET_DOMAIN}:443
+              server_name: collabora.${SECRET_DOMAIN}
+              DONT_GEN_SSL_CERT: "true"
+              # TLS terminates at the Cilium gateway / Cloudflare
+              extra_params: >-
+                --o:ssl.enable=false
+                --o:ssl.termination=true
+                --o:net.frame_ancestors=nextcloud.${SECRET_DOMAIN}
+                --o:welcome.enable=false
+                --o:home_mode.enable=true
+              dictionaries: en_GB en_US nb_NO nn_NO
+              # Admin console: https://collabora.<domain>/browser/dist/admin/admin.html
+              username:
+                valueFrom:
+                  secretKeyRef:
+                    name: collabora-admin
+                    key: username
+              password:
+                valueFrom:
+                  secretKeyRef:
+                    name: collabora-admin
+                    key: password
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 9980
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *probe
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  periodSeconds: 5
+                  failureThreshold: 30
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
+              limits:
+                memory: 2Gi
+
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+
+    route:
+      app:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: *port

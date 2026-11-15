@@ -15,6 +15,7 @@ resources:
   - ./browserless/ks.yaml
   - ./calibre/ks.yaml
   - ./calibre-web-automated/ks.yaml
+  - ./collabora/ks.yaml
   - ./docmost/ks.yaml
   - ./drawio/ks.yaml
   - ./excalidraw/ks.yaml
