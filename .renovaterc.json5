@@ -95,6 +95,15 @@
       minimumGroupSize: 2,
     },
     {
+      description: "Tdarr server and node refuse to talk across versions, so ship them in one PR",
+      groupName: "tdarr",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["haveagitgat/tdarr", "haveagitgat/tdarr_node"],
+      group: {
+        commitMessageTopic: "{{{groupName}}} group",
+      },
+    },
+    {
       description: "Auto-merge GitHub Actions",
       matchManagers: ["github-actions"],
       automerge: true,
