@@ -99,8 +99,7 @@ tasks:
       - { msg: "Unlock template not found", sh: "test -f {{.templatesDir}}/unlock-s3.tmpl.yaml" }
     silent: true
 
-  # To run backup jobs in parallel for all replicationsources:
-  #   - kubectl get replicationsources --all-namespaces --no-headers | awk '{print $2, $1}' | xargs --max-procs=4 -l bash -c 'task volsync:snapshot app=$0 ns=$1'
+  # ReplicationSources in this cluster are named <app>-local and <app>-remote.
   snapshot:
     desc: Snapshot a PVC for an application
     summary: |
@@ -108,25 +107,37 @@ tasks:
         cluster: Cluster to run command against (required)
         ns: Namespace the PVC is in (default: default)
         app: Application to snapshot (required)
+        repo: Which backup to run, local or remote (default: local)
     cmds:
-      # # TODO: Only suspend when a arg is passed to the task
-      # # https://github.com/go-task/task/issues/608
-      # - task: .suspend
-      #   vars: *env
-      - kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.app}} --type merge -p '{"spec":{"trigger":{"manual":"{{.ts}}"}}}'
-      - bash {{.scriptsDir}}/wait.sh volsync-src-{{.app}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/volsync-src-{{.app}} --for condition=complete --timeout=120m
-    env: *env
+      - kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.source}} --type merge -p '{"spec":{"trigger":{"manual":"{{.trigger}}"}}}'
+      # Flux may already have removed the manual trigger, so a failed cleanup is fine
+      - defer: kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.source}} --type json -p '[{"op":"remove","path":"/spec/trigger/manual"}]' >/dev/null 2>&1 || true
+      # Wait on lastSyncTime rather than lastManualSync: Flux can strip the manual
+      # trigger mid-backup, which leaves lastManualSync empty forever
+      - |
+        echo "Waiting for {{.source}} to finish a new backup (last one: {{.lastSync}})"
+        done=""
+        for i in $(seq 1 720); do
+          now="$(kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.lastSyncTime}')"
+          if [ "$now" != "{{.lastSync}}" ]; then done="$now"; break; fi
+          sleep 10
+        done
+        if [ -z "$done" ]; then echo "Timed out after 2h waiting for a new backup"; exit 1; fi
+        echo "Backup finished at $done"
+      - kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus.result}{"\n"}{.status.latestMoverStatus.logs}{"\n"}'
+      - test "$(kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus.result}')" = "Successful"
     vars:
       cluster: '{{ or .cluster (fail "Argument (cluster) is required") }}'
       ns: '{{.ns | default "default"}}'
       app: '{{ or .app (fail "Argument (app) is required") }}'
-      controller:
-        sh: true && {{.scriptsDir}}/controller.sh {{.app}} {{.ns}} {{.cluster}}
+      repo: '{{.repo | default "local"}}'
+      source: '{{.app}}-{{.repo}}'
+      trigger: '{{now | unixEpoch}}'
+      lastSync:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.lastSyncTime}'
     preconditions:
-      - { msg: "Controller script not found", sh: "test -f {{.scriptsDir}}/controller.sh" }
-      - { msg: "Wait script not found", sh: "test -f {{.scriptsDir}}/wait.sh" }
-      - { msg: "RepositorySource not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.app}}" }
+      - { msg: "ReplicationSource not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}}" }
+    silent: true
 
   # To run restore jobs in parallel for all replicationdestinations:
   #    - kubectl get replicationsources --all-namespaces --no-headers | awk '{print $2, $1}' | xargs --max-procs=4 -l bash -c 'task volsync:restore app=$0 ns=$1'
