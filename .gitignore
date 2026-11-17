@@ -22,3 +22,11 @@ Thumbs.db
 secret.yaml
 .mise.local.toml
 *-wg.conf
+.ijfw/
+# Local-only notes and agent files (public repo: keep these out)
+/.claude/
+/ijfw/
+/AGENTS.md
+/CLAUDE.md
+/NOTES.md
+/docs/
