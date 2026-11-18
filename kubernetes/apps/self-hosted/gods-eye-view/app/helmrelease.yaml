@@ -33,6 +33,11 @@ spec:
             image:
               repository: ghcr.io/torstava/gods-eye-view
               tag: v0.3.0
+            envFrom:
+              # Optional so the app still starts before the Bitwarden secret exists
+              - secretRef:
+                  name: *app
+                  optional: true
             env:
               PORT: &port 4173
               # Vite rejects unknown Host headers. The authentik outpost may send
