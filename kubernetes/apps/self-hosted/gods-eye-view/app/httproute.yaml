@@ -1,0 +1,28 @@
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/gateway.networking.k8s.io/httproute_v1.json
+# The app brokers whatever provider keys it holds to anyone who reaches it, so the
+# public hostname goes to the authentik embedded outpost (proxy provider "God's Eye
+# View", internal host http://gods-eye-view.self-hosted.svc.cluster.local:4173),
+# never straight to the app. ReferenceGrant: security/authentik/references.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: gods-eye-view
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: Home
+    gethomepage.dev/name: God's Eye View
+    gethomepage.dev/icon: mdi-earth
+    gethomepage.dev/description: Live 3D globe of aircraft, ships and satellites
+spec:
+  hostnames:
+    - godseye.${SECRET_DOMAIN}
+  parentRefs:
+    - name: external
+      namespace: kube-system
+      sectionName: https
+  rules:
+    - backendRefs:
+        - name: ak-outpost-authentik-embedded-outpost
+          namespace: security
+          port: 9000
