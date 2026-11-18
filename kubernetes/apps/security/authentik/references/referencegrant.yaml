@@ -94,3 +94,20 @@ spec:
     - group: ''
       kind: Service
       name: ${AUTH_SVC}
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/gateway.networking.k8s.io/referencegrant_v1beta1.json
+# Lets apps in self-hosted route their public hostname through the authentik
+# embedded outpost (proxy provider), e.g. self-hosted/gods-eye-view.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: self-hosted-httproute-ref-authentik-outpost
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: self-hosted
+  to:
+    - group: ''
+      kind: Service
+      name: ${AUTH_SVC}
