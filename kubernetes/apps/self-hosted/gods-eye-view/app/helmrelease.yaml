@@ -27,17 +27,46 @@ spec:
             runAsGroup: 1000
             runAsNonRoot: true
 
-        containers:
-          app:
-            # Built from upstream's Dockerfile by .github/workflows/build-gods-eye-view.yaml
-            image:
+        # Upstream's image runs the Vite dev server: ~1000 unbundled module
+        # requests per page load, each through Cloudflare and the authentik
+        # outpost. Instead, build the bundle at pod start and serve it with
+        # `vite preview`, which registers the same /api provider routes
+        # (credential editing /api/setup/* is dev-only and absent).
+        # The build bakes the browser keys (GOOGLE_MAPS_API_KEY,
+        # CESIUM_ION_TOKEN, MAPILLARY_CLIENT_TOKEN) into the bundle, so it must
+        # not happen in CI: the GHCR image is public. Reloader restarts the pod
+        # when the Secret changes, which rebuilds with the new keys (~15s).
+        initContainers:
+          build:
+            image: &image
+              # Built from upstream's Dockerfile by .github/workflows/build-gods-eye-view.yaml
               repository: ghcr.io/torstava/gods-eye-view
               tag: v0.3.0
-            envFrom:
+            command: ["node", "node_modules/vite/bin/vite.js", "build", "--emptyOutDir"]
+            envFrom: &envFrom
               # Optional so the app still starts before the Bitwarden secret exists
               - secretRef:
                   name: *app
                   optional: true
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+              limits:
+                memory: 3Gi
+            securityContext: &securityContext
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              # Vite writes its build cache under node_modules, the app .gev-cache under /app
+              readOnlyRootFilesystem: false
+
+        containers:
+          app:
+            image: *image
+            command: ["node", "node_modules/vite/bin/vite.js", "preview", "--host", "0.0.0.0", "--port", "4173", "--strictPort"]
+            envFrom: *envFrom
             env:
               PORT: &port 4173
               # Vite rejects unknown Host headers. The authentik outpost may send
@@ -65,24 +94,28 @@ spec:
                   httpGet:
                     path: /
                     port: *port
-                  periodSeconds: 10
-                  failureThreshold: 30
+                  periodSeconds: 5
+                  failureThreshold: 12
             resources:
               requests:
                 cpu: 50m
-                memory: 512Mi
+                memory: 256Mi
               limits:
-                memory: 2Gi
-            securityContext:
-              allowPrivilegeEscalation: false
-              capabilities:
-                drop:
-                  - ALL
-              # The dev server writes .gev-cache, .gev-logs and Vite's dep cache under /app
-              readOnlyRootFilesystem: false
+                memory: 1Gi
+            securityContext: *securityContext
 
     service:
       app:
         ports:
           http:
             port: *port
+
+    persistence:
+      dist:
+        type: emptyDir
+        advancedMounts:
+          gods-eye-view:
+            build:
+              - path: /app/dist
+            app:
+              - path: /app/dist
