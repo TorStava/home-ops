@@ -65,36 +65,38 @@ spec:
         containers:
           app:
             image: *image
-            command: ["node", "node_modules/vite/bin/vite.js", "preview", "--host", "0.0.0.0", "--port", "4173", "--strictPort"]
+            # Loopback only: every request reaches the app through the gateway
+            # sidecar below, so nothing in the cluster can skip its header policy.
+            command: ["node", "node_modules/vite/bin/vite.js", "preview", "--host", "127.0.0.1", "--port", "4173", "--strictPort"]
             envFrom: *envFrom
             env:
-              PORT: &port 4173
-              # Vite rejects unknown Host headers. The authentik outpost may send
-              # either the public name or the internal service name.
-              GEV_ALLOWED_HOSTS: godseye.${SECRET_DOMAIN},gods-eye-view.self-hosted.svc.cluster.local,gods-eye-view
-              # The launcher would otherwise trust the pod's default gateway (the
-              # Cilium router) for the in-app key setup. Keys are not set in the UI here.
+              # The gateway sidecar pins Host to this name
+              GEV_ALLOWED_HOSTS: godseye.${SECRET_DOMAIN}
+              # Defence in depth: credential editing does not exist under preview
               GEV_KEY_SETUP_TRUSTED_PEERS: none
+              # Free (no-signup) layers. OpenSky: anonymous until
+              # OPENSKY_CLIENT_ID/SECRET land in the Secret, then OAuth.
+              OPENSKY_AUTH_MODE: auto
+              # Default 4000 thins packs round-robin (Vegvesen got 320/876); 5000 is upstream's ceiling
+              CCTV_MAX_SOURCES: "5000"
             probes:
-              liveness: &probe
+              liveness: &appProbe
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /
-                    port: *port
+                  exec: &appCheck
+                    command: ["node", "-e", "fetch('http://127.0.0.1:4173/').then((r)=>process.exit(r.ok?0:1),()=>process.exit(1))"]
                   periodSeconds: 30
                   timeoutSeconds: 10
                   failureThreshold: 3
-              readiness: *probe
+              readiness: *appProbe
               startup:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /
-                    port: *port
+                  exec: *appCheck
                   periodSeconds: 5
+                  timeoutSeconds: 10
                   failureThreshold: 12
             resources:
               requests:
@@ -104,11 +106,83 @@ spec:
                 memory: 1Gi
             securityContext: *securityContext
 
+          # The app's cost-bearing routes (OpenAI/Gemini voice, HUD summary,
+          # Google nearby-places) refuse any request carrying reverse-proxy
+          # headers, and compare Origin against http://<Host> because the app
+          # sees plain HTTP. Behind Cloudflare + authentik every request has
+          # both, so they all fail. This sidecar strips exactly upstream's
+          # PROXY_SIGNALS list (src/localRequestGate.mjs), pins Host, and
+          # rewrites Origin only when it is exactly our own https origin. Foreign
+          # origins pass through unchanged and Sec-Fetch-Site is kept, so the
+          # app's cross-site checks still apply. Access control is authentik's.
+          gateway:
+            image:
+              repository: docker.io/library/caddy
+              tag: 2.11.9@sha256:4851e54a46b206517c574821bb5cc67f170d2156041e9fbc4c9193b45e84a75b
+            args: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+            env:
+              XDG_CONFIG_HOME: /tmp
+              XDG_DATA_HOME: /tmp
+            probes:
+              liveness: &gatewayProbe
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: &gatewayPort 8080
+                  periodSeconds: 30
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *gatewayPort
+                  periodSeconds: 15
+                  timeoutSeconds: 10
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+
+    configMaps:
+      gateway:
+        data:
+          Caddyfile: |
+            {
+              admin off
+              auto_https off
+              persist_config off
+            }
+            :8080 {
+              @own_origin header Origin "https://godseye.${SECRET_DOMAIN}"
+              request_header @own_origin Origin "http://godseye.${SECRET_DOMAIN}"
+              reverse_proxy 127.0.0.1:4173 {
+                header_up Host godseye.${SECRET_DOMAIN}
+                header_up -Forwarded
+                header_up -Via
+                header_up -X-Forwarded-*
+                header_up -X-Real-Ip
+                header_up -Cf-*
+              }
+            }
+
     service:
       app:
         ports:
           http:
-            port: *port
+            # authentik's proxy provider targets :4173, so keep the port and
+            # point it at the gateway
+            port: 4173
+            targetPort: *gatewayPort
 
     persistence:
       dist:
@@ -119,3 +193,18 @@ spec:
               - path: /app/dist
             app:
               - path: /app/dist
+      gateway-config:
+        type: configMap
+        identifier: gateway
+        advancedMounts:
+          gods-eye-view:
+            gateway:
+              - path: /etc/caddy/Caddyfile
+                subPath: Caddyfile
+                readOnly: true
+      gateway-tmp:
+        type: emptyDir
+        advancedMounts:
+          gods-eye-view:
+            gateway:
+              - path: /tmp
