@@ -32,7 +32,7 @@ spec:
             # Built from upstream's Dockerfile by .github/workflows/build-gods-eye-view.yaml
             image:
               repository: ghcr.io/torstava/gods-eye-view
-              tag: v0.3.0
+              tag: v0.3.0@sha256:b6da780639b477817e6cc3f14a91293bec8930250a0149f613c999760509e361
             env:
               PORT: &port 4173
               # Vite rejects unknown Host headers. The authentik outpost may send
