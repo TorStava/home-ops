@@ -1,0 +1,63 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# God's Eye View (github.com/bilawalsidhu/gods-eye-view) publishes no image, only a
+# Dockerfile. Build upstream's own Dockerfile at the pinned release and push it to
+# GHCR. Renovate bumps GEV_VERSION; the merge triggers a rebuild, and Renovate then
+# bumps the image tag in kubernetes/apps/self-hosted/gods-eye-view.
+name: "Build gods-eye-view"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths: [".github/workflows/build-gods-eye-view.yaml"]
+
+env:
+  # renovate: datasource=github-releases depName=bilawalsidhu/gods-eye-view
+  GEV_VERSION: v0.3.0
+  IMAGE: ghcr.io/torstava/gods-eye-view
+
+jobs:
+  build:
+    name: Build and push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout upstream
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: bilawalsidhu/gods-eye-view
+          ref: ${{ env.GEV_VERSION }}
+          persist-credentials: false
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: type=raw,value=${{ env.GEV_VERSION }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.GEV_VERSION }}
+            org.opencontainers.image.url=https://github.com/bilawalsidhu/gods-eye-view
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
