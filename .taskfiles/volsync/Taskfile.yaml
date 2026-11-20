@@ -3,17 +3,31 @@
 version: "3"
 
 # This taskfile is used to manage certain VolSync tasks for a given application, limitations are described below.
-#   1. Fluxtomization, HelmRelease, PVC, ReplicationSource all have the same name (e.g. plex)
-#   2. ReplicationSource and ReplicationDestination are a Restic repository
-#   3. Applications are deployed as either a Kubernetes Deployment or StatefulSet
+#   1. Flux Kustomization, HelmRelease, PVC and controller are all named after the app (e.g. plex),
+#      and the Flux Kustomization lives in the app's namespace
+#   2. Each app has two ReplicationSources, <app>-local and <app>-remote, each with its own restic
+#      secret, <app>-volsync-local-secret and <app>-volsync-remote-secret (kubernetes/components/volsync)
+#   3. Applications are deployed as either a Kubernetes Deployment or StatefulSet, one controller
+#      per app: restore waits for every pod labelled app.kubernetes.io/name=<app> to go away, so an
+#      app with extra controllers (karakeep, freshrss) stops there, and a CronJob app (recyclarr)
+#      is not handled
 #   4. Each application only has one PVC that is being replicated
+# Every task takes repo=local|remote (default: local) to pick the restic repository.
 
 x-env: &env
   app: '{{.app}}'
+  repo: '{{.repo}}'
   controller: '{{.controller}}'
+  replicas: '{{.replicas}}'
+  sources: '{{.sources}}'
+  scaledobjects: '{{.scaledobjects}}'
+  cluster: '{{.cluster}}'
   claim: '{{.claim}}'
   puid: '{{.puid}}'
   pgid: '{{.pgid}}'
+  cache_sc: '{{.cache_sc}}'
+  cache_capacity: '{{.cache_capacity}}'
+  cache_access_mode: '{{.cache_access_mode}}'
   ns: '{{.ns}}'
   previous: '{{.previous}}'
   ts: '{{.ts}}'
@@ -31,27 +45,30 @@ tasks:
         cluster: Cluster to run command against (required)
         ns: Namespace the PVC is in (default: default)
         app: Application to list snapshots for (required)
+        repo: Which repository to list, local or remote (default: local)
     cmds:
       - envsubst < <(cat {{.templatesDir}}/list.tmpl.yaml) | kubectl --context {{.cluster}} apply -f -
-      - bash {{.scriptsDir}}/wait.sh list-{{.app}}-{{.ts}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/list-{{.app}}-{{.ts}} --for condition=complete --timeout=1m
-      - kubectl --context {{.cluster}} -n {{.ns}} logs job/list-{{.app}}-{{.ts}} --container list
-      - kubectl --context {{.cluster}} -n {{.ns}} delete job list-{{.app}}-{{.ts}}
+      - bash {{.scriptsDir}}/job.sh list-{{.app}}-{{.repo}}-{{.ts}} {{.ns}} {{.cluster}} list 300
     env: *env
     vars:
       cluster: '{{ or .cluster (fail "Argument (cluster) is required") }}'
       ns: '{{.ns | default "default"}}'
       app: '{{ or .app (fail "Argument (app) is required") }}'
+      repo: '{{.repo | default "local"}}'
     preconditions:
-      - { msg: "Wait script not found", sh: "test -f {{.scriptsDir}}/wait.sh" }
+      - { msg: "repo must be local or remote", sh: 'test "{{.repo}}" = local -o "{{.repo}}" = remote' }
+      - { msg: "Job script not found", sh: "test -f {{.scriptsDir}}/job.sh" }
       - { msg: "List template not found", sh: "test -f {{.templatesDir}}/list.tmpl.yaml" }
+      - { msg: "Restic secret {{.app}}-volsync-{{.repo}}-secret not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get secret {{.app}}-volsync-{{.repo}}-secret" }
     silent: true
 
   unlock-all:
-    desc: Unlock all Restic repositories for an application
+    desc: Unlock the local and the remote Restic repository for an application
     cmds:
       - task: unlock
-      - task: unlock-s3
+        vars: { repo: local }
+      - task: unlock
+        vars: { repo: remote }
 
   unlock:
     desc: Unlock a Restic repository for an application
@@ -60,44 +77,29 @@ tasks:
         cluster: Cluster to run command against (required)
         ns: Namespace the PVC is in (default: default)
         app: Application to unlock (required)
+        repo: Which repository to unlock, local or remote (default: local)
     cmds:
       - envsubst < <(cat {{.templatesDir}}/unlock.tmpl.yaml) | kubectl --context {{.cluster}} apply -f -
-      - bash {{.scriptsDir}}/wait.sh unlock-{{.app}}-{{.ts}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/unlock-{{.app}}-{{.ts}} --for condition=complete --timeout=1m
-      - kubectl --context {{.cluster}} -n {{.ns}} logs job/unlock-{{.app}}-{{.ts}} --container unlock
-      - kubectl --context {{.cluster}} -n {{.ns}} delete job unlock-{{.app}}-{{.ts}}
+      - bash {{.scriptsDir}}/job.sh unlock-{{.app}}-{{.repo}}-{{.ts}} {{.ns}} {{.cluster}} unlock 300
     env: *env
     vars:
       cluster: '{{ or .cluster (fail "Argument (cluster) is required") }}'
       ns: '{{.ns | default "default"}}'
       app: '{{ or .app (fail "Argument (app) is required") }}'
+      repo: '{{.repo | default "local"}}'
     preconditions:
-      - { msg: "Wait script not found", sh: "test -f {{.scriptsDir}}/wait.sh" }
+      - { msg: "repo must be local or remote", sh: 'test "{{.repo}}" = local -o "{{.repo}}" = remote' }
+      - { msg: "Job script not found", sh: "test -f {{.scriptsDir}}/job.sh" }
       - { msg: "Unlock template not found", sh: "test -f {{.templatesDir}}/unlock.tmpl.yaml" }
+      - { msg: "Restic secret {{.app}}-volsync-{{.repo}}-secret not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get secret {{.app}}-volsync-{{.repo}}-secret" }
     silent: true
 
+  # The remote repository is on S3 (Cloudflare R2); kept for the old name
   unlock-s3:
-    desc: Unlock a Restic repository for an application on S3
-    summary: |
-      Args:
-        cluster: Cluster to run command against (required)
-        ns: Namespace the PVC is in (default: default)
-        app: Application to unlock (required)
+    desc: Unlock the remote Restic repository for an application (same as unlock repo=remote)
     cmds:
-      - envsubst < <(cat {{.templatesDir}}/unlock-s3.tmpl.yaml) | kubectl --context {{.cluster}} apply -f -
-      - bash {{.scriptsDir}}/wait.sh unlock-{{.app}}-s3-{{.ts}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/unlock-{{.app}}-s3-{{.ts}} --for condition=complete --timeout=1m
-      - kubectl --context {{.cluster}} -n {{.ns}} logs job/unlock-{{.app}}-s3-{{.ts}} --container unlock
-      - kubectl --context {{.cluster}} -n {{.ns}} delete job unlock-{{.app}}-s3-{{.ts}}
-    env: *env
-    vars:
-      cluster: '{{ or .cluster (fail "Argument (cluster) is required") }}'
-      ns: '{{.ns | default "default"}}'
-      app: '{{ or .app (fail "Argument (app) is required") }}'
-    preconditions:
-      - { msg: "Wait script not found", sh: "test -f {{.scriptsDir}}/wait.sh" }
-      - { msg: "Unlock template not found", sh: "test -f {{.templatesDir}}/unlock-s3.tmpl.yaml" }
-    silent: true
+      - task: unlock
+        vars: { repo: remote }
 
   # ReplicationSources in this cluster are named <app>-local and <app>-remote.
   snapshot:
@@ -113,13 +115,48 @@ tasks:
       # Flux may already have removed the manual trigger, so a failed cleanup is fine
       - defer: kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.source}} --type json -p '[{"op":"remove","path":"/spec/trigger/manual"}]' >/dev/null 2>&1 || true
       # Wait on lastSyncTime rather than lastManualSync: Flux can strip the manual
-      # trigger mid-backup, which leaves lastManualSync empty forever
+      # trigger mid-backup, which leaves lastManualSync empty forever.
+      # A failed mover never moves lastSyncTime, so also stop when this run failed:
+      #  - latestMoverStatus turns Failed and differs from what it was before the trigger, or
+      #  - a mover Job we saw on its last retry is replaced while latestMoverStatus says Failed
+      #    (VolSync gives up on a Job after backoffLimit failures, records Failed, then starts
+      #    a new Job). This catches a repeat of the same failure, whose status looks the same
+      #    as the old one. A Job replaced earlier (VolSync does that when the spec changes)
+      #    does not count.
+      # VolSync only gives up after about 20 min of retries, so each failed attempt is shown.
       - |
         echo "Waiting for {{.source}} to finish a new backup (last one: {{.lastSync}})"
+        # Task's shell exits on a failed command substitution: every lookup ends in `|| true`
+        k() { kubectl --context {{.cluster}} -n {{.ns}} "$@"; }
+        fail() {
+          echo "Backup failed:"
+          k get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus.logs}{"\n"}'
+          exit 1
+        }
         done=""
+        job_uid=""
+        last_try_uid=""
+        seen=0
         for i in $(seq 1 720); do
-          now="$(kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.lastSyncTime}')"
-          if [ "$now" != "{{.lastSync}}" ]; then done="$now"; break; fi
+          # A failed read (API hiccup) counts as "nothing new yet"
+          now="$(k get replicationsources {{.source}} -o jsonpath='{.status.lastSyncTime}' || true)"
+          if [ -n "$now" ] && [ "$now" != "{{.lastSync}}" ]; then done="$now"; break; fi
+          result="$(k get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus.result}' || true)"
+          status="$(k get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus}' || true)"
+          if [ -n "$status" ] && [ "$result" = "Failed" ] && [ "$(printf '%s' "$status" | sha256sum | cut -c1-16)" != "{{.lastMover}}" ]; then fail; fi
+          uid="$(k get job volsync-src-{{.source}} -o jsonpath='{.metadata.uid}' 2>/dev/null || true)"
+          if [ -n "$last_try_uid" ] && [ "$uid" != "$last_try_uid" ] && [ "$result" = "Failed" ]; then fail; fi
+          if [ "$uid" != "$job_uid" ]; then job_uid="$uid"; seen=0; fi
+          failed="$(k get job volsync-src-{{.source}} -o jsonpath='{.status.failed}' 2>/dev/null || true)"
+          if [ -n "$uid" ] && [ "${failed:-0}" -gt "$seen" ]; then
+            seen="$failed"
+            limit="$(k get job volsync-src-{{.source}} -o jsonpath='{.spec.backoffLimit}' 2>/dev/null || true)"
+            # 10s polls can miss the final count, so the attempt before the last one counts too
+            if [ "$failed" -ge "$(( ${limit:-8} - 1 ))" ]; then last_try_uid="$uid"; fi
+            pod="$(k get pods -l job-name=volsync-src-{{.source}} --field-selector=status.phase=Failed --sort-by=.metadata.creationTimestamp -o name 2>/dev/null | tail -n1 || true)"
+            echo "Mover attempt $failed failed, VolSync will retry. Last lines of $pod:"
+            k logs "$pod" --tail=5 2>/dev/null | sed 's/^/  /' || true
+          fi
           sleep 10
         done
         if [ -z "$done" ]; then echo "Timed out after 2h waiting for a new backup"; exit 1; fi
@@ -135,21 +172,45 @@ tasks:
       trigger: '{{now | unixEpoch}}'
       lastSync:
         sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.lastSyncTime}'
+      # Fingerprint of the mover status before the trigger, so an old failure does not count
+      lastMover:
+        sh: printf '%s' "$(kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}} -o jsonpath='{.status.latestMoverStatus}')" | sha256sum | cut -c1-16
     preconditions:
+      - { msg: "repo must be local or remote", sh: 'test "{{.repo}}" = local -o "{{.repo}}" = remote' }
       - { msg: "ReplicationSource not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}}" }
     silent: true
 
-  # To run restore jobs in parallel for all replicationdestinations:
-  #    - kubectl get replicationsources --all-namespaces --no-headers | awk '{print $2, $1}' | xargs --max-procs=4 -l bash -c 'task volsync:restore app=$0 ns=$1'
+  # Restore wipes the PVC and fills it from restic. The app stays suspended (Flux and
+  # replicas 0) if the wipe or the restore fails, so it never starts on an empty volume.
+  # To restore every app from its local repository, 4 at a time:
+  #    - kubectl get replicationsources -A --no-headers | awk '$2 ~ /-local$/ {sub(/-local$/, "", $2); print $2, $1}' | xargs --max-procs=4 -l bash -c 'task volsync:restore cluster=<context> app=$0 ns=$1'
   restore:
-    desc: Restore a PVC for an application
+    desc: Restore a PVC for an application (wipes the PVC first)
     summary: |
       Args:
         cluster: Cluster to run command against (required)
         ns: Namespace the PVC is in (default: default)
         app: Application to restore (required)
-        previous: Previous number of snapshots to restore (default: 2)
+        repo: Which repository to restore from, local or remote (default: local)
+        previous: Snapshots to skip, newest first; 0 is the latest snapshot (default: 2)
+        replicas: Replicas to start the app with afterwards (default: the count before the restore)
     cmds:
+      - task: .check
+        vars: *env
+      # One message for a failure in any later step (registered after the check, which changes nothing): what is left paused and how to run it again
+      - defer: |
+          {{if .EXIT_CODE}}
+          cat >&2 <<'MSG'
+
+          Restore of {{.app}} did not finish. Whatever was already paused stays paused, so the app
+          never starts on an empty volume. Depending on the step that failed, that is:
+            Flux Kustomization and HelmRelease {{.app}} suspended, {{.controller}} at 0 replicas,
+            backups paused (ReplicationSources: {{.sources | trim}}){{if .scaledobjects}}, KEDA paused (ScaledObject: {{.scaledobjects | trim}}){{end}}.
+            If the wipe started, the PVC {{.claim}} may be empty.
+          Fix the cause, then run it again:
+            task volsync:restore cluster={{.cluster}} ns={{.ns}} app={{.app}} repo={{.repo}} previous={{.previous}} replicas={{.replicas}}
+          MSG
+          {{end}}
       - task: .suspend
         vars: *env
       - task: .wipe
@@ -163,27 +224,80 @@ tasks:
       cluster: '{{ or .cluster (fail "Argument (cluster) is required") }}'
       ns: '{{.ns | default "default"}}'
       app: '{{ or .app (fail "Argument (app) is required") }}'
+      repo: '{{.repo | default "local"}}'
+      source: '{{.app}}-{{.repo}}'
       previous: '{{.previous | default 2}}'
       controller:
-        sh: "{{.scriptsDir}}/controller.sh {{.app}} {{.ns}}"
+        sh: "{{.scriptsDir}}/controller.sh {{.app}} {{.ns}} {{.cluster}}"
+      current_replicas:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get {{.controller}} -o jsonpath="{.spec.replicas}"
+      replicas: '{{.replicas | default .current_replicas}}'
       claim:
-        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.app}} -o jsonpath="{.spec.sourcePVC}"
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.sourcePVC}"
+      # Every ReplicationSource of the PVC, paused during the restore so a scheduled backup
+      # never snapshots a half-restored volume
+      sources:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources -o jsonpath='{range .items[?(@.spec.sourcePVC=="{{.claim}}")]}{.metadata.name}{" "}{end}'
+      # KEDA ScaledObjects on the controller (named silent-<app>, so found by target), paused at 0
+      # replicas: KEDA would otherwise scale an active app back up during the wipe. A failed lookup
+      # stops the restore: KEDA is part of this cluster, and "none found" must mean none
+      scaledobjects:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get scaledobjects.keda.sh -o jsonpath='{range .items[?(@.spec.scaleTargetRef.name=="{{.app}}")]}{.metadata.name}{" "}{end}'
       puid:
-        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.app}} -o jsonpath="{.spec.restic.moverSecurityContext.runAsUser}"
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.moverSecurityContext.runAsUser}"
       pgid:
-        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.app}} -o jsonpath="{.spec.restic.moverSecurityContext.runAsGroup}"
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.moverSecurityContext.runAsGroup}"
+      cache_sc:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.cacheStorageClassName}"
+      cache_capacity:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.cacheCapacity}"
+      cache_access_mode:
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.cacheAccessModes[0]}"
     preconditions:
+      - { msg: "repo must be local or remote", sh: 'test "{{.repo}}" = local -o "{{.repo}}" = remote' }
       - { msg: "Controller script not found", sh: "test -f {{.scriptsDir}}/controller.sh" }
-      - { msg: "Wait script not found", sh: "test -f {{.scriptsDir}}/wait.sh" }
-      - { msg: "ReplicationDestination script not found", sh: "test -f {{.templatesDir}}/replicationdestination.tmpl.yaml" }
+      - { msg: "Job script not found", sh: "test -f {{.scriptsDir}}/job.sh" }
+      - { msg: "ReplicationDestination template not found", sh: "test -f {{.templatesDir}}/replicationdestination.tmpl.yaml" }
       - { msg: "Wipe template not found", sh: "test -f {{.templatesDir}}/wipe.tmpl.yaml" }
+      - { msg: "ReplicationSource {{.source}} not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}}" }
+      - { msg: "Restic secret {{.app}}-volsync-{{.repo}}-secret not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get secret {{.app}}-volsync-{{.repo}}-secret" }
+      # A pattern, not `test -ge`: Task's shell treats any non-number as 0 there. Leading zeros
+      # are refused too: some steps read 010 as octal 8, others as 10.
+      - { msg: "replicas must be a whole number (0 or more, no leading zeros)", sh: 'case "{{.replicas}}" in ""|0?*|*[!0-9]*) exit 1;; esac' }
+      - { msg: "previous must be a whole number (0 or more, no leading zeros)", sh: 'case "{{.previous}}" in ""|0?*|*[!0-9]*) exit 1;; esac' }
+      - { msg: "Could not read the PVC, mover uid/gid or cache settings from {{.source}}", sh: 'test -n "{{.claim}}" -a -n "{{.puid}}" -a -n "{{.pgid}}" -a -n "{{.cache_sc}}" -a -n "{{.cache_capacity}}" -a -n "{{.cache_access_mode}}"' }
+    silent: true
 
-  # Suspend the Flux ks and hr
+  # Before touching anything: VolSync reports a restore from too few snapshots as Successful
+  # ("No eligible snapshots found", nothing restored), which would leave a wiped, empty volume
+  .check:
+    internal: true
+    cmds:
+      - envsubst < <(cat {{.templatesDir}}/list.tmpl.yaml) | kubectl --context {{.cluster}} apply -f - >/dev/null
+      - |
+        out="$(bash {{.scriptsDir}}/job.sh list-{{.app}}-{{.repo}}-{{.ts}} {{.ns}} {{.cluster}} list 300)" || { echo "$out"; echo "Could not list the snapshots in {{.repo}}; nothing was changed" >&2; exit 1; }
+        count="$(printf '%s\n' "$out" | sed -n 's/^\([0-9][0-9]*\) snapshots$/\1/p' | tail -n1)"
+        echo "{{.repo}} repository has ${count:-0} snapshots; previous={{.previous}} restores number $(( {{.previous}} + 1 )) from the newest"
+        if [ "${count:-0}" -le "{{.previous}}" ]; then
+          echo "Not enough snapshots for previous={{.previous}}; nothing was changed" >&2
+          exit 1
+        fi
+    env: *env
+    silent: true
+
+  # Suspend the Flux ks and hr (both live in the app's namespace), pause backups and KEDA,
+  # then stop the app
   .suspend:
     internal: true
     cmds:
-      - flux --context {{.cluster}} -n flux-system suspend kustomization {{.app}}
+      - flux --context {{.cluster}} -n {{.ns}} suspend kustomization {{.app}}
       - flux --context {{.cluster}} -n {{.ns}} suspend helmrelease {{.app}}
+      - for: { var: sources }
+        cmd: kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.ITEM}} --type merge -p '{"spec":{"paused":true}}'
+      - for: { var: scaledobjects }
+        cmd: kubectl --context {{.cluster}} -n {{.ns}} annotate scaledobjects.keda.sh {{.ITEM}} autoscaling.keda.sh/paused-replicas=0 --overwrite
+      - for: { var: scaledobjects }
+        cmd: kubectl --context {{.cluster}} -n {{.ns}} wait scaledobjects.keda.sh/{{.ITEM}} --for condition=Paused --timeout=2m
       - kubectl --context {{.cluster}} -n {{.ns}} scale {{.controller}} --replicas 0
       - kubectl --context {{.cluster}} -n {{.ns}} wait pod --for delete --selector="app.kubernetes.io/name={{.app}}" --timeout=2m
     env: *env
@@ -193,10 +307,7 @@ tasks:
     internal: true
     cmds:
       - envsubst < <(cat {{.templatesDir}}/wipe.tmpl.yaml) | kubectl --context {{.cluster}} apply -f -
-      - bash {{.scriptsDir}}/wait.sh wipe-{{.app}}-{{.ts}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/wipe-{{.app}}-{{.ts}} --for condition=complete --timeout=120m
-      - kubectl --context {{.cluster}} -n {{.ns}} logs job/wipe-{{.app}}-{{.ts}} --container wipe
-      - kubectl --context {{.cluster}} -n {{.ns}} delete job wipe-{{.app}}-{{.ts}}
+      - bash {{.scriptsDir}}/job.sh wipe-{{.app}}-{{.ts}} {{.ns}} {{.cluster}} wipe 7200
     env: *env
 
   # Create VolSync replicationdestination CR to restore data
@@ -204,15 +315,53 @@ tasks:
     internal: true
     cmds:
       - envsubst < <(cat {{.templatesDir}}/replicationdestination.tmpl.yaml) | kubectl --context {{.cluster}} apply -f -
-      - bash {{.scriptsDir}}/wait.sh volsync-dst-{{.app}}-{{.ts}} {{.ns}} {{.cluster}}
-      - kubectl --context {{.cluster}} -n {{.ns}} wait job/volsync-dst-{{.app}}-{{.ts}} --for condition=complete --timeout=120m
-      - kubectl --context {{.cluster}} -n {{.ns}} delete replicationdestination {{.app}}-{{.ts}}
+      # Also on failure or Ctrl-C: a leftover RD keeps retrying the restore into the PVC
+      - defer: kubectl --context {{.cluster}} -n {{.ns}} delete replicationdestination {{.app}}-{{.ts}} --ignore-not-found
+      # VolSync retries a failed mover, then records the result in latestMoverStatus
+      - |
+        rd="replicationdestination/{{.app}}-{{.ts}}"
+        echo "Waiting for $rd to restore {{.claim}} from {{.repo}}"
+        result=""
+        for i in $(seq 1 720); do
+          # Task's shell exits on a failed command substitution; a failed read is "no result yet"
+          result="$(kubectl --context {{.cluster}} -n {{.ns}} get "$rd" -o jsonpath='{.status.latestMoverStatus.result}' || true)"
+          [ -n "$result" ] && break
+          sleep 10
+        done
+        logs="$(kubectl --context {{.cluster}} -n {{.ns}} get "$rd" -o jsonpath='{.status.latestMoverStatus.logs}' || true)"
+        echo "$logs"
+        kubectl --context {{.cluster}} -n {{.ns}} delete "$rd"
+        # VolSync calls this Successful, but nothing was restored
+        if printf '%s' "$logs" | grep -q 'No eligible snapshots found'; then
+          echo "No snapshot matched previous={{.previous}}: nothing was restored" >&2
+          exit 1
+        fi
+        if [ "$result" != "Successful" ]; then
+          echo "Restore from {{.repo}} ${result:-timed out after 2h}" >&2
+          exit 1
+        fi
     env: *env
 
-  # Resume Flux ks and hr
+  # Resume Flux ks and hr, backups and KEDA, then bring the app back to its replica count from
+  # before the restore (helm-controller does not scale it back by itself when nothing in the
+  # release changed)
   .resume:
     internal: true
     cmds:
       - flux --context {{.cluster}} -n {{.ns}} resume helmrelease {{.app}}
-      - flux --context {{.cluster}} -n flux-system resume kustomization {{.app}}
+      - flux --context {{.cluster}} -n {{.ns}} resume kustomization {{.app}}
+      - for: { var: sources }
+        cmd: kubectl --context {{.cluster}} -n {{.ns}} patch replicationsources {{.ITEM}} --type merge -p '{"spec":{"paused":null}}'
+      - for: { var: scaledobjects }
+        cmd: kubectl --context {{.cluster}} -n {{.ns}} annotate scaledobjects.keda.sh {{.ITEM}} autoscaling.keda.sh/paused-replicas-
+      - kubectl --context {{.cluster}} -n {{.ns}} scale {{.controller}} --replicas {{.replicas}}
+      - |
+        {{if eq .replicas "0"}}
+        {{if .scaledobjects}}
+        echo "Restored. {{.controller}} was at 0 replicas when the restore started; KEDA ({{.scaledobjects | trim}}) scales it from here." >&2
+        {{else}}
+        echo "Restored, but {{.controller}} is at 0 replicas: it was at 0 when the restore started (an earlier failed restore?)." >&2
+        echo "Start it with: kubectl --context {{.cluster}} -n {{.ns}} scale {{.controller}} --replicas 1" >&2
+        {{end}}
+        {{end}}
     env: *env
