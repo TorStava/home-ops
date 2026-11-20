@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Wait for a one-shot Job to finish, print its logs, and delete it when it succeeded.
 # A failed Job is left in place (its ttlSecondsAfterFinished cleans it up) so it can be inspected.
+# A Job that has not finished is deleted on timeout and on Ctrl-C/TERM: otherwise a wipe stuck in
+# Pending could still run later, after the app is back, and wipe it.
 #
 # Usage: job.sh <job> <namespace> <context> <container> [timeout-seconds]
 #
@@ -17,6 +19,13 @@ TIMEOUT="${5:-600}"
 
 k() { kubectl --context "${CLUSTER}" -n "${NAMESPACE}" "$@"; }
 
+delete_unfinished() {
+    echo "Deleting unfinished job ${JOB} so it cannot run later" >&2
+    k delete job "${JOB}" --cascade=foreground --wait=true --timeout=2m --ignore-not-found >&2
+}
+trap 'delete_unfinished; exit 130' INT
+trap 'delete_unfinished; exit 143' TERM
+
 result=""
 end=$((SECONDS + TIMEOUT))
 while [ "${SECONDS}" -lt "${end}" ]; do
@@ -28,7 +37,8 @@ while [ "${SECONDS}" -lt "${end}" ]; do
     sleep 2
 done
 
-k logs "job/${JOB}" --container "${CONTAINER}" || true
+trap - INT TERM
+[ -n "${result}" ] && { k logs "job/${JOB}" --container "${CONTAINER}" || true; }
 
 case "${result}" in
     Complete)
@@ -40,6 +50,8 @@ case "${result}" in
         ;;
     *)
         echo "Timed out after ${TIMEOUT}s waiting for job ${JOB}" >&2
+        k logs "job/${JOB}" --container "${CONTAINER}" 2>/dev/null || true
+        delete_unfinished
         exit 1
         ;;
 esac
