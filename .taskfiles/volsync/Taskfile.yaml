@@ -202,10 +202,11 @@ tasks:
           {{if .EXIT_CODE}}
           cat >&2 <<'MSG'
 
-          Restore of {{.app}} did not finish. Left as is, so the app never starts on an empty volume:
+          Restore of {{.app}} did not finish. Whatever was already paused stays paused, so the app
+          never starts on an empty volume. Depending on the step that failed, that is:
             Flux Kustomization and HelmRelease {{.app}} suspended, {{.controller}} at 0 replicas,
             backups paused (ReplicationSources: {{.sources | trim}}){{if .scaledobjects}}, KEDA paused (ScaledObject: {{.scaledobjects | trim}}){{end}}.
-            The PVC {{.claim}} may be empty.
+            If the wipe started, the PVC {{.claim}} may be empty.
           Fix the cause, then run it again:
             task volsync:restore cluster={{.cluster}} ns={{.ns}} app={{.app}} repo={{.repo}} previous={{.previous}} replicas={{.replicas}}
           MSG
@@ -238,9 +239,10 @@ tasks:
       sources:
         sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources -o jsonpath='{range .items[?(@.spec.sourcePVC=="{{.claim}}")]}{.metadata.name}{" "}{end}'
       # KEDA ScaledObjects on the controller (named silent-<app>, so found by target), paused at 0
-      # replicas: KEDA would otherwise scale an active app back up during the wipe
+      # replicas: KEDA would otherwise scale an active app back up during the wipe. A failed lookup
+      # stops the restore: KEDA is part of this cluster, and "none found" must mean none
       scaledobjects:
-        sh: kubectl --context {{.cluster}} -n {{.ns}} get scaledobjects.keda.sh -o jsonpath='{range .items[?(@.spec.scaleTargetRef.name=="{{.app}}")]}{.metadata.name}{" "}{end}' 2>/dev/null || true
+        sh: kubectl --context {{.cluster}} -n {{.ns}} get scaledobjects.keda.sh -o jsonpath='{range .items[?(@.spec.scaleTargetRef.name=="{{.app}}")]}{.metadata.name}{" "}{end}'
       puid:
         sh: kubectl --context {{.cluster}} -n {{.ns}} get replicationsources/{{.source}} -o jsonpath="{.spec.restic.moverSecurityContext.runAsUser}"
       pgid:
@@ -259,8 +261,9 @@ tasks:
       - { msg: "Wipe template not found", sh: "test -f {{.templatesDir}}/wipe.tmpl.yaml" }
       - { msg: "ReplicationSource {{.source}} not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}}" }
       - { msg: "Restic secret {{.app}}-volsync-{{.repo}}-secret not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get secret {{.app}}-volsync-{{.repo}}-secret" }
-      - { msg: "replicas must be a number", sh: 'test "{{.replicas}}" -ge 0 2>/dev/null' }
-      - { msg: "previous must be a number", sh: 'test "{{.previous}}" -ge 0 2>/dev/null' }
+      # A pattern, not `test -ge`: Task's shell treats any non-number as 0 there
+      - { msg: "replicas must be a whole number (0 or more)", sh: 'case "{{.replicas}}" in ""|*[!0-9]*) exit 1;; esac' }
+      - { msg: "previous must be a whole number (0 or more)", sh: 'case "{{.previous}}" in ""|*[!0-9]*) exit 1;; esac' }
       - { msg: "Could not read the PVC, mover uid/gid or cache settings from {{.source}}", sh: 'test -n "{{.claim}}" -a -n "{{.puid}}" -a -n "{{.pgid}}" -a -n "{{.cache_sc}}" -a -n "{{.cache_capacity}}" -a -n "{{.cache_access_mode}}"' }
     silent: true
 
