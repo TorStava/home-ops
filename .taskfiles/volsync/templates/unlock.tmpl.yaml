@@ -2,18 +2,19 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "unlock-${app}-${ts}"
+  name: "unlock-${app}-${repo}-${ts}"
   namespace: "${ns}"
 spec:
+  backoffLimit: 0
   ttlSecondsAfterFinished: 3600
   template:
     spec:
       automountServiceAccountToken: false
-      restartPolicy: OnFailure
+      restartPolicy: Never
       containers:
         - name: unlock
           image: docker.io/restic/restic:0.18.0@sha256:4cf4a61ef9786f4de53e9de8c8f5c040f33830eb0a10bf3d614410ee2fcb6120
           args: ["unlock", "--remove-all"]
           envFrom:
             - secretRef:
-                name: "${app}-volsync-local-secret"
+                name: "${app}-volsync-${repo}-secret"

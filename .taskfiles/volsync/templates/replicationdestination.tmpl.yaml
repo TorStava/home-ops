@@ -8,14 +8,17 @@ spec:
   trigger:
     manual: restore-once
   restic:
-    repository: "${app}-volsync"
+    repository: "${app}-volsync-${repo}-secret"
     destinationPVC: "${claim}"
     copyMethod: Direct
-    storageClassName: longhorn
-    # storageClassName: ceph-filesystem
-    # accessModes: ["ReadWriteMany"]
+    # The cluster has no default StorageClass, so the cache volume needs these;
+    # they are copied from the app's ReplicationSource
+    cacheStorageClassName: "${cache_sc}"
+    cacheCapacity: "${cache_capacity}"
+    cacheAccessModes: ["${cache_access_mode}"]
+    cleanupCachePVC: true
     # IMPORTANT NOTE:
-    #   Set to the last X number of snapshots to restore from
+    #   Number of snapshots to skip, newest first: 0 restores the latest one
     previous: ${previous}
     # OR;
     # IMPORTANT NOTE:

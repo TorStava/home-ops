@@ -5,15 +5,16 @@ metadata:
   name: "wipe-${app}-${ts}"
   namespace: "${ns}"
 spec:
+  backoffLimit: 0
   ttlSecondsAfterFinished: 3600
   template:
     spec:
       automountServiceAccountToken: false
-      restartPolicy: OnFailure
+      restartPolicy: Never
       containers:
         - name: wipe
           image: public.ecr.aws/docker/library/busybox:latest
-          command: ["/bin/sh", "-c", "cd /config; find . -delete"]
+          command: ["/bin/sh", "-c", "cd /config && find . -mindepth 1 -delete && echo wiped"]
           volumeMounts:
             - name: config
               mountPath: /config
