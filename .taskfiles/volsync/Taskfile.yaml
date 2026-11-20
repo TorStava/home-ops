@@ -261,9 +261,10 @@ tasks:
       - { msg: "Wipe template not found", sh: "test -f {{.templatesDir}}/wipe.tmpl.yaml" }
       - { msg: "ReplicationSource {{.source}} not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get replicationsources {{.source}}" }
       - { msg: "Restic secret {{.app}}-volsync-{{.repo}}-secret not found", sh: "kubectl --context {{.cluster}} -n {{.ns}} get secret {{.app}}-volsync-{{.repo}}-secret" }
-      # A pattern, not `test -ge`: Task's shell treats any non-number as 0 there
-      - { msg: "replicas must be a whole number (0 or more)", sh: 'case "{{.replicas}}" in ""|*[!0-9]*) exit 1;; esac' }
-      - { msg: "previous must be a whole number (0 or more)", sh: 'case "{{.previous}}" in ""|*[!0-9]*) exit 1;; esac' }
+      # A pattern, not `test -ge`: Task's shell treats any non-number as 0 there. Leading zeros
+      # are refused too: some steps read 010 as octal 8, others as 10.
+      - { msg: "replicas must be a whole number (0 or more, no leading zeros)", sh: 'case "{{.replicas}}" in ""|0?*|*[!0-9]*) exit 1;; esac' }
+      - { msg: "previous must be a whole number (0 or more, no leading zeros)", sh: 'case "{{.previous}}" in ""|0?*|*[!0-9]*) exit 1;; esac' }
       - { msg: "Could not read the PVC, mover uid/gid or cache settings from {{.source}}", sh: 'test -n "{{.claim}}" -a -n "{{.puid}}" -a -n "{{.pgid}}" -a -n "{{.cache_sc}}" -a -n "{{.cache_capacity}}" -a -n "{{.cache_access_mode}}"' }
     silent: true
 
