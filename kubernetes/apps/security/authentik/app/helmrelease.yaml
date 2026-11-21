@@ -25,11 +25,15 @@ spec:
     global:
       podAnnotations:
         secret.reloader.stakater.com/reload: &secret authentik-secret
+        configmap.reloader.stakater.com/reload: authentik-blueprints
       deploymentStrategy:
         type: RollingUpdate
       envFrom:
         - secretRef:
             name: *secret
+    blueprints:
+      configMaps:
+        - authentik-blueprints
     authentik:
       postgresql:
         host: postgres-cluster-rw.database.svc.cluster.local

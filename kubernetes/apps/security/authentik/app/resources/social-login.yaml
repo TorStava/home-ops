@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Social login (Google, Facebook)
+  labels:
+    blueprints.goauthentik.io/description: Link-only Google and Facebook login on the default login page
+entries:
+  # Link-only: enrollment_flow is left unset (none), and users are matched only through an
+  # existing source connection ("identifier"), never by email or username.
+  # An unlinked Google/Facebook account is refused; link it first under
+  # User settings > Connected services.
+  - model: authentik_sources_oauth.oauthsource
+    id: source-google
+    identifiers:
+      slug: google
+    attrs:
+      name: Google
+      provider_type: google
+      enabled: true
+      consumer_key: !Env GOOGLE_CLIENT_ID
+      consumer_secret: !Env GOOGLE_CLIENT_SECRET
+      authentication_flow: !Find [authentik_flows.flow, [slug, default-source-authentication]]
+      user_matching_mode: identifier
+  - model: authentik_sources_oauth.oauthsource
+    id: source-facebook
+    identifiers:
+      slug: facebook
+    attrs:
+      name: Facebook
+      provider_type: facebook
+      enabled: true
+      consumer_key: !Env FACEBOOK_APP_ID
+      consumer_secret: !Env FACEBOOK_APP_SECRET
+      authentication_flow: !Find [authentik_flows.flow, [slug, default-source-authentication]]
+      user_matching_mode: identifier
+  # Show both buttons on the default login page. `sources` is replaced as a
+  # whole, so any source added by hand to this stage must be listed here too.
+  - model: authentik_stages_identification.identificationstage
+    identifiers:
+      name: default-authentication-identification
+    attrs:
+      sources:
+        - !KeyOf source-google
+        - !KeyOf source-facebook
