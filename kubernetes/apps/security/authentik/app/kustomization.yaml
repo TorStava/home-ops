@@ -7,3 +7,9 @@ resources:
   - ./ocirepository.yaml
   - ./helmrelease.yaml
   - ./httproute.yaml
+configMapGenerator:
+  - name: authentik-blueprints
+    files:
+      - social-login.yaml=./resources/social-login.yaml
+generatorOptions:
+  disableNameSuffixHash: true
