@@ -30,7 +30,7 @@ spec:
                 path: /spec/template/spec/initContainers/0
                 value:
                   name: init-db
-                  image: ghcr.io/home-operations/postgres-init:18
+                  image: ghcr.io/home-operations/postgres-init:19
                   envFrom:
                     - secretRef:
                         name: forgejo-db
