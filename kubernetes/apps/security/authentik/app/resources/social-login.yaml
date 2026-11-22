@@ -3,12 +3,13 @@ version: 1
 metadata:
   name: Social login (Google)
   labels:
-    blueprints.goauthentik.io/description: Link-only Google login on the default login page
+    blueprints.goauthentik.io/description: Google login, linked by email, no self-enrollment on the default login page
 entries:
-  # Link-only: enrollment_flow is left unset (none), and users are matched only through an
-  # existing source connection ("identifier"), never by email or username.
-  # An unlinked Google account is refused; link it first under
-  # User settings > Connected services.
+  # No self-enrollment: enrollment_flow is left unset (none), so a Google
+  # account whose email matches no existing user is refused and never created.
+  # An admin creates the user; on the first Google login Authentik links it to
+  # the user with the same email ("email_link"). Safe only for providers that
+  # verify email (Google does); do not reuse this mode for others without checking.
   - model: authentik_sources_oauth.oauthsource
     id: source-google
     identifiers:
@@ -20,7 +21,7 @@ entries:
       consumer_key: !Env GOOGLE_CLIENT_ID
       consumer_secret: !Env GOOGLE_CLIENT_SECRET
       authentication_flow: !Find [authentik_flows.flow, [slug, default-source-authentication]]
-      user_matching_mode: identifier
+      user_matching_mode: email_link
   # Show the Google button on the default login page. `sources` is replaced as a
   # whole, so any source added by hand to this stage must be listed here too.
   - model: authentik_stages_identification.identificationstage
