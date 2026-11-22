@@ -8,8 +8,12 @@ entries:
   # No self-enrollment: enrollment_flow is left unset (none), so a Google
   # account whose email matches no existing user is refused and never created.
   # An admin creates the user; on the first Google login Authentik links it to
-  # the user with the same email ("email_link"). Safe only for providers that
-  # verify email (Google does); do not reuse this mode for others without checking.
+  # the user with the same email ("email_link"). Authentik does not check
+  # Google's verified_email, so this relies on Google: use @gmail.com
+  # addresses, or only domains we control (a lapsed custom domain can be
+  # re-registered and its address minted on a new Google account). Matching is
+  # exact and case-sensitive, and the first match wins: keep emails lowercase
+  # and unique. Do not reuse this mode for other providers without checking.
   - model: authentik_sources_oauth.oauthsource
     id: source-google
     identifiers:
