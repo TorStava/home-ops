@@ -29,4 +29,5 @@ secret.yaml
 /AGENTS.md
 /CLAUDE.md
 /NOTES.md
-/docs/
+/docs/*
+!/docs/adr/
