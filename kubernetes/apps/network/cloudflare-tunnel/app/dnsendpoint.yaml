@@ -9,3 +9,22 @@ spec:
     - dnsName: "external.${SECRET_DOMAIN}"
       recordType: CNAME
       targets: ["fc2d648a-772a-4df8-bd7c-601a4a142a30.cfargotunnel.com"]
+---
+# Names that only redirect at Cloudflare still need a proxied record, or the
+# redirect rule never sees the request. The canonical apex gets its record from
+# the app's HTTPRoute.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: slektly-redirects
+spec:
+  endpoints:
+    - dnsName: "www.${SECRET_DOMAIN_SLEKTLY}"
+      recordType: CNAME
+      targets: ["external.${SECRET_DOMAIN}"]
+    - dnsName: "${SECRET_DOMAIN_SLEKTLY_COM}"
+      recordType: CNAME
+      targets: ["external.${SECRET_DOMAIN}"]
+    - dnsName: "www.${SECRET_DOMAIN_SLEKTLY_COM}"
+      recordType: CNAME
+      targets: ["external.${SECRET_DOMAIN}"]

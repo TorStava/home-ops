@@ -33,3 +33,16 @@ spec:
         certificateRefs:
           - kind: Secret
             name: ${SECRET_DOMAIN/./-}-production-tls
+    # Second zone. Apex only: www and the .com names are redirected at Cloudflare
+    # and never reach the cluster, so they need no listener or certificate.
+    - name: https-slektly
+      protocol: HTTPS
+      port: 443
+      hostname: "${SECRET_DOMAIN_SLEKTLY}"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: ${SECRET_DOMAIN_SLEKTLY/./-}-production-tls

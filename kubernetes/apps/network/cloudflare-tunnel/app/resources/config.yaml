@@ -9,4 +9,10 @@ ingress:
     service: &svc https://cilium-gateway-external.kube-system.svc.cluster.local
   - hostname: "*.${SECRET_DOMAIN}"
     service: *svc
+  # Second zone: apex only. www and the .com names redirect at Cloudflare.
+  # SNI must match the apex listener, not the default external.<domain>.
+  - hostname: "${SECRET_DOMAIN_SLEKTLY}"
+    service: *svc
+    originRequest:
+      originServerName: "${SECRET_DOMAIN_SLEKTLY}"
   - service: http_status:404
