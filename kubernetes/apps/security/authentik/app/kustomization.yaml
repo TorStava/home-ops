@@ -10,6 +10,7 @@ resources:
 configMapGenerator:
   - name: authentik-blueprints
     files:
-      - social-login.yaml=./resources/social-login.yaml
+      - access-groups.yaml=./resources/blueprints/access-groups.yaml
+      - social-login.yaml=./resources/blueprints/social-login.yaml
 generatorOptions:
   disableNameSuffixHash: true

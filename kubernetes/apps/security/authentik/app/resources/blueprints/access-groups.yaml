@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Access groups
+  labels:
+    blueprints.goauthentik.io/description: Guests, Household and Operators, the nested groups that open applications
+entries:
+  # Access groups open applications through policy bindings in each app's
+  # blueprint; see GLOSSARY.md. They are nested: a binding to a group also
+  # passes for members of its child groups (Authentik checks a user's groups
+  # with their ancestors), so Operators open everything Household opens, and
+  # Household opens everything Guests opens. Bind each app once, to the lowest
+  # group that should open it.
+  #
+  # Membership is managed in the Authentik UI, not here: `users` is left out
+  # of attrs, so applying this file never changes who is in a group. None of
+  # these groups is a superuser group; Authentik admin stays with the built-in
+  # "authentik Admins" group and grants no application access.
+  - model: authentik_core.group
+    id: group-guests
+    identifiers:
+      name: Guests
+    attrs:
+      is_superuser: false
+      parents: []
+  - model: authentik_core.group
+    id: group-household
+    identifiers:
+      name: Household
+    attrs:
+      is_superuser: false
+      parents:
+        - !KeyOf group-guests
+  - model: authentik_core.group
+    id: group-operators
+    identifiers:
+      name: Operators
+    attrs:
+      is_superuser: false
+      parents:
+        - !KeyOf group-household
