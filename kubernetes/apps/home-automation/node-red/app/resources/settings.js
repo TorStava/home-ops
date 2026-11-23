@@ -21,7 +21,10 @@ module.exports = {
         callbackURL: "https://${APP}.${SECRET_DOMAIN}/auth/strategy/callback/",
         scope: ["email", "profile", "openid"],
         proxy: true,
-        verify: function(context, issuer, profile, done) {
+        // passport-openidconnect passes (issuer, profile, done) to a 3-argument
+        // verify; with 4 arguments it is (issuer, profile, context, done).
+        // profile.username is the preferred_username claim.
+        verify: function(issuer, profile, done) {
           return done(null, profile);
         },
       },
