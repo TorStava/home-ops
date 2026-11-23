@@ -81,7 +81,7 @@ spec:
           iconUrl: https://auth.${SECRET_DOMAIN}/static/dist/assets/icons/icon.svg
           scopes: openid email profile
           groupClaimName: groups
-          adminGroup: authentik Admins
+          adminGroup: Operators
       metrics:
         enabled: true
         serviceMonitor:

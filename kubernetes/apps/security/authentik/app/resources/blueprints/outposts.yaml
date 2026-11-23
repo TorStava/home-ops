@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Outposts
+  labels:
+    blueprints.goauthentik.io/description: The embedded outpost's provider list
+entries:
+  # The only place that sets the embedded outpost's providers. The list is
+  # replaced whole on apply, so a proxy provider missing here is dropped from
+  # the outpost. A new proxy app: its apps/<slug>.yaml, one meta-apply below,
+  # and one line in providers.
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        path: mounted/cm-authentik-blueprints/app-gods-eye.yaml
+      required: true
+
+  - model: authentik_outposts.outpost
+    identifiers:
+      managed: goauthentik.io/outposts/embedded
+    attrs:
+      providers:
+        - !Find [authentik_providers_proxy.proxyprovider, [name, Provider for Gods Eye]]
