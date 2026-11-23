@@ -1,0 +1,28 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: "Authentik Blueprints"
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - kubernetes/apps/security/authentik/**
+      - scripts/check-authentik-blueprints.py
+      - .github/workflows/authentik-blueprints.yaml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check Authentik Blueprints
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check blueprints
+        run: |
+          pip install --quiet pyyaml
+          python3 scripts/check-authentik-blueprints.py

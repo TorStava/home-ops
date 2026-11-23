@@ -24,13 +24,15 @@ spec:
     # if I ever lose the db, my setup is based heavily on https://github.com/joryirving/home-ops/tree/77478606352bfb43e6c1c5fcf0b5fa134d007095/terraform/authentik
     global:
       podAnnotations:
-        secret.reloader.stakater.com/reload: &secret authentik-secret
+        secret.reloader.stakater.com/reload: authentik-secret,authentik-app-credentials
         configmap.reloader.stakater.com/reload: authentik-blueprints
       deploymentStrategy:
         type: RollingUpdate
       envFrom:
         - secretRef:
-            name: *secret
+            name: &secret authentik-secret
+        - secretRef:
+            name: authentik-app-credentials
     blueprints:
       configMaps:
         - authentik-blueprints
