@@ -43,6 +43,8 @@ spec:
               tag: 2.7.2@sha256:1b6d43c3c0f5d2888aa564d9daf29883212b79ad496f59f3c684c099eb1a57b9
             env:
               TZ: ${TIMEZONE}
+              # Tandoor 2.7 changed the default from "*" to empty, which rejects every request
+              ALLOWED_HOSTS: tandoor.${SECRET_DOMAIN}
             envFrom:
               - secretRef:
                   name: *app
