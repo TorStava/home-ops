@@ -1,0 +1,99 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app slektly
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/torstava/slektly
+              # PLACEHOLDER: replace with sha-<short>@sha256:<digest> once slektly#158 publishes the image.
+              tag: sha-0000000@sha256:0000000000000000000000000000000000000000000000000000000000000000
+            # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: &port 8080
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: *port
+                  failureThreshold: 30
+                  periodSeconds: 2
+                  timeoutSeconds: 3
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      imagePullSecrets:
+        - name: slektly-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101 # nginx-unprivileged
+        runAsGroup: 101
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: { type: RuntimeDefault }
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: *port
+    persistence:
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          *app :
+            app:
+              - path: /tmp
+      # The entrypoint renders the nginx template into conf.d at start.
+      nginx-conf:
+        type: emptyDir
+        advancedMounts:
+          *app :
+            app:
+              - path: /etc/nginx/conf.d
+    # Public, on the second zone's own listener. www and the .com names redirect at Cloudflare.
+    route:
+      app:
+        hostnames: ["${SECRET_DOMAIN_SLEKTLY}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https-slektly
