@@ -36,18 +36,38 @@ spec:
                   name: *app
               - secretRef:
                   name: tandoor-initdb
-        containers:
-          main:
-            image:
+          # The main container starts gunicorn directly instead of the image's
+          # boot.sh (which also starts nginx and needs a writable root), so the
+          # two upgrade steps boot.sh runs are done here, before every start.
+          migrate:
+            dependsOn: init-db
+            image: &image
               repository: ghcr.io/tandoorrecipes/recipes
               tag: 2.7.2@sha256:1b6d43c3c0f5d2888aa564d9daf29883212b79ad496f59f3c684c099eb1a57b9
-            env:
+            env: &env
               TZ: ${TIMEZONE}
               # Tandoor 2.7 changed the default from "*" to empty, which rejects every request
               ALLOWED_HOSTS: tandoor.${SECRET_DOMAIN}
-            envFrom:
+            envFrom: &envFrom
               - secretRef:
                   name: *app
+            workingDir: /opt/recipes
+            command:
+              - /bin/sh
+              - -c
+              - |
+                set -e
+                /opt/recipes/venv/bin/python manage.py migrate
+                /opt/recipes/venv/bin/python manage.py collectstatic --noinput --clear
+            securityContext: &securityContext
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: {drop: ["ALL"]}
+        containers:
+          main:
+            image: *image
+            env: *env
+            envFrom: *envFrom
             command:
               - /opt/recipes/venv/bin/gunicorn
               - -b
@@ -59,10 +79,7 @@ spec:
               - --log-level
               - INFO
               - recipes.wsgi
-            securityContext:
-              allowPrivilegeEscalation: false
-              readOnlyRootFilesystem: true
-              capabilities: {drop: ["ALL"]}
+            securityContext: *securityContext
     defaultPodOptions:
       securityContext:
         runAsNonRoot: true
@@ -96,17 +113,19 @@ spec:
         existingClaim: *app
         advancedMounts:
           tandoor:
-            main:
+            migrate: &dataMounts
               - path: /opt/recipes/mediafiles
                 subPath: mediafiles
               - path: /opt/recipes/staticfiles
                 subPath: staticfiles
+            main: *dataMounts
       tmpfs:
         type: emptyDir
         advancedMounts:
           tandoor:
-            main:
+            migrate: &tmpMounts
               - path: /opt/recipes/cookbook/static/django_js_reverse
                 subPath: django_js_reverse
               - path: /tmp
                 subPath: tmp
+            main: *tmpMounts
