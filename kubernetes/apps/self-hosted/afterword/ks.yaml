@@ -9,9 +9,6 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  components:
-    # /health/tick fails when the tick CronJob stops: then nothing is nudged, warned or released.
-    - ../../../../components/gatus/external
   dependsOn:
     - name: postgres-cluster
       namespace: database
@@ -21,7 +18,6 @@ spec:
   postBuild:
     substitute:
       APP: *app
-      GATUS_PATH: /health/tick
   prune: true
   sourceRef:
     kind: GitRepository

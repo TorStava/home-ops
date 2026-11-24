@@ -50,7 +50,8 @@ spec:
             image: *image
             env:
               PORT: &port 3000
-              PUBLIC_BASE_URL: "https://{{ .Release.Name }}.${SECRET_DOMAIN}"
+              PUBLIC_BASE_URL: "https://${SECRET_DOMAIN_AFTERWORD}"
+              # The passkey RP ID is the host of PUBLIC_BASE_URL (WEBAUTHN_RP_ID is unset, so it follows).
             envFrom:
               - secretRef:
                   name: *app
@@ -146,8 +147,8 @@ spec:
     # Public: recipients' download links, /open, and check-in links from the owner's phone.
     route:
       app:
-        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        hostnames: ["${SECRET_DOMAIN_AFTERWORD}"]
         parentRefs:
           - name: external
             namespace: kube-system
-            sectionName: https
+            sectionName: https-afterword

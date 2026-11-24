@@ -5,3 +5,14 @@ kind: Kustomization
 resources:
   - ./externalsecret.yaml
   - ./helmrelease.yaml
+  - ./redirect.yaml
+# The shared gatus/external component builds its URL on ${SECRET_DOMAIN}, so this app carries its own.
+configMapGenerator:
+  - name: afterword-gatus-external-ep
+    files:
+      - config.yaml=./gatus.yaml
+    options:
+      labels:
+        gatus.io/enabled: "true"
+generatorOptions:
+  disableNameSuffixHash: true

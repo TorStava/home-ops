@@ -46,3 +46,15 @@ spec:
         certificateRefs:
           - kind: Secret
             name: ${SECRET_DOMAIN_SLEKTLY/./-}-production-tls
+    # Afterword's own domain. Apex only, as for the second zone.
+    - name: https-afterword
+      protocol: HTTPS
+      port: 443
+      hostname: "${SECRET_DOMAIN_AFTERWORD}"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: ${SECRET_DOMAIN_AFTERWORD/./-}-production-tls
