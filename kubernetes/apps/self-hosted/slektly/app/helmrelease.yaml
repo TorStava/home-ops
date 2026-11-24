@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              tag: sha-79089b5@sha256:62900e1bc14b187a1c677baa4de93db014438402d44a75f77621f377b824ad06
+              tag: sha-5e0d405@sha256:0441eff11f9828dba9f6b1115a4205991b222e2bf58d20544202ced0c42295f3
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
             env:
               # Believe Cloudflare's CF-Connecting-IP for the rate limit: every request comes through
@@ -68,7 +68,7 @@ spec:
           api:
             image:
               repository: ghcr.io/torstava/slektly-api
-              tag: sha-79089b5@sha256:fa8dc012c1f434a99f100e5558bf0477dae13f3d6e30d00129167d73e8fb1d93
+              tag: sha-5e0d405@sha256:a56acd76ceb85575a8e7a6deaece5c8f937b26b20f0ca135dc804997e5e7ecdc
             env:
               # fake until the Personvern text names Scaleway (slektly#171): the form then thanks visitors
               # and delivers nothing. Set to scaleway to send; the secret below is already wired.
