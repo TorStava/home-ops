@@ -44,6 +44,7 @@ resources:
   - ./outline/ks.yaml
   - ./paperless/ks.yaml
   - ./penpot/ks.yaml
+  - ./slektly/ks.yaml
   - ./tandoor/ks.yaml
   - ./umami/ks.yaml
   - ./vikunja/ks.yaml
