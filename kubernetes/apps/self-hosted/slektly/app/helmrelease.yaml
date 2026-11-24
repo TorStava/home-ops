@@ -70,7 +70,9 @@ spec:
               repository: ghcr.io/torstava/slektly-api
               tag: sha-79089b5@sha256:fa8dc012c1f434a99f100e5558bf0477dae13f3d6e30d00129167d73e8fb1d93
             env:
-              MAIL_PROVIDER: scaleway
+              # fake until the Personvern text names Scaleway (slektly#171): the form then thanks visitors
+              # and delivers nothing. Set to scaleway to send; the secret below is already wired.
+              MAIL_PROVIDER: fake
               TRUST_CF_CONNECTING_IP: "1"
             envFrom:
               - secretRef:
