@@ -25,8 +25,13 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              tag: sha-f1705ab@sha256:821390491bff7d9cb0c034552e0c143e63cf5e84596623679100cd224fc5eb8c
+              tag: sha-5e0d405@sha256:0441eff11f9828dba9f6b1115a4205991b222e2bf58d20544202ced0c42295f3
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
+            env:
+              # Believe Cloudflare's CF-Connecting-IP for the rate limit: every request comes through
+              # the tunnel. Set on both containers (slektly ADR 0019), else all visitors share one bucket.
+              TRUST_CF_CONNECTING_IP: "1"
+            # /api/ goes to the api container on 127.0.0.1:8787 (the default SLEKTLY_API_UPSTREAM).
             probes:
               liveness: &probes
                 enabled: true
@@ -53,6 +58,47 @@ spec:
               requests:
                 cpu: 5m
                 memory: 16Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+          # The contact form's API (slektly ADR 0019): listens on 127.0.0.1:8787, shared with nginx.
+          api:
+            image:
+              repository: ghcr.io/torstava/slektly-api
+              tag: sha-5e0d405@sha256:a56acd76ceb85575a8e7a6deaece5c8f937b26b20f0ca135dc804997e5e7ecdc
+            env:
+              # fake until the Personvern text names Scaleway (slektly#171): the form then thanks visitors
+              # and delivers nothing. Set to scaleway to send; the secret below is already wired.
+              MAIL_PROVIDER: fake
+              TRUST_CF_CONNECTING_IP: "1"
+            envFrom:
+              - secretRef:
+                  name: slektly-mail
+            # Loopback only, so the kubelet cannot probe it over the network: an exec probe from inside.
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                      - node
+                      - -e
+                      - fetch('http://127.0.0.1:8787/api/health').then((r)=>process.exit(r.ok?0:1),()=>process.exit(1))
+                  periodSeconds: 30
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+            resources:
+              requests:
+                cpu: 5m
+                memory: 32Mi
               limits:
                 memory: 128Mi
             securityContext:
