@@ -15,4 +15,9 @@ ingress:
     service: *svc
     originRequest:
       originServerName: "${SECRET_DOMAIN_SLEKTLY}"
+  # Afterword's own domain: apex only, same SNI rule as above.
+  - hostname: "${SECRET_DOMAIN_AFTERWORD}"
+    service: *svc
+    originRequest:
+      originServerName: "${SECRET_DOMAIN_AFTERWORD}"
   - service: http_status:404

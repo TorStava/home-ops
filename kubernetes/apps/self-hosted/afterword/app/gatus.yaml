@@ -1,0 +1,10 @@
+# /health/tick fails when the tick CronJob stops: then nothing is nudged, warned or released.
+endpoints:
+  - name: afterword
+    group: external
+    url: 'https://${SECRET_DOMAIN_AFTERWORD}/health/tick'
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - '[STATUS] == 200'

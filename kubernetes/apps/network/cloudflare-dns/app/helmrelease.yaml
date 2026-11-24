@@ -49,6 +49,7 @@ spec:
       - "${SECRET_DOMAIN}"
       - "${SECRET_DOMAIN_SLEKTLY}"
       - "${SECRET_DOMAIN_SLEKTLY_COM}"
+      - "${SECRET_DOMAIN_AFTERWORD}"
     serviceMonitor:
       enabled: true
     podAnnotations:
