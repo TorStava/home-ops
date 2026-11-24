@@ -25,8 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              # PLACEHOLDER: replace with sha-<short>@sha256:<digest> once slektly#158 publishes the image.
-              tag: sha-0000000@sha256:0000000000000000000000000000000000000000000000000000000000000000
+              tag: sha-f1705ab@sha256:821390491bff7d9cb0c034552e0c143e63cf5e84596623679100cd224fc5eb8c
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
             probes:
               liveness: &probes
