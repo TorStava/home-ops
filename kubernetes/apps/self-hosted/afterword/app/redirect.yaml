@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://schemas.tholinka.dev/gateway.networking.k8s.io/httproute_v1.json
 # The old host forwards to the new domain, so printed key cards and sent links keep working.
 # A RequestRedirect without a path modifier keeps the request's path and query.
-# No `scheme`: Cilium then adds an X-Forwarded-Proto != https condition, which never holds
+# No `scheme`: with it Cilium adds an X-Forwarded-Proto != https condition, which never holds
 # for traffic through the tunnel, so the redirect would not match (404). The listener is https.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
