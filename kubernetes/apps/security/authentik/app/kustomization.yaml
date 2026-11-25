@@ -12,12 +12,17 @@ configMapGenerator:
   - name: authentik-blueprints
     files:
       - access-groups.yaml=./resources/blueprints/access-groups.yaml
+      - app-actual-budget.yaml=./resources/blueprints/apps/actual-budget.yaml
       - app-forgejo.yaml=./resources/blueprints/apps/forgejo.yaml
+      - app-freshrss.yaml=./resources/blueprints/apps/freshrss.yaml
       - app-gods-eye.yaml=./resources/blueprints/apps/gods-eye.yaml
       - app-karakeep.yaml=./resources/blueprints/apps/karakeep.yaml
+      - app-komga.yaml=./resources/blueprints/apps/komga.yaml
       - app-linkwarden.yaml=./resources/blueprints/apps/linkwarden.yaml
       - app-node-red.yaml=./resources/blueprints/apps/node-red.yaml
+      - app-outline.yaml=./resources/blueprints/apps/outline.yaml
       - app-paperless.yaml=./resources/blueprints/apps/paperless.yaml
+      - app-penpot.yaml=./resources/blueprints/apps/penpot.yaml
       - app-pgadmin.yaml=./resources/blueprints/apps/pgadmin.yaml
       - app-tandoor.yaml=./resources/blueprints/apps/tandoor.yaml
       - app-vikunja.yaml=./resources/blueprints/apps/vikunja.yaml
