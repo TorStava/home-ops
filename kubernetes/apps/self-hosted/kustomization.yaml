@@ -45,6 +45,7 @@ resources:
   - ./paperless/ks.yaml
   - ./penpot/ks.yaml
   - ./slektly/ks.yaml
+  - ./turvis/keycloak/ks.yaml
   - ./tandoor/ks.yaml
   - ./turvis/ks.yaml
   - ./umami/ks.yaml
