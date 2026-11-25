@@ -20,4 +20,11 @@ ingress:
     service: *svc
     originRequest:
       originServerName: "${SECRET_DOMAIN_AFTERWORD}"
+  # Turvis: every subdomain (app, auth). One originServerName serves all names the
+  # rule matches, so it is a concrete name that the wildcard listener covers; the
+  # HTTPRoute still matches on the Host header, which cloudflared leaves alone.
+  - hostname: "*.${SECRET_DOMAIN_TURVIS}"
+    service: *svc
+    originRequest:
+      originServerName: "app.${SECRET_DOMAIN_TURVIS}"
   - service: http_status:404

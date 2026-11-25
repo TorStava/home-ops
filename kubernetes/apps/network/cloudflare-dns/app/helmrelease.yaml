@@ -50,6 +50,7 @@ spec:
       - "${SECRET_DOMAIN_SLEKTLY}"
       - "${SECRET_DOMAIN_SLEKTLY_COM}"
       - "${SECRET_DOMAIN_AFTERWORD}"
+      - "${SECRET_DOMAIN_TURVIS}"
     serviceMonitor:
       enabled: true
     podAnnotations:
