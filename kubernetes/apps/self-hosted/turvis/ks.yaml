@@ -41,8 +41,9 @@ spec:
     substitute:
       APP: turvis
       CNPG_REPLICAS: '1'
+      # Postgres 18: the major Turvis's compose.yaml and CI test on.
       # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
-      CNPG_VERSION: 17.5-standard-bookworm@sha256:8bcc3eb5b0b2dd7ad91c3c57eadc0df37148f28be16fc8062ed5eb29a2a4a4b7
+      CNPG_VERSION: 18.7-standard-bookworm@sha256:4eae19c85f20f9ad1457b25f0dfeabef8673e67a96a6fa37ef91e6af343d6631
       CNPG_SIZE: 2Gi
       CNPG_REQUESTS_CPU: 100m
       # Turvis rows are small (photos live in S3, not here) and Keycloak's database is small too. The
@@ -70,6 +71,11 @@ spec:
               database: turvis
               owner: turvis
               dataChecksums: true
+              # CNPG defaults to C, where lower() and ILIKE fold only ASCII ('ÅSE' stays 'Åse'), which breaks
+              # Turvis's search and login_user's lower(email). Turvis dev and CI run en_US.utf8. Fixed at
+              # initdb; the keycloak database inherits it.
+              localeCollate: en_US.utf8
+              localeCType: en_US.utf8
               # Runs once, as the superuser, when the cluster is created. Only CREATEROLE: the owner stays
               # NOSUPERUSER and NOBYPASSRLS, and Postgres (16+) lets a CREATEROLE role give no attribute it
               # lacks itself, so turvis_app can never get BYPASSRLS through it.
