@@ -1,0 +1,97 @@
+---
+# Turvis's own Postgres: one instance, no backups (demo data only, rebuilt by seeding; add R2 backups like
+# postgres-slektly before any real tenant). Later Kustomizations (Keycloak, the web app and the scheduler)
+# dependsOn this one.
+#
+# Database turvis, owned by role turvis (CNPG's secret postgres-turvis-app: username, password, host,
+# dbname, uri). The owner runs Turvis's migrations, and the migration runner itself creates the app's
+# login role turvis_app and sets its password from APP_DB_PASSWORD (secret turvis-app-db) on every run.
+# So the owner gets CREATEROLE once, at bootstrap, and is deliberately not a CNPG managed role: CNPG
+# revokes every membership a managed role has that is not in its inRoles, and that would take away the
+# ADMIN grant on turvis_app that Postgres gives the owner when it creates the role (without it the
+# runner's ALTER ROLE turvis_app ... PASSWORD fails). turvis_app is not managed by CNPG either.
+#
+# Database keycloak, owned by role keycloak (password in secret turvis-keycloak-db): ./db/keycloak.yaml.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app postgres-turvis
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/db
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: cnpg-crds
+      namespace: database
+    - name: openebs
+      namespace: openebs-system
+  postBuild:
+    substitute:
+      APP: turvis
+      CNPG_REPLICAS: '1'
+      # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
+      CNPG_VERSION: 17.5-standard-bookworm@sha256:8bcc3eb5b0b2dd7ad91c3c57eadc0df37148f28be16fc8062ed5eb29a2a4a4b7
+      CNPG_SIZE: 2Gi
+      CNPG_REQUESTS_CPU: 100m
+      # Turvis rows are small (photos live in S3, not here) and Keycloak's database is small too. The
+      # request stays small; the component otherwise sets request = limit.
+      CNPG_REQUESTS_MEMORY: 256Mi
+      CNPG_LIMITS_MEMORY: 1Gi
+      CNPG_LIMITS_MEMORY_HUGEPAGES: 256Mi
+      CNPG_SHARED_BUFFERS: 128MB
+      # Room for Keycloak's pool next to the app, the scheduler and a migration run. Inner quotes on
+      # purpose: CNPG wants parameters as strings and rejects a bare number.
+      CNPG_MAX_CONNECTIONS: '"150"'
+  components:
+    - ../../../../components/cnpg/no-backup
+  patches:
+    - target:
+        kind: Cluster
+      patch: |-
+        apiVersion: postgresql.cnpg.io/v1
+        kind: Cluster
+        metadata:
+          name: not-used
+        spec:
+          bootstrap:
+            initdb:
+              database: turvis
+              owner: turvis
+              dataChecksums: true
+              # Runs once, as the superuser, when the cluster is created. Only CREATEROLE: the owner stays
+              # NOSUPERUSER and NOBYPASSRLS, and Postgres (16+) lets a CREATEROLE role give no attribute it
+              # lacks itself, so turvis_app can never get BYPASSRLS through it.
+              postInitApplicationSQL:
+                - ALTER ROLE turvis CREATEROLE
+  healthChecks:
+    - apiVersion: &postgresVersion postgresql.cnpg.io/v1
+      kind: &postgresKind Cluster
+      name: *app
+      namespace: *namespace
+    - apiVersion: *postgresVersion
+      kind: &databaseKind Database
+      name: postgres-turvis-keycloak
+      namespace: *namespace
+  healthCheckExprs:
+    - apiVersion: *postgresVersion
+      kind: *postgresKind
+      current: status.conditions.exists(c, c.type == 'Ready' && c.status == 'True')
+      inProgress: status.conditions.exists(c, c.type == 'Ready' && c.status == 'False') && !status.phase.contains('manual intervention')
+      failed: status.phase.contains('manual intervention')
+    # Applied only once the keycloak role exists, so this also covers the DatabaseRole. No failed
+    # expression: applied is false while the role is still being created.
+    - apiVersion: *postgresVersion
+      kind: *databaseKind
+      current: has(status.applied) && status.applied == true

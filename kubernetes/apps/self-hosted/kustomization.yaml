@@ -46,6 +46,7 @@ resources:
   - ./penpot/ks.yaml
   - ./slektly/ks.yaml
   - ./tandoor/ks.yaml
+  - ./turvis/ks.yaml
   - ./umami/ks.yaml
   - ./vikunja/ks.yaml
   - ./watchstate/ks.yaml
