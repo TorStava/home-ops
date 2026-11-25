@@ -74,9 +74,21 @@ spec:
               # The secret below carries the key; set fake to stop delivery without stopping the form.
               MAIL_PROVIDER: scaleway
               TRUST_CF_CONNECTING_IP: "1"
+              # Sign-in by e-mail link (slektly ADR 0022). https, so the session cookie is
+              # __Host- and Secure; never set ALLOW_INSECURE_SITE here.
+              SITE_ORIGIN: "https://${SECRET_DOMAIN_SLEKTLY}"
+              # The API migrates this database itself at startup; CNPG makes slektly its owner.
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-slektly-app
+                    key: uri
             envFrom:
               - secretRef:
                   name: slektly-mail
+              # OWNER_EMAILS
+              - secretRef:
+                  name: slektly-api
             # Loopback only, so the kubelet cannot probe it over the network: an exec probe from inside.
             probes:
               liveness:

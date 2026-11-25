@@ -1,4 +1,112 @@
 ---
+# Slektly's own Postgres (slektly ADR 0017/0022), backed up by barman-cloud to an R2 bucket in the
+# EU jurisdiction. The shared postgres bucket is not EU, so this cluster overrides the bucket, the
+# endpoint and the R2 credentials of the cnpg/backup component:
+#   - bucket: slektly-postgres (EU jurisdiction), set below
+#   - endpoint: CLOUDFLARE_S3_ENDPOINT_EU in the Bitwarden item cluster_secrets
+#     (https://<account id>.eu.r2.cloudflarestorage.com)
+#   - credentials: SLEKTLY_R2_ACCESS_KEY_ID / SLEKTLY_R2_SECRET_ACCESS_KEY in the Bitwarden item
+#     slektly-r2 (an R2 token with Object Read & Write on that bucket only)
+# CNPG creates database slektly owned by user slektly and the secret postgres-slektly-app,
+# whose uri key is the API's DATABASE_URL.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app postgres-slektly
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/slektly/db
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
+  dependsOn:
+    - name: cnpg-crds
+      namespace: database
+    - name: openebs
+      namespace: openebs-system
+  postBuild:
+    substitute:
+      APP: slektly
+      # Overrides the shared bucket from cluster-secrets (inline substitutes win over substituteFrom).
+      S3_POSTGRES_BUCKET: slektly-postgres
+      CNPG_REPLICAS: '2'
+      # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
+      CNPG_VERSION: 17.5-standard-bookworm@sha256:8bcc3eb5b0b2dd7ad91c3c57eadc0df37148f28be16fc8062ed5eb29a2a4a4b7
+      CNPG_SIZE: 5Gi
+      CNPG_REQUESTS_CPU: 100m
+      CNPG_LIMITS_MEMORY: 1Gi
+      CNPG_LIMITS_MEMORY_HUGEPAGES: 256Mi
+      CNPG_SHARED_BUFFERS: 128MB
+      CNPG_MAX_CONNECTIONS: '100'
+  components:
+    - ../../../../components/cnpg/backup
+  patches:
+    - target:
+        kind: Cluster
+      patch: |-
+        apiVersion: postgresql.cnpg.io/v1
+        kind: Cluster
+        metadata:
+          name: not-used
+        spec:
+          bootstrap:
+            initdb:
+              database: slektly
+              owner: slektly
+              dataChecksums: true
+    - target:
+        kind: ObjectStore
+      patch: |-
+        apiVersion: barmancloud.cnpg.io/v1
+        kind: ObjectStore
+        metadata:
+          name: not-used
+        spec:
+          configuration:
+            endpointURL: ${CLOUDFLARE_S3_ENDPOINT_EU}
+    # The component's only ExternalSecret (APP-cnpg): slektly's own R2 token instead of the shared one.
+    - target:
+        kind: ExternalSecret
+      patch: |-
+        apiVersion: external-secrets.io/v1
+        kind: ExternalSecret
+        metadata:
+          name: not-used
+        spec:
+          target:
+            template:
+              data:
+                CLOUDFLARE_R2_ACCESS_KEY_ID: '{{ .SLEKTLY_R2_ACCESS_KEY_ID }}'
+                CLOUDFLARE_R2_SECRET_ACCESS_KEY: '{{ .SLEKTLY_R2_SECRET_ACCESS_KEY }}'
+          dataFrom:
+            - extract:
+                key: cloudnative_pg
+            - extract:
+                key: cloudflare
+            - extract:
+                key: slektly-r2
+  healthChecks:
+    - apiVersion: &postgresVersion postgresql.cnpg.io/v1
+      kind: &postgresKind Cluster
+      name: *app
+      namespace: *namespace
+  healthCheckExprs:
+    - apiVersion: *postgresVersion
+      kind: *postgresKind
+      current: status.conditions.exists(c, c.type == 'Ready' && c.status == 'True')
+      inProgress: status.conditions.exists(c, c.type == 'Ready' && c.status == 'False') && !status.phase.contains('manual intervention')
+      failed: status.phase.contains('manual intervention')
+---
 # yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -9,6 +117,9 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
+  dependsOn:
+    - name: postgres-slektly
+      namespace: *namespace
   interval: 1h
   retryInterval: 2m
   path: ./kubernetes/apps/self-hosted/slektly/app
