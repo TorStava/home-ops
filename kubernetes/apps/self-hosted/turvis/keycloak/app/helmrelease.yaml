@@ -45,11 +45,12 @@ spec:
                     key: password
               # Login pages, tokens and the issuer: https://auth.<turvis domain>/realms/turvis.
               KC_HOSTNAME: https://auth.${SECRET_DOMAIN_TURVIS}
-              # The admin console (and the master realm's login) on an internal host only: the public
-              # route below passes only the turvis realm and static resources.
+              # The admin console on an internal host only: the public route below passes only the
+              # turvis realm and static resources. This moves only the console's own URLs; its login
+              # goes to the master realm on the master realm's frontend URL, which is KC_HOSTNAME
+              # (404 publicly) until master's frontendUrl is set to this host once, by hand, after
+              # the first start (the PR's after-merge step; the master realm cannot be imported).
               KC_HOSTNAME_ADMIN: https://turvis-keycloak.${SECRET_DOMAIN}
-              # The app (step 6) may call the token endpoint on the Service, inside the cluster.
-              KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
               # TLS ends at the gateway; Keycloak gets plain http with X-Forwarded-* from Envoy.
               KC_HTTP_ENABLED: "true"
               KC_PROXY_HEADERS: xforwarded

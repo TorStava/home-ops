@@ -2,6 +2,9 @@
 # Turvis's Keycloak (turvis ADR 0004): the login for app.<turvis domain>, public on auth.<turvis domain>,
 # realm turvis imported once from the image (turvis infra/keycloak: no dev users, no dev secret). Its
 # database is keycloak in the postgres-turvis cluster (../ks.yaml), so it waits for that.
+# One manual step lives in that database: the master realm's frontendUrl = the internal admin host,
+# without which nobody can sign in to the admin console. postgres-turvis has no backups, so after a
+# lost database redo it (kcadm command in home-ops#831's after-merge list) along with the users.
 # yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
