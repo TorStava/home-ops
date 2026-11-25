@@ -28,3 +28,16 @@ spec:
     - dnsName: "www.${SECRET_DOMAIN_SLEKTLY_COM}"
       recordType: CNAME
       targets: ["external.${SECRET_DOMAIN}"]
+---
+# www only redirects at Cloudflare (to the app for now; the apex has no site yet),
+# and a redirect rule only fires on a proxied record. app and auth get their
+# records from their HTTPRoutes later.
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: turvis-redirects
+spec:
+  endpoints:
+    - dnsName: "www.${SECRET_DOMAIN_TURVIS}"
+      recordType: CNAME
+      targets: ["external.${SECRET_DOMAIN}"]

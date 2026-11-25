@@ -16,7 +16,7 @@ spec:
               name: cert-manager-secret
               key: API_TOKEN
         selector:
-          dnsZones: ["${SECRET_DOMAIN}", "${SECRET_DOMAIN_SLEKTLY}", "${SECRET_DOMAIN_AFTERWORD}"]
+          dnsZones: ["${SECRET_DOMAIN}", "${SECRET_DOMAIN_SLEKTLY}", "${SECRET_DOMAIN_AFTERWORD}", "${SECRET_DOMAIN_TURVIS}"]
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/cert-manager.io/clusterissuer_v1.json
 apiVersion: cert-manager.io/v1

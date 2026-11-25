@@ -58,3 +58,17 @@ spec:
         certificateRefs:
           - kind: Secret
             name: ${SECRET_DOMAIN_AFTERWORD/./-}-production-tls
+    # Turvis: app and auth live on subdomains, so one wildcard listener. The apex is
+    # reserved for a future landing page and has no listener yet; the certificate
+    # already covers it.
+    - name: https-turvis
+      protocol: HTTPS
+      port: 443
+      hostname: "*.${SECRET_DOMAIN_TURVIS}"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: ${SECRET_DOMAIN_TURVIS/./-}-production-tls
