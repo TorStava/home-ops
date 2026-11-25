@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - ./externalsecret.yaml
   - ./externalsecret-mail.yaml
+  - ./externalsecret-api.yaml
   - ./helmrelease.yaml
 # The shared gatus/external component builds its URL on ${SECRET_DOMAIN}, so this app carries its own.
 configMapGenerator:

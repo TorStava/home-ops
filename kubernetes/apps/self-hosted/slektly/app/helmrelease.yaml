@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              tag: sha-5fd4b35@sha256:3983216282d6bab768acbc2a21bef4f689eba49dcbdce48298e09a03cb5c4f1c
+              tag: sha-478bff6@sha256:fd3f069ca9dcf81fa3835d8c6ca133e626c29b4415f165f4142fc49568ffdfb9
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
             env:
               # Believe Cloudflare's CF-Connecting-IP for the rate limit: every request comes through
@@ -68,15 +68,29 @@ spec:
           api:
             image:
               repository: ghcr.io/torstava/slektly-api
-              tag: sha-5fd4b35@sha256:9cb61be06884609bcd4798b4f70b62d8c433a6cef429c5c933a2655e6d724293
+              tag: sha-478bff6@sha256:616dca4fb1c48566cec3f86dc7270830a88cd3232811ccb0c828edb50ed36e0d
             env:
               # Scaleway Transactional Email (slektly#154); Personvern names it since slektly#171.
               # The secret below carries the key; set fake to stop delivery without stopping the form.
               MAIL_PROVIDER: scaleway
               TRUST_CF_CONNECTING_IP: "1"
+              # Sign-in by e-mail link (slektly ADR 0022). https, so the session cookie is
+              # __Host- and Secure; never set ALLOW_INSECURE_SITE here.
+              SITE_ORIGIN: "https://${SECRET_DOMAIN_SLEKTLY}"
+              # The API migrates this database itself at startup; CNPG makes slektly its owner.
+              DATABASE_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-slektly-app
+                    key: uri
             envFrom:
               - secretRef:
                   name: slektly-mail
+              # OWNER_EMAILS. Optional: without it the API still starts (it logs that nobody can
+              # sign in), so a missing Bitwarden item cannot take the contact form down with it.
+              - secretRef:
+                  name: slektly-api
+                  optional: true
             # Loopback only, so the kubelet cannot probe it over the network: an exec probe from inside.
             probes:
               liveness:
@@ -95,12 +109,17 @@ spec:
                 enabled: false
               startup:
                 enabled: false
+            # Sized for tree builds (uploads and the hourly rebuild run in a worker thread with a
+            # 3072 MB heap cap, slektly server/tree-builder.ts), not the contact form. Measured on
+            # sha-478bff6's code, peak RSS of the whole process: 3.4 MB GEDCOM (fixtures/large.ged)
+            # 529 MiB; 53.5 MiB, 50,000 people about 4.5 GiB; 63.3 MiB, 59,000 people (at the 64 MiB
+            # upload cap) 4864-4882 MiB, once 5226 MiB. 6Gi leaves about 15% over the worst run.
             resources:
               requests:
                 cpu: 5m
-                memory: 32Mi
-              limits:
                 memory: 128Mi
+              limits:
+                memory: 6Gi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
