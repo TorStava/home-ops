@@ -53,6 +53,9 @@ spec:
               # TLS ends at the gateway; Keycloak gets plain http with X-Forwarded-* from Envoy.
               KC_HTTP_ENABLED: "true"
               KC_PROXY_HEADERS: xforwarded
+              # One replica, so local caches: with the default ispn (JGroups jdbc-ping) a start after an
+              # unclean stop waits about 20 s on cluster JOIN (measured: ready in 29 s, 7 s with local).
+              KC_CACHE: local
               # The realm import's two values (turvis infra/keycloak/realm-cluster.jq): the only app
               # address the turvis-web client accepts, and its secret. The image refuses to import
               # the realm without them.
