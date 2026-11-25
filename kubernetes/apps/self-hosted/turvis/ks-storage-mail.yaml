@@ -1,0 +1,61 @@
+---
+# Turvis's storage for bilder (its own Garage, ./garage) and mail (Scaleway TEM, ./mail), step 5. In their own file so
+# they do not collide with the Keycloak Kustomization (step 4) that is added to ks.yaml. The web app and the scheduler
+# (step 6) dependsOn both; turvis-garage is healthy only when its setup container has finished (layout, bucket, key).
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app turvis-garage
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: external-secrets
+      namespace: external-secrets
+    - name: openebs
+      namespace: openebs-system
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/garage
+  postBuild:
+    substitute:
+      APP: turvis
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 10m
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: *app
+      namespace: *namespace
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app turvis-mail
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: bitwarden
+      namespace: external-secrets
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/mail
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m

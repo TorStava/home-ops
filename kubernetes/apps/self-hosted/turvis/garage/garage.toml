@@ -1,0 +1,20 @@
+# Turvis's own Garage in the cluster (turvis ADR 0012; local dev: turvis infra/garage/garage.toml). One node, one
+# copy, SQLite metadata, all on the volume at /var/lib/garage. The RPC secret and the admin token are not here: the
+# pod passes them as GARAGE_RPC_SECRET and GARAGE_ADMIN_TOKEN (secret turvis-garage).
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+
+# One node talks to itself: RPC and the admin API listen on loopback, so nothing else in the cluster can reach
+# them (the setup container shares the pod). Only the S3 API listens on the pod's address.
+rpc_bind_addr = "127.0.0.1:3901"
+rpc_public_addr = "127.0.0.1:3901"
+
+[s3_api]
+# The app signs for this region (S3_REGION=garage) and uses path-style addresses.
+s3_region = "garage"
+api_bind_addr = "0.0.0.0:3900"
+
+[admin]
+api_bind_addr = "127.0.0.1:3903"

@@ -1,0 +1,27 @@
+---
+# The S3 API is for the Turvis pods only. There is no Turvis namespace (everything runs in self-hosted), so the
+# pods are picked by label: app-template sets app.kubernetes.io/instance to the HelmRelease's name. The setup
+# container shares the Garage pod and talks over loopback, which a policy does not touch; the kubelet's probes
+# come from the node and are always let in. Step 6 names its release turvis (two controllers) or turvis-web and
+# turvis-scheduler (two releases); anything else is added here.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: turvis-garage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: turvis-garage
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values: [turvis, turvis-web, turvis-scheduler]
+      ports:
+        - port: 3900
+          protocol: TCP

@@ -1,0 +1,167 @@
+---
+# Turvis's own Garage (S3 for the bilder, turvis ADR 0012): one node, one volume, no backup (demo data only). Same
+# image and settings as turvis's compose.yaml (service garage); the settings are in garage.toml. The Service is a
+# ClusterIP for the S3 API only: no route, and a NetworkPolicy lets only the Turvis pods in. The `setup` container
+# is what compose's garage-setup is: it applies the layout, makes the bucket and imports the app's key, on every
+# start (safe to repeat), and the pod is ready only after it has finished.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app turvis-garage
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        # One volume that only one pod can hold.
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: docker.io/dxflrs/garage
+              tag: v2.2.0@sha256:45a61ce3f7c9c24fc23d9ed2b09b27ed560ab87b34605d175d5c588f539c24e4
+            envFrom:
+              - secretRef:
+                  name: turvis-garage
+            # The S3 port answers once Garage is up; the layout comes from the setup container.
+            probes:
+              liveness: &probe
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: &s3 3900
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *probe
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *s3
+                  periodSeconds: 3
+                  failureThreshold: 40
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 512Mi
+            securityContext: &securityContext
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+          # compose's garage-setup (turvis infra/garage/setup.sh): runs the script, then keeps the container (and
+          # so the pod's readiness) up until the pod stops. A failed setup exits and the container restarts.
+          setup:
+            image:
+              repository: docker.io/curlimages/curl
+              tag: 8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                trap 'exit 0' TERM INT
+                /bin/sh /setup/setup.sh || exit 1
+                touch /tmp/ready
+                while :; do sleep 3600 & wait $!; done
+            env:
+              LAYOUT_CAPACITY_BYTES: "4294967296"
+              GARAGE_ADMIN_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-garage
+                    key: GARAGE_ADMIN_TOKEN
+              S3_BUCKET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-s3
+                    key: S3_BUCKET
+              S3_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-s3
+                    key: S3_ACCESS_KEY_ID
+              S3_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-s3
+                    key: S3_SECRET_ACCESS_KEY
+            probes:
+              liveness:
+                enabled: false
+              startup:
+                enabled: false
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: ["test", "-f", "/tmp/ready"]
+                  periodSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                memory: 64Mi
+            securityContext: *securityContext
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: { type: RuntimeDefault }
+    service:
+      app:
+        controller: *app
+        ports:
+          s3:
+            port: *s3
+    persistence:
+      data:
+        existingClaim: *app
+        advancedMounts:
+          *app :
+            app:
+              - path: /var/lib/garage
+      config:
+        type: configMap
+        name: turvis-garage-config
+        advancedMounts:
+          *app :
+            app:
+              - path: /etc/garage.toml
+                subPath: garage.toml
+                readOnly: true
+      setup:
+        type: configMap
+        name: turvis-garage-setup
+        advancedMounts:
+          *app :
+            setup:
+              - path: /setup
+                readOnly: true
+      setup-tmp:
+        type: emptyDir
+        advancedMounts:
+          *app :
+            setup:
+              - path: /tmp
