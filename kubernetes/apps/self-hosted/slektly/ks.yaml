@@ -47,7 +47,9 @@ spec:
       CNPG_LIMITS_MEMORY: 1Gi
       CNPG_LIMITS_MEMORY_HUGEPAGES: 256Mi
       CNPG_SHARED_BUFFERS: 128MB
-      CNPG_MAX_CONNECTIONS: '100'
+      # Inner quotes on purpose: CNPG wants parameters as strings and rejects a bare number
+      # (the component's own default is :="600" for the same reason).
+      CNPG_MAX_CONNECTIONS: '"100"'
   components:
     - ../../../../components/cnpg/backup
   patches:
@@ -64,6 +66,23 @@ spec:
               database: slektly
               owner: slektly
               dataChecksums: true
+    # To restore this cluster from its backup: switch the component above to
+    # ../../../../components/cnpg/restore and replace the initdb patch with this one. database and
+    # owner are required: without them CNPG names both "app", postgres-slektly-app then points at a
+    # new empty database, and the API migrates it and starts with no accounts or trees.
+    # Optional: recoveryTarget.targetTime for a point in time.
+    # - target:
+    #     kind: Cluster
+    #   patch: |-
+    #     apiVersion: postgresql.cnpg.io/v1
+    #     kind: Cluster
+    #     metadata:
+    #       name: not-used
+    #     spec:
+    #       bootstrap:
+    #         recovery:
+    #           database: slektly
+    #           owner: slektly
     - target:
         kind: ObjectStore
       patch: |-
