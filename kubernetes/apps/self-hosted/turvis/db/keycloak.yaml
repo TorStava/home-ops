@@ -1,0 +1,26 @@
+---
+# Keycloak's role and database in the Turvis cluster (what Turvis's infra/postgres/init.sh does locally).
+# keycloak has no other attributes or memberships, so CNPG managing it fights nothing.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/postgresql.cnpg.io/databaserole_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: DatabaseRole
+metadata:
+  name: postgres-${APP}-keycloak
+spec:
+  cluster:
+    name: postgres-${APP}
+  name: keycloak
+  login: true
+  passwordSecret:
+    name: ${APP}-keycloak-db
+---
+# yaml-language-server: $schema=https://schemas.tholinka.dev/postgresql.cnpg.io/database_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: postgres-${APP}-keycloak
+spec:
+  cluster:
+    name: postgres-${APP}
+  name: keycloak
+  owner: keycloak
