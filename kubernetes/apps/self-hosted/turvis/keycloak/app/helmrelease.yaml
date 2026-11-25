@@ -139,7 +139,9 @@ spec:
             path: /metrics
             interval: 1m
             scrapeTimeout: 10s
-    # Keycloak writes only temporary files; the rest of the filesystem stays read-only.
+    # The root filesystem stays read-only; Keycloak writes only here. transaction-logs is Narayana's
+    # object store: without it every start waits about 30 s on RecoveryModule retries (measured 36.6 s
+    # vs 6.6 s). Not all of /opt/keycloak/data, which would hide the realm in data/import.
     persistence:
       tmp:
         type: emptyDir
@@ -149,6 +151,10 @@ spec:
         type: emptyDir
         globalMounts:
           - path: /opt/keycloak/data/tmp
+      transaction-logs:
+        type: emptyDir
+        globalMounts:
+          - path: /opt/keycloak/data/transaction-logs
     route:
       # Public, through the tunnel: only the turvis realm (login, tokens, account) and the static
       # files its pages load. Not /admin/ and not the master realm; other paths 404 at the gateway.
