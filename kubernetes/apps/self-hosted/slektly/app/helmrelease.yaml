@@ -112,14 +112,14 @@ spec:
             # Sized for tree builds (uploads and the hourly rebuild run in a worker thread with a
             # 3072 MB heap cap, slektly server/tree-builder.ts), not the contact form. Measured on
             # sha-478bff6's code, peak RSS of the whole process: 3.4 MB GEDCOM (fixtures/large.ged)
-            # 529 MiB; 56 MB, 50,000 people (fixtures:stress, just under the 64 MiB upload cap)
-            # 4470 MiB. 5Gi covers the cap, so a legal upload cannot OOM-kill the API.
+            # 529 MiB; 53.5 MiB, 50,000 people about 4.5 GiB; 63.3 MiB, 59,000 people (at the 64 MiB
+            # upload cap) 4864-4882 MiB, once 5226 MiB. 6Gi leaves about 15% over the worst run.
             resources:
               requests:
                 cpu: 5m
                 memory: 128Mi
               limits:
-                memory: 5Gi
+                memory: 6Gi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
