@@ -15,4 +15,8 @@ configMapGenerator:
     files:
       - setup.sh=./setup.sh
 generatorOptions:
+  # Flux's postBuild substitution would blank every ${VAR} in setup.sh (and any $VAR with braces); the scripts are shell,
+  # not templates.
+  annotations:
+    kustomize.toolkit.fluxcd.io/substitute: disabled
   disableNameSuffixHash: true

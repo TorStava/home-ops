@@ -3,7 +3,8 @@
 # pods are picked by label: app-template sets app.kubernetes.io/instance to the HelmRelease's name. The setup
 # container shares the Garage pod and talks over loopback, which a policy does not touch; the kubelet's probes
 # come from the node and are always let in. Step 6 names its release turvis (two controllers) or turvis-web and
-# turvis-scheduler (two releases); anything else is added here.
+# turvis-scheduler (two releases); anything else is added here. That includes a demo-data seed Job or a migrate Job
+# that does not come from one of those releases' app-template (it has another instance label): it is blocked too.
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/networking.k8s.io/networkpolicy_v1.json
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
