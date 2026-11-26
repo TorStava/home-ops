@@ -1,5 +1,5 @@
 ---
-# Turvis's own Garage (S3 for the bilder, turvis ADR 0012): one node, one volume, no backup (demo data only). Same
+# Turvis's own Garage (S3 for the bilder, turvis ADR 0012): one node, one volume, copied nightly to R2 (../photos-backup). Same
 # image and settings as turvis's compose.yaml (service garage); the settings are in garage.toml. The Service is a
 # ClusterIP for the S3 API only: no route, and a NetworkPolicy lets only the Turvis pods in. The `setup` container
 # is what compose's garage-setup is: it applies the layout, makes the bucket and imports the app's key, on every
@@ -101,6 +101,16 @@ spec:
                   secretKeyRef:
                     name: turvis-s3
                     key: S3_SECRET_ACCESS_KEY
+              BACKUP_ACCESS_KEY_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-garage-backup
+                    key: BACKUP_ACCESS_KEY_ID
+              BACKUP_SECRET_ACCESS_KEY:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-garage-backup
+                    key: BACKUP_SECRET_ACCESS_KEY
             probes:
               liveness:
                 enabled: false

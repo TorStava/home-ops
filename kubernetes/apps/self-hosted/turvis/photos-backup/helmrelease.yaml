@@ -1,0 +1,85 @@
+---
+# The nightly copy of Turvis's bilder off the cluster (home-ops#842): rclone copy from the Garage bucket turvis-photos to
+# the R2 bucket turvis-photos-backup (EU jurisdiction). Tor's choice (Thu 26 Nov 2026): copy, not sync, so a bild that
+# is deleted in Turvis (or lost with the Garage volume) stays in R2; R2 keeps no versions, and nothing here deletes
+# there. --immutable: a bild already in R2 is never replaced either. Turvis never rewrites a key (rentals/<tenant>/<uuid>/
+# <size>.webp, turvis apps/web/src/lib/photos.ts), so a changed object means damage or tampering: the run keeps R2's copy,
+# still copies new bilder, and exits non-zero ("immutable file modified"), which fires KubeJobFailed. To restore, the
+# same command the other way, with a Garage key that can write (the app's, secret turvis-s3).
+# Garage side: a read-only key (secret turvis-garage-backup, setup.sh step 4); the NetworkPolicy lets this release's pods
+# reach the S3 port. A failed run is alerted by KubeJobFailed.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app turvis-photos-backup
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        type: cronjob
+        cronjob:
+          # After the Postgres base backup (00:00 UTC); Oslo time.
+          schedule: '30 3 * * *'
+          timeZone: Europe/Oslo
+          concurrencyPolicy: Forbid
+          backoffLimit: 2
+          successfulJobsHistory: 1
+          failedJobsHistory: 1
+          ttlSecondsAfterFinished: 86400
+        containers:
+          app:
+            image:
+              repository: docker.io/rclone/rclone
+              tag: 1.76.0@sha256:7cbeec24a44f206067597c0368be4de90ae19a64d5113c7d1938bd737a81e466
+            envFrom:
+              - secretRef:
+                  name: turvis-garage-backup
+              - secretRef:
+                  name: turvis-photos-backup-r2
+            env:
+              # rclone wants a config file even when every remote comes from the environment.
+              RCLONE_CONFIG: /tmp/rclone.conf
+              HOME: /tmp
+            args:
+              - copy
+              - garage:turvis-photos
+              - r2:turvis-photos-backup
+              - --fast-list
+              # Never replace a bild already in R2 (see the top of this file).
+              - --immutable
+              - --stats-one-line
+              - --stats=0
+              - -v
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 512Mi
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+    persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp

@@ -5,6 +5,7 @@
 # come from the node and are always let in. Step 6 names its release turvis (two controllers) or turvis-web and
 # turvis-scheduler (two releases); anything else is added here. That includes a demo-data seed Job or a migrate Job
 # that does not come from one of those releases' app-template (it has another instance label): it is blocked too.
+# turvis-photos-backup is the nightly copy to R2 (../photos-backup); its Garage key can only read.
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/networking.k8s.io/networkpolicy_v1.json
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -22,7 +23,7 @@ spec:
             matchExpressions:
               - key: app.kubernetes.io/instance
                 operator: In
-                values: [turvis, turvis-web, turvis-scheduler]
+                values: [turvis, turvis-web, turvis-scheduler, turvis-photos-backup]
       ports:
         - port: 3900
           protocol: TCP

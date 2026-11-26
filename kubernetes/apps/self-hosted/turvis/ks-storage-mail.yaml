@@ -59,3 +59,34 @@ spec:
     namespace: flux-system
   targetNamespace: *namespace
   timeout: 5m
+---
+# The nightly copy of the bilder to R2 (./photos-backup): needs Garage (its read-only key, secret turvis-garage-backup,
+# comes from there) and the Bitwarden item turvis-photos-r2.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app turvis-photos-backup
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: bitwarden
+      namespace: external-secrets
+    - name: turvis-garage
+      namespace: *namespace
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/photos-backup
+  postBuild:
+    substitute:
+      APP: *app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 5m
