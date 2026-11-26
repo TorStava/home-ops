@@ -1,0 +1,180 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app turvis-keycloak
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      *app :
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            # Keycloak with the Turvis login theme and the realm built in (turvis infra/keycloak/Dockerfile):
+            # an optimized build for Postgres, health and metrics on the management port.
+            image:
+              repository: ghcr.io/torstava/turvis-keycloak
+              tag: sha-55eff26@sha256:fb7aa371d2a807e80f37ce5a6d4e16edf961ff2cf0ad06df791178e465b03876
+            # Production mode. --import-realm imports turvis only when it does not exist yet, so the
+            # users and settings made in the admin console stay across restarts and new images.
+            args: ["start", "--optimized", "--import-realm"]
+            env:
+              KC_DB_URL: jdbc:postgresql://postgres-turvis-rw.self-hosted.svc.cluster.local:5432/keycloak
+              KC_DB_USERNAME:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-keycloak-db
+                    key: username
+              KC_DB_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-keycloak-db
+                    key: password
+              # Login pages, tokens and the issuer: https://auth.<turvis domain>/realms/turvis.
+              KC_HOSTNAME: https://auth.${SECRET_DOMAIN_TURVIS}
+              # The admin console on an internal host only: the public route below passes only the
+              # turvis realm and static resources. This moves only the console's own URLs; its login
+              # goes to the master realm on the master realm's frontend URL, which is KC_HOSTNAME
+              # (404 publicly) until master's frontendUrl is set to this host once, by hand, after
+              # the first start (the PR's after-merge step; the master realm cannot be imported).
+              KC_HOSTNAME_ADMIN: https://turvis-keycloak.${SECRET_DOMAIN}
+              # TLS ends at the gateway; Keycloak gets plain http with X-Forwarded-* from Envoy.
+              KC_HTTP_ENABLED: "true"
+              KC_PROXY_HEADERS: xforwarded
+              # One replica, so local caches: with the default ispn (JGroups jdbc-ping) a start after an
+              # unclean stop waits about 20 s on cluster JOIN (measured: ready in 29 s, 7 s with local).
+              KC_CACHE: local
+              # The realm import's two values (turvis infra/keycloak/realm-cluster.jq): the only app
+              # address the turvis-web client accepts, and its secret. The image refuses to import
+              # the realm without them.
+              TURVIS_APP_URL: https://app.${SECRET_DOMAIN_TURVIS}
+              TURVIS_WEB_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-web-oidc
+                    key: client-secret
+              # No SMTP yet: password-reset and verify mails fail until step 5 (Scaleway TEM).
+            envFrom:
+              - secretRef:
+                  name: turvis-keycloak-admin
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/live
+                    port: &management 9000
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/ready
+                    port: *management
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              # First start creates the schema and imports the realm (about 30 s locally).
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health/started
+                    port: *management
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            # The JVM heap follows the limit: Keycloak's default JAVA_OPTS_KC_HEAP is
+            # -XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=50 of the container's memory.
+            resources:
+              requests:
+                cpu: 50m
+                memory: 768Mi
+              limits:
+                memory: 1536Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      imagePullSecrets:
+        - name: turvis-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000 # keycloak
+        runAsGroup: 0
+        seccompProfile: { type: RuntimeDefault }
+    service:
+      app:
+        controller: *app
+        ports:
+          http:
+            port: &port 8080
+          management:
+            port: *management
+    serviceMonitor:
+      app:
+        serviceName: *app
+        endpoints:
+          - port: management
+            scheme: http
+            path: /metrics
+            interval: 1m
+            scrapeTimeout: 10s
+    # The root filesystem stays read-only; Keycloak writes only here. transaction-logs is Narayana's
+    # object store: without it every start waits about 30 s on RecoveryModule retries (measured 36.6 s
+    # vs 6.6 s). Not all of /opt/keycloak/data, which would hide the realm in data/import.
+    persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      data-tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /opt/keycloak/data/tmp
+      transaction-logs:
+        type: emptyDir
+        globalMounts:
+          - path: /opt/keycloak/data/transaction-logs
+    route:
+      # Public, through the tunnel: only the turvis realm (login, tokens, account) and the static
+      # files its pages load. Not /admin/ and not the master realm; other paths 404 at the gateway.
+      app:
+        hostnames: ["auth.${SECRET_DOMAIN_TURVIS}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https-turvis
+        rules:
+          - matches:
+              - path: {type: PathPrefix, value: /realms/turvis/}
+              - path: {type: PathPrefix, value: /resources/}
+            backendRefs: [{identifier: app, port: *port}]
+      # The admin console, on the LAN only (internal gateway; DNS from pihole, never Cloudflare).
+      admin:
+        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
+        parentRefs:
+          - name: internal
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs: [{identifier: app, port: *port}]

@@ -101,3 +101,36 @@ spec:
     - apiVersion: *postgresVersion
       kind: *databaseKind
       current: has(status.applied) && status.applied == true
+---
+# Turvis's Keycloak (turvis ADR 0004): the login for app.<turvis domain>, public on auth.<turvis domain>,
+# realm turvis imported once from the image (turvis infra/keycloak: no dev users, no dev secret). Its
+# database is keycloak in the postgres-turvis cluster (above), so it waits for that.
+# One manual step lives in that database: the master realm's frontendUrl = the internal admin host,
+# without which nobody can sign in to the admin console. postgres-turvis has no backups, so after a
+# lost database redo it (kcadm command in home-ops#831's after-merge list) along with the users.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app turvis-keycloak
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: postgres-turvis
+      namespace: *namespace
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/keycloak
+  postBuild:
+    substitute:
+      APP: *app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 10m
