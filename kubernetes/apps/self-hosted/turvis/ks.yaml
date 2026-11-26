@@ -137,3 +137,42 @@ spec:
     namespace: flux-system
   targetNamespace: *namespace
   timeout: 10m
+---
+# Turvis itself (step 6): the web app on app.<turvis domain> and the scheduler (turvis ADR 0011), one
+# HelmRelease named turvis with two controllers, so both pods carry app.kubernetes.io/instance=turvis,
+# which the Garage NetworkPolicy lets in. The web pod migrates the database at every start (turvis
+# apps/web/docker/start.ts) as the owner turvis, and that run creates the app role turvis_app; both
+# pods then log in as turvis_app. The scheduler's pod waits for the web app first (see its
+# initContainer). Mail goes out through turvis-mail, bilder go to turvis-garage.
+# yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: &app turvis
+  namespace: &namespace self-hosted
+spec:
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: *app
+  dependsOn:
+    - name: postgres-turvis
+      namespace: *namespace
+    - name: turvis-keycloak
+      namespace: *namespace
+    - name: turvis-garage
+      namespace: *namespace
+    - name: turvis-mail
+      namespace: *namespace
+  interval: 1h
+  retryInterval: 2m
+  path: ./kubernetes/apps/self-hosted/turvis/app
+  postBuild:
+    substitute:
+      APP: *app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  targetNamespace: *namespace
+  timeout: 10m

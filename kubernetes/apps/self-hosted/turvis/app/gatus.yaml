@@ -1,0 +1,9 @@
+endpoints:
+  - name: turvis
+    group: external
+    url: 'https://app.${SECRET_DOMAIN_TURVIS}/api/health'
+    interval: 1m
+    client:
+      dns-resolver: tcp://1.1.1.1:53
+    conditions:
+      - '[STATUS] == 200'
