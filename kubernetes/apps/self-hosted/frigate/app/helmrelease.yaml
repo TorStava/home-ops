@@ -35,31 +35,42 @@ spec:
               requests:
                 cpu: 1000m
                 memory: 2Gi
+            # Not privileged: detection runs on the CPU and no device is passed in. s6 needs
+            # these to set up its log dirs and drop to service users; media is on NFS.
             securityContext:
-              privileged: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: ["ALL"]
+                add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+              seccompProfile:
+                type: RuntimeDefault
 
     service:
+      # In-cluster only: 8971 (authenticated UI) for the internal gateway route, 5000 for homepage.
       app:
         controller: *app
-        type: LoadBalancer
-        annotations:
-          lbipam.cilium.io/ips: 192.168.1.249
+        primary: true
+        # Keep the name `frigate`: the route and homepage widget point at it.
+        forceRename: *app
         ports:
           http:
             port: &port 8971
           unsecure:
             port: 5000
+      # LAN address for Home Assistant only: the integration's API (5000, unauthenticated by
+      # design) and camera restreams (8554). Cilium drops any other source.
+      ha:
+        controller: *app
+        type: LoadBalancer
+        annotations:
+          lbipam.cilium.io/ips: 192.168.1.249
+        loadBalancerSourceRanges:
+          - 192.168.1.20/32 # home-assistant (external-services/home-assistant)
+        ports:
+          unsecure:
+            port: 5000
           rtsp:
             port: 8554
-          webrtc-tcp:
-            port: 8555
-            protocol: TCP
-          webrtc-udp:
-            port: 8555
-            protocol: UDP
-          go2rtc:
-            port: 1984
-            protocol: TCP
 
     route:
       app:
