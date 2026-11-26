@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+version: 1
+metadata:
+  name: Login security (MFA, lockout)
+  labels:
+    blueprints.goauthentik.io/description: MFA required on the password login, and a lockout after repeated failures
+entries:
+  # MFA is required after the password. A user with no MFA device sets one up
+  # right there (passkey/security key, or an authenticator app) instead of being
+  # let through. Recovery codes (static) count once a user has made them.
+  # The Google login (default-source-authentication flow) does not pass this
+  # stage: Google's own sign-in, and its 2-step verification, cover it.
+  - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+    identifiers:
+      name: default-authentication-mfa-validation
+    attrs:
+      not_configured_action: configure
+      device_classes:
+        - static
+        - totp
+        - webauthn
+      configuration_stages:
+        - !Find [authentik_stages_authenticator_webauthn.authenticatorwebauthnstage, [name, default-authenticator-webauthn-setup]]
+        - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
+
+  # Lockout: each failed identification, password or MFA attempt lowers the
+  # reputation score of that (IP, username) pair by 1, and each login raises it
+  # by 1. A score row expires a day after it was first written. The policy
+  # matches when the summed score for this IP, or for this username, is -5 or
+  # lower.
+  - model: authentik_policies_reputation.reputationpolicy
+    id: reputation
+    identifiers:
+      name: default-authentication-reputation
+    attrs:
+      check_ip: true
+      check_username: true
+      threshold: -5
+  - model: authentik_stages_deny.denystage
+    id: reputation-deny
+    identifiers:
+      name: default-authentication-reputation-deny
+    attrs:
+      deny_message: Too many failed sign-in attempts. Try again later, or continue with Google.
+  # Runs between identification (10) and password (20), only when the policy
+  # matches, so a locked-out user never gets to try a password. The Google
+  # button is on the identification stage, before this, so Google still works.
+  # If the policy errors, the stage is skipped (failure_result false): fail open
+  # rather than lock everyone out.
+  - model: authentik_flows.flowstagebinding
+    id: reputation-deny-binding
+    identifiers:
+      target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+      stage: !KeyOf reputation-deny
+      order: 15
+    attrs:
+      evaluate_on_plan: false
+      re_evaluate_policies: true
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf reputation-deny-binding
+      policy: !KeyOf reputation
+      order: 0
+    attrs:
+      failure_result: false

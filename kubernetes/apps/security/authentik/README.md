@@ -12,6 +12,7 @@ Change these **only in code**:
 - access groups (`Guests`, `Household`, `Operators`)
 - policy bindings: which group may open which application
 - outposts
+- the login rules in `login-security.yaml`: MFA and the lockout
 
 Use the UI for:
 
@@ -34,6 +35,30 @@ group are refused everywhere.
 
 Apps that map groups to in-app roles (Forgejo, Grafana) check only for `Operators`. The `groups`
 claim lists direct memberships, not inherited parent groups.
+
+## Login security
+
+`app/resources/blueprints/login-security.yaml` sets two rules on the username-and-password login
+(`default-authentication-flow`):
+
+- **MFA is required.** After the password, a user must use a passkey/security key, an authenticator
+  app (TOTP) or a recovery code. A user with none sets one up right there, at that login.
+- **Lockout.** Failed identification, password or MFA attempts lower a reputation score per
+  username and per IP. At -5 the login stops before the password step with "Too many failed
+  sign-in attempts". Each successful login raises the score by 1, and a score expires a day after
+  it was first written.
+
+The Google login (`default-source-authentication`) has neither rule. Google's own sign-in covers it,
+and it stays open while a username is locked out.
+
+Break-glass, if the only admin is locked out or has lost every MFA device:
+
+```sh
+kubectl -n security exec deploy/authentik-server -c server -- ak create_recovery_key 10 <username>
+```
+
+It prints a link, valid for 10 minutes, that logs the user in. From there, user settings
+can add an MFA device.
 
 ## Adding an application
 
