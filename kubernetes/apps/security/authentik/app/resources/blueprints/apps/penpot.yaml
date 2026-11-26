@@ -31,7 +31,7 @@ entries:
       redirect_uris:
         - matching_mode: strict
           redirect_uri_type: authorization
-          url: https://penpot.${SECRET_DOMAIN}/api/auth/oauth/oidc/callback
+          url: https://penpot.${SECRET_DOMAIN}/api/auth/oidc/callback
       sub_mode: hashed_user_id
       issuer_mode: per_provider
       include_claims_in_id_token: true
