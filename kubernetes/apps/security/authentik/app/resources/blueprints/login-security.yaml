@@ -23,17 +23,16 @@ entries:
         - !Find [authentik_stages_authenticator_webauthn.authenticatorwebauthnstage, [name, default-authenticator-webauthn-setup]]
         - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
 
-  # Lockout: each failed identification, password or MFA attempt lowers the
-  # reputation score of that (IP, username) pair by 1, and each login raises it
-  # by 1. A score row expires a day after it was first written. The policy
-  # matches when the summed score for this IP, or for this username, is -5 or
-  # lower.
+  # Lockout per username: each failed identification, password or MFA attempt
+  # lowers the username's reputation score by 1, and each login raises it by 1.
+  # A score row expires a day after it was first written. The policy matches
+  # when the username's summed score is -5 or lower.
   - model: authentik_policies_reputation.reputationpolicy
     id: reputation
     identifiers:
       name: default-authentication-reputation
     attrs:
-      check_ip: true
+      check_ip: false
       check_username: true
       threshold: -5
   - model: authentik_stages_deny.denystage

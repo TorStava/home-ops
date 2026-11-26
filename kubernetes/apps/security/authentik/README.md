@@ -44,7 +44,7 @@ claim lists direct memberships, not inherited parent groups.
 - **MFA is required.** After the password, a user must use a passkey/security key, an authenticator
   app (TOTP) or a recovery code. A user with none sets one up right there, at that login.
 - **Lockout.** Failed identification, password or MFA attempts lower a reputation score per
-  username and per IP. At -5 the login stops before the password step with "Too many failed
+  username. At -5 the login stops before the password step with "Too many failed
   sign-in attempts". Each successful login raises the score by 1, and a score expires a day after
   it was first written.
 
