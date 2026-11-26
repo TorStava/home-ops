@@ -44,13 +44,13 @@ spec:
       CNPG_VERSION: 17.5-standard-bookworm@sha256:8bcc3eb5b0b2dd7ad91c3c57eadc0df37148f28be16fc8062ed5eb29a2a4a4b7
       CNPG_SIZE: 5Gi
       CNPG_REQUESTS_CPU: 100m
-      # Sized for storing a tree (slektly server/trees.ts storeBuild). Since slektly#190 (gzip views)
-      # the INSERT carries both views gzipped: at the 64 MiB upload cap (59,000 people) Postgres peaked
-      # at 421 MiB during the store, against 3,028 MiB with the old text views (measured under a
-      # 512 MiB limit, no OOM). 1536Mi covers two cap-size stores at once with room to spare. The
-      # request stays small; the component otherwise sets request = limit.
+      # Sized for storing a tree: the API's INSERT (slektly server/trees.ts storeBuild) carries the
+      # report and both views as parameters, 608 MiB for 50,000 people, 722 MiB for 59,000 (a file at
+      # the 64 MiB upload cap). Measured: at 1Gi a 30,000-person tree already gets the backend
+      # OOM-killed (every session drops); at 2Gi 59,000 still does; at 3Gi and 4Gi it stores (cgroup
+      # peak 2929 MiB). The request stays small; the component otherwise sets request = limit.
       CNPG_REQUESTS_MEMORY: 1Gi
-      CNPG_LIMITS_MEMORY: 1536Mi
+      CNPG_LIMITS_MEMORY: 4Gi
       CNPG_LIMITS_MEMORY_HUGEPAGES: 256Mi
       CNPG_SHARED_BUFFERS: 128MB
       # Inner quotes on purpose: CNPG wants parameters as strings and rejects a bare number

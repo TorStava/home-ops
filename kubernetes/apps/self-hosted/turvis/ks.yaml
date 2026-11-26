@@ -1,17 +1,7 @@
 ---
-# Turvis's own Postgres: one instance, backed up by barman-cloud to an R2 bucket in the EU jurisdiction
-# (home-ops#842, as postgres-slektly): a base backup daily, WAL archived as it fills (at least every
-# 5 minutes) for point-in-time recovery, 30 days kept. The backup holds both databases, turvis and
-# keycloak. The shared postgres bucket is not EU, so this cluster overrides the bucket, the endpoint and
-# the R2 credentials of the cnpg/backup component:
-#   - bucket: turvis-postgres (EU jurisdiction), set below
-#   - endpoint: CLOUDFLARE_S3_ENDPOINT_EU in the Bitwarden item cluster_secrets
-#     (https://<account id>.eu.r2.cloudflarestorage.com)
-#   - credentials: TURVIS_R2_ACCESS_KEY_ID / TURVIS_R2_SECRET_ACCESS_KEY in the Bitwarden item
-#     turvis-r2 (an R2 token with Object Read & Write on that bucket only)
-# If archiving fails (a wrong token, R2 down), Postgres keeps every WAL file on its 2Gi volume until it
-# works again: the ContinuousArchiving condition on the Cluster says so.
-# Later Kustomizations (Keycloak, the web app and the scheduler) dependsOn this one.
+# Turvis's own Postgres: one instance, no backups (demo data only, rebuilt by seeding; add R2 backups like
+# postgres-slektly before any real tenant). Later Kustomizations (Keycloak, the web app and the scheduler)
+# dependsOn this one.
 #
 # Database turvis, owned by role turvis (CNPG's secret postgres-turvis-app: username, password, host,
 # dbname, uri). The owner runs Turvis's migrations, and the migration runner itself creates the app's
@@ -50,8 +40,6 @@ spec:
   postBuild:
     substitute:
       APP: turvis
-      # Overrides the shared bucket from cluster-secrets (inline substitutes win over substituteFrom).
-      S3_POSTGRES_BUCKET: turvis-postgres
       CNPG_REPLICAS: '1'
       # Postgres 18: the major Turvis's compose.yaml and CI test on.
       # renovate: datasource=docker depName=ghcr.io/cloudnative-pg/postgresql
@@ -68,7 +56,7 @@ spec:
       # purpose: CNPG wants parameters as strings and rejects a bare number.
       CNPG_MAX_CONNECTIONS: '"150"'
   components:
-    - ../../../../components/cnpg/backup
+    - ../../../../components/cnpg/no-backup
   patches:
     - target:
         kind: Cluster
@@ -93,58 +81,6 @@ spec:
               # lacks itself, so turvis_app can never get BYPASSRLS through it.
               postInitApplicationSQL:
                 - ALTER ROLE turvis CREATEROLE
-    # To restore this cluster from its backup: switch the component above to
-    # ../../../../components/cnpg/restore and replace the initdb patch with this one. database and
-    # owner are required: without them CNPG names both "app" and postgres-turvis-app points at a new,
-    # empty database. Roles (turvis with CREATEROLE, turvis_app, keycloak) and the keycloak database come
-    # back with the data. Optional: recoveryTarget.targetTime for a point in time.
-    # - target:
-    #     kind: Cluster
-    #   patch: |-
-    #     apiVersion: postgresql.cnpg.io/v1
-    #     kind: Cluster
-    #     metadata:
-    #       name: not-used
-    #     spec:
-    #       bootstrap:
-    #         recovery:
-    #           database: turvis
-    #           owner: turvis
-    - target:
-        kind: ObjectStore
-      patch: |-
-        apiVersion: barmancloud.cnpg.io/v1
-        kind: ObjectStore
-        metadata:
-          name: not-used
-        spec:
-          configuration:
-            endpointURL: ${CLOUDFLARE_S3_ENDPOINT_EU}
-    # The component's ExternalSecret (turvis-cnpg): Turvis's own R2 token instead of the shared one.
-    # Selected by name, not kind alone: ./db has two more ExternalSecrets (turvis-app-db,
-    # turvis-keycloak-db) that this must not touch. A regex, because at patch time the name is still
-    # the unsubstituted APP-cnpg.
-    - target:
-        kind: ExternalSecret
-        name: .*-cnpg
-      patch: |-
-        apiVersion: external-secrets.io/v1
-        kind: ExternalSecret
-        metadata:
-          name: not-used
-        spec:
-          target:
-            template:
-              data:
-                CLOUDFLARE_R2_ACCESS_KEY_ID: '{{ .TURVIS_R2_ACCESS_KEY_ID }}'
-                CLOUDFLARE_R2_SECRET_ACCESS_KEY: '{{ .TURVIS_R2_SECRET_ACCESS_KEY }}'
-          dataFrom:
-            - extract:
-                key: cloudnative_pg
-            - extract:
-                key: cloudflare
-            - extract:
-                key: turvis-r2
   healthChecks:
     - apiVersion: &postgresVersion postgresql.cnpg.io/v1
       kind: &postgresKind Cluster
@@ -171,9 +107,8 @@ spec:
 # database is keycloak in the postgres-turvis cluster (above), so it waits for that; and its mail comes
 # from Secret turvis-mail (ks-storage-mail.yaml), so it waits for that too.
 # One manual step lives in that database: the master realm's frontendUrl = the internal admin host,
-# without which nobody can sign in to the admin console. It is in postgres-turvis's backups with the
-# users; only if the database is rebuilt from nothing, redo it (kcadm command in home-ops#831's
-# after-merge list).
+# without which nobody can sign in to the admin console. postgres-turvis has no backups, so after a
+# lost database redo it (kcadm command in home-ops#831's after-merge list) along with the users.
 # yaml-language-server: $schema=https://schemas.tholinka.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
