@@ -34,6 +34,9 @@ entries:
           url: https://actual.${SECRET_DOMAIN}/openid/callback
       # Actual takes its session length from the token (ACTUAL_TOKEN_EXPIRATION: openid-provider)
       access_token_validity: days=14
+      grant_types:
+        - authorization_code
+        - refresh_token
       sub_mode: hashed_user_id
       issuer_mode: per_provider
       include_claims_in_id_token: true

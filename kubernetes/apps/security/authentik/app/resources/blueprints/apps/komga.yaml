@@ -49,6 +49,9 @@ entries:
         - matching_mode: strict
           redirect_uri_type: authorization
           url: https://komga.${SECRET_DOMAIN}/login/oauth2/code/authentik
+      grant_types:
+        - authorization_code
+        - refresh_token
       sub_mode: hashed_user_id
       issuer_mode: per_provider
       include_claims_in_id_token: true
