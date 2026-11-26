@@ -1,0 +1,246 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: &app turvis
+spec:
+  interval: 1h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  install:
+    remediation:
+      retries: -1
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  values:
+    controllers:
+      # The web app (turvis apps/web, Next.js standalone). Its entrypoint builds DATABASE_URL (turvis_app)
+      # and MIGRATION_DATABASE_URL (the owner) from the POSTGRES_* parts and APP_DB_PASSWORD, applies the
+      # migrations, and only then starts the server, so a pod is ready only on the current schema.
+      web:
+        # Recreate: one pod at a time, so two migration runs never overlap (the runner takes no lock),
+        # and the old code never serves on the new schema. A deploy costs a few seconds of downtime.
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/torstava/turvis-web
+              tag: sha-82a2e57@sha256:395f92b8ba59171f5c7b46312c3071976ca5be5778b3f62d8c773165b8e594f6
+            env: &env
+              # Kubernetes sets HOSTNAME to the pod's name, and Next.js listens on HOSTNAME.
+              HOSTNAME: 0.0.0.0
+              POSTGRES_HOST: postgres-turvis-rw.self-hosted.svc.cluster.local
+              POSTGRES_PORT: "5432"
+              POSTGRES_DB: &db turvis
+              # The schema owner (CNPG's secret): the migrations run as turvis, which has CREATEROLE and
+              # makes turvis_app on the first start. The scheduler does not get these two.
+              POSTGRES_USER:
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-turvis-app
+                    key: username
+              POSTGRES_PASSWORD:
+                valueFrom:
+                  secretKeyRef:
+                    name: postgres-turvis-app
+                    key: password
+              APP_DB_PASSWORD: &appDbPassword
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-app-db
+                    key: password
+              APP_URL: &appUrl https://app.${SECRET_DOMAIN_TURVIS}
+              # https only: the app refuses a plain-http issuer unless OIDC_ALLOW_HTTP_PRIVATE is set,
+              # and that is never set here.
+              OIDC_ISSUER: https://auth.${SECRET_DOMAIN_TURVIS}/realms/turvis
+              OIDC_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-web-oidc
+                    key: client-id
+              OIDC_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-web-oidc
+                    key: client-secret
+              # Scaleway TEM over SMTP (turvis-mail): nodemailer's URL and the sender.
+              SMTP_URL: &smtpUrl
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-mail
+                    key: SMTP_URL
+              EMAIL_FROM: &emailFrom
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-mail
+                    key: EMAIL_FROM
+              # web.log in an emptyDir (/logs below): the same lines go to stdout, which is what to read.
+              # Short keeping, so the emptyDir stays small.
+              LOG_KEEP_DAYS: &keepDays "2"
+              LOG_MAX_MB: &maxMb "20"
+            # Bilder (turvis-garage): S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY.
+            envFrom: &s3
+              - secretRef:
+                  name: turvis-s3
+            # /api/health is 200 only while the database answers. Liveness is lenient (2 minutes), so a
+            # short database restart does not also restart the web app.
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: &port 3000
+                  periodSeconds: 20
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: *port
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              # The first start applies every migration before the server listens.
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/health
+                    port: *port
+                  periodSeconds: 5
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 1Gi
+            securityContext: &securityContext
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+
+      # The scheduler (turvis ADR 0011): the payment reminder, the e-post queue sweep and the bilde sweep,
+      # every SCHEDULER_INTERVAL_MINUTES (5), as turvis_app. Exactly one: Recreate, never two during a
+      # rollout. It gets no owner password and no OIDC settings. No probe: it has no port.
+      scheduler:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        initContainers:
+          # turvis_app and the schema are made by the web pod's migration. Wait until the web app answers
+          # /api/health (it listens only after migrating), as compose's depends_on: service_healthy does.
+          # Without this, the very first start would fail every job until web has migrated.
+          wait-for-web:
+            image: &schedulerImage
+              repository: ghcr.io/torstava/turvis-scheduler
+              tag: sha-82a2e57@sha256:0b962b99d3d6972a32451393845cf373775a86ba6124b2cd5e444854f24de9a2
+            command:
+              - node
+              - -e
+              - |
+                const url = "http://turvis.self-hosted.svc.cluster.local:3000/api/health";
+                const ok = () => fetch(url, { signal: AbortSignal.timeout(5000) }).then((r) => r.ok, () => false);
+                (async () => {
+                  while (!(await ok())) {
+                    console.log("waiting for the web app (it migrates the database)");
+                    await new Promise((r) => setTimeout(r, 5000));
+                  }
+                })();
+            resources:
+              requests:
+                cpu: 5m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+            securityContext: *securityContext
+        containers:
+          app:
+            image: *schedulerImage
+            env:
+              POSTGRES_HOST: postgres-turvis-rw.self-hosted.svc.cluster.local
+              POSTGRES_PORT: "5432"
+              POSTGRES_DB: *db
+              APP_DB_PASSWORD: *appDbPassword
+              # Links in the e-post it sends: the web app's address.
+              APP_URL: *appUrl
+              SMTP_URL: *smtpUrl
+              EMAIL_FROM: *emailFrom
+              LOG_KEEP_DAYS: *keepDays
+              LOG_MAX_MB: *maxMb
+            # The bilde sweep lists and removes files in the bucket.
+            envFrom: *s3
+            probes:
+              liveness:
+                enabled: false
+              readiness:
+                enabled: false
+              startup:
+                enabled: false
+            # Measured locally: 220 MiB after a run (node with the app's TypeScript sources loaded).
+            resources:
+              requests:
+                cpu: 10m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
+            securityContext: *securityContext
+    defaultPodOptions:
+      imagePullSecrets:
+        - name: turvis-ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000 # node
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: { type: RuntimeDefault }
+    service:
+      app:
+        controller: web
+        ports:
+          http:
+            port: *port
+    # The root filesystem stays read-only. The web app writes web.log, Next.js's cache and temp files;
+    # the scheduler writes scheduler.log.
+    persistence:
+      logs:
+        type: emptyDir
+        sizeLimit: 512Mi
+        globalMounts:
+          - path: /logs
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      next-cache:
+        type: emptyDir
+        sizeLimit: 512Mi
+        advancedMounts:
+          web:
+            app:
+              - path: /app/apps/web/.next/cache
+    # Public, through the tunnel, on the turvis zone's listener. The apex stays empty (a landing page
+    # later); www redirects here at Cloudflare.
+    route:
+      app:
+        hostnames: ["app.${SECRET_DOMAIN_TURVIS}"]
+        parentRefs:
+          - name: external
+            namespace: kube-system
+            sectionName: https-turvis
+        rules:
+          - backendRefs: [{identifier: app, port: *port}]
