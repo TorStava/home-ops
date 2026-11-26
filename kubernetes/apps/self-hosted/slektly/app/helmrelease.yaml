@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              tag: sha-478bff6@sha256:fd3f069ca9dcf81fa3835d8c6ca133e626c29b4415f165f4142fc49568ffdfb9
+              tag: sha-1ec194b@sha256:f24fa8602df23b4f35f6e8b4607ef997e9f549cc93833b9c6f59c2ab281ad168
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
             env:
               # Believe Cloudflare's CF-Connecting-IP for the rate limit: every request comes through
@@ -68,7 +68,7 @@ spec:
           api:
             image:
               repository: ghcr.io/torstava/slektly-api
-              tag: sha-478bff6@sha256:616dca4fb1c48566cec3f86dc7270830a88cd3232811ccb0c828edb50ed36e0d
+              tag: sha-1ec194b@sha256:809e13af046bfefd83764170e2b73a59a484e568ff2f0bbbad58e676b56c257d
             env:
               # Scaleway Transactional Email (slektly#154); Personvern names it since slektly#171.
               # The secret below carries the key; set fake to stop delivery without stopping the form.
@@ -86,11 +86,10 @@ spec:
             envFrom:
               - secretRef:
                   name: slektly-mail
-              # OWNER_EMAILS. Optional: without it the API still starts (it logs that nobody can
-              # sign in), so a missing Bitwarden item cannot take the contact form down with it.
+              # OWNER_EMAILS, ADMIN_EMAILS and MATCH_KEY_SECRET (slektly ADR 0022, 0030). Required:
+              # since slektly#182 the API refuses to start in production without MATCH_KEY_SECRET.
               - secretRef:
                   name: slektly-api
-                  optional: true
             # Loopback only, so the kubelet cannot probe it over the network: an exec probe from inside.
             probes:
               liveness:
@@ -114,6 +113,9 @@ spec:
             # sha-478bff6's code, peak RSS of the whole process: 3.4 MB GEDCOM (fixtures/large.ged)
             # 529 MiB; 53.5 MiB, 50,000 people about 4.5 GiB; 63.3 MiB, 59,000 people (at the 64 MiB
             # upload cap) 4864-4882 MiB, once 5226 MiB. 6Gi leaves about 15% over the worst run.
+            # Kept at 6Gi on sha-1ec194b: slektly#190 measured 4.9 GiB at the cap, but an upload now
+            # also reconciles suggestions against the earlier view in the worker (slektly#180), which
+            # has not been measured at the cap yet.
             resources:
               requests:
                 cpu: 5m
