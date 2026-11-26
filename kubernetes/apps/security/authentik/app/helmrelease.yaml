@@ -35,7 +35,7 @@ spec:
             name: authentik-app-credentials
     blueprints:
       configMaps:
-        - authentik-blueprints
+        - &blueprints authentik-blueprints
     authentik:
       postgresql:
         host: postgres-cluster-rw.database.svc.cluster.local
@@ -84,6 +84,67 @@ spec:
         requests:
           cpu: 100m
           memory: 128Mi
+    # Nightly: force-apply every blueprint, then fail (KubeJobFailed) if an application
+    # is not described in code or has no access-group binding. See ../README.md.
+    # Rendered by the chart, so the image always matches the running Authentik.
+    additionalObjects:
+      - apiVersion: batch/v1
+        kind: CronJob
+        metadata:
+          name: authentik-blueprint-sync
+        spec:
+          schedule: "30 3 * * *"
+          timeZone: Europe/Oslo
+          concurrencyPolicy: Forbid
+          successfulJobsHistoryLimit: 1
+          failedJobsHistoryLimit: 1
+          jobTemplate:
+            spec:
+              backoffLimit: 1
+              # A failed Job keeps KubeJobFailed firing until it is gone; clear it before the next run.
+              ttlSecondsAfterFinished: 82800
+              template:
+                spec:
+                  restartPolicy: Never
+                  securityContext:
+                    runAsNonRoot: true
+                    runAsUser: 1000
+                    runAsGroup: 1000
+                  containers:
+                    - name: sync
+                      image: '{{ .Values.global.image.repository }}:{{ include "authentik.defaultTag" . }}{{ with .Values.global.image.digest }}@{{ . }}{{ end }}'
+                      args: ["shell", "-c", "exec(open('/sync/blueprint-sync.py').read())"]
+                      envFrom:
+                        - secretRef:
+                            name: '{{ include "authentik.secret.name" . }}'
+                        - secretRef:
+                            name: *secret
+                        - secretRef:
+                            name: authentik-app-credentials
+                      securityContext:
+                        allowPrivilegeEscalation: false
+                        capabilities:
+                          drop: [ALL]
+                      resources:
+                        requests:
+                          cpu: 50m
+                          memory: 512Mi
+                        limits:
+                          memory: 1Gi
+                      volumeMounts:
+                        - name: blueprints
+                          mountPath: /blueprints/mounted/cm-authentik-blueprints
+                          readOnly: true
+                        - name: sync
+                          mountPath: /sync
+                          readOnly: true
+                  volumes:
+                    - name: blueprints
+                      configMap:
+                        name: *blueprints
+                    - name: sync
+                      configMap:
+                        name: authentik-blueprint-sync
   valuesFrom:
     - targetPath: authentik.postgresql.user
       kind: Secret

@@ -30,5 +30,8 @@ configMapGenerator:
       - app-vikunja.yaml=./resources/blueprints/apps/vikunja.yaml
       - outposts.yaml=./resources/blueprints/outposts.yaml
       - social-login.yaml=./resources/blueprints/social-login.yaml
+  - name: authentik-blueprint-sync
+    files:
+      - blueprint-sync.py=./resources/blueprint-sync.py
 generatorOptions:
   disableNameSuffixHash: true
