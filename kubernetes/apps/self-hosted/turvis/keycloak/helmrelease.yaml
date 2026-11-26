@@ -19,6 +19,9 @@ spec:
   values:
     controllers:
       *app :
+        # One pod at a time: the entrypoint may run Keycloak's `bootstrap-admin` (adding turvis-admin to
+        # an existing realm), which needs every Keycloak node stopped. Also one set of local caches.
+        strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -27,7 +30,7 @@ spec:
             # an optimized build for Postgres, health and metrics on the management port.
             image:
               repository: ghcr.io/torstava/turvis-keycloak
-              tag: sha-82a2e57@sha256:b9722f8157f0771fd218fcd39d914789afc5a5b193bf6c95378661e2ad10c63d
+              tag: sha-9c370d7@sha256:701cc1ebba5a65431738d0399a9f93b19d4f982d8a2269ffd699370e0bb3d07d
             # Production mode. --import-realm imports turvis only when it does not exist yet, so the
             # users and settings made in the admin console stay across restarts and new images.
             args: ["start", "--optimized", "--import-realm"]
@@ -66,6 +69,14 @@ spec:
                   secretKeyRef:
                     name: turvis-web-oidc
                     key: client-secret
+              # turvis-admin (turvis ADR 0004): in the realm file for a fresh import, and set on the
+              # existing realm by the entrypoint when it does not work yet. The image refuses to start
+              # without it.
+              TURVIS_ADMIN_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-admin-client
+                    key: client-secret
               # The realm's mail (password reset, email verification): Scaleway TEM from Secret
               # turvis-mail (step 5), implicit TLS on 465. These fill the realm at import; the password
               # is not here but in the vault mount below, read by Keycloak at every send. The image
@@ -94,6 +105,10 @@ spec:
               - secretRef:
                   name: turvis-keycloak-admin
             probes:
+              # When the entrypoint adds turvis-admin to the existing realm it starts the server a second time,
+              # and /health/live is down meanwhile (about 15 s on an idle node, over 90 s at half a CPU, measured
+              # in the review of turvis#241). Two minutes of failures before a restart, so that start is not cut
+              # off (a cut one is retried at the next start, but would loop on a slow node).
               liveness:
                 enabled: true
                 custom: true
@@ -103,7 +118,7 @@ spec:
                     port: &management 9000
                   periodSeconds: 10
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  failureThreshold: 12
               readiness:
                 enabled: true
                 custom: true
@@ -138,6 +153,9 @@ spec:
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
     defaultPodOptions:
+      # A stop while the entrypoint adds turvis-admin still deletes its temporary admin before the
+      # server stops (a few kcadm calls), then the server's own shutdown: more than the default 30 s.
+      terminationGracePeriodSeconds: 90
       imagePullSecrets:
         - name: turvis-ghcr
       securityContext:
