@@ -47,6 +47,7 @@ resources:
   - ./slektly/ks.yaml
   - ./tandoor/ks.yaml
   - ./turvis/ks.yaml
+  - ./turvis/ks-storage-mail.yaml
   - ./umami/ks.yaml
   - ./vikunja/ks.yaml
   - ./watchstate/ks.yaml
