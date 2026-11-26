@@ -88,19 +88,20 @@ spec:
             envFrom: &s3
               - secretRef:
                   name: turvis-s3
-            # /api/health is 200 only while the database answers. Liveness is lenient (2 minutes), so a
-            # short database restart does not also restart the web app.
+            # Readiness and startup on /api/health, which is 200 only while the database answers. Liveness
+            # only checks that the server listens: with the database gone /api/health hangs, and a restart
+            # then fails at the migration and backs off, while the running server recovers by itself
+            # within seconds once the database is back.
             probes:
               liveness:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/health
+                  tcpSocket:
                     port: &port 3000
                   periodSeconds: 20
                   timeoutSeconds: 5
-                  failureThreshold: 6
+                  failureThreshold: 3
               readiness:
                 enabled: true
                 custom: true
@@ -190,7 +191,8 @@ spec:
                 enabled: false
               startup:
                 enabled: false
-            # Measured locally: 220 MiB after a run (node with the app's TypeScript sources loaded).
+            # Measured locally after runs: 57-60 MiB in the review's run, 220 MiB in mine; the request
+            # covers the higher one.
             resources:
               requests:
                 cpu: 10m
