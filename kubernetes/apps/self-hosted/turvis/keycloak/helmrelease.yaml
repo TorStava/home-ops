@@ -105,6 +105,10 @@ spec:
               - secretRef:
                   name: turvis-keycloak-admin
             probes:
+              # When the entrypoint adds turvis-admin to the existing realm it starts the server a second time,
+              # and /health/live is down meanwhile (about 15 s on an idle node, over 90 s at half a CPU, measured
+              # in the review of turvis#241). Two minutes of failures before a restart, so that start is not cut
+              # off (a cut one is retried at the next start, but would loop on a slow node).
               liveness:
                 enabled: true
                 custom: true
@@ -114,7 +118,7 @@ spec:
                     port: &management 9000
                   periodSeconds: 10
                   timeoutSeconds: 5
-                  failureThreshold: 3
+                  failureThreshold: 12
               readiness:
                 enabled: true
                 custom: true
@@ -149,6 +153,9 @@ spec:
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
     defaultPodOptions:
+      # A stop while the entrypoint adds turvis-admin still deletes its temporary admin before the
+      # server stops (a few kcadm calls), then the server's own shutdown: more than the default 30 s.
+      terminationGracePeriodSeconds: 90
       imagePullSecrets:
         - name: turvis-ghcr
       securityContext:
