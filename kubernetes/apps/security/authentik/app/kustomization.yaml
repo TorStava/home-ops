@@ -16,6 +16,7 @@ configMapGenerator:
       - app-forgejo.yaml=./resources/blueprints/apps/forgejo.yaml
       - app-freshrss.yaml=./resources/blueprints/apps/freshrss.yaml
       - app-gods-eye.yaml=./resources/blueprints/apps/gods-eye.yaml
+      - app-grafana.yaml=./resources/blueprints/apps/grafana.yaml
       - app-immich.yaml=./resources/blueprints/apps/immich.yaml
       - app-karakeep.yaml=./resources/blueprints/apps/karakeep.yaml
       - app-komga.yaml=./resources/blueprints/apps/komga.yaml

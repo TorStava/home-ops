@@ -56,8 +56,8 @@ spec:
         auth_url: https://auth.${SECRET_DOMAIN}/application/o/authorize/
         token_url: https://auth.${SECRET_DOMAIN}/application/o/token/
         api_url: https://auth.${SECRET_DOMAIN}/application/o/userinfo/
-        # Optionally map user groups to Grafana roles
-        role_attribute_path: contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'
+        # Only Operators can log in (Authentik binding); the groups claim lists direct memberships.
+        role_attribute_path: contains(groups[*], 'Operators') && 'Admin' || 'Viewer'
       news:
         news_feed_enabled: false
     resources:
