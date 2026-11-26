@@ -69,6 +69,19 @@ spec:
                   secretKeyRef:
                     name: turvis-web-oidc
                     key: client-secret
+              # Accounts (turvis ADR 0004, #24): Keycloak's admin API inside the cluster (the public host
+              # passes only /realms/turvis/), as the service account turvis-admin.
+              OIDC_ADMIN_URL: http://turvis-keycloak.self-hosted.svc.cluster.local:8080
+              OIDC_ADMIN_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-admin-client
+                    key: client-id
+              OIDC_ADMIN_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-admin-client
+                    key: client-secret
               # Scaleway TEM over SMTP (turvis-mail): nodemailer's URL and the sender.
               SMTP_URL: &smtpUrl
                 valueFrom:

@@ -19,6 +19,9 @@ spec:
   values:
     controllers:
       *app :
+        # One pod at a time: the entrypoint may run Keycloak's `bootstrap-admin` (adding turvis-admin to
+        # an existing realm), which needs every Keycloak node stopped. Also one set of local caches.
+        strategy: Recreate
         annotations:
           reloader.stakater.com/auto: "true"
         containers:
@@ -65,6 +68,14 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: turvis-web-oidc
+                    key: client-secret
+              # turvis-admin (turvis ADR 0004): in the realm file for a fresh import, and set on the
+              # existing realm by the entrypoint when it does not work yet. The image refuses to start
+              # without it.
+              TURVIS_ADMIN_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-admin-client
                     key: client-secret
               # The realm's mail (password reset, email verification): Scaleway TEM from Secret
               # turvis-mail (step 5), implicit TLS on 465. These fill the realm at import; the password
