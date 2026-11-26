@@ -26,6 +26,10 @@ entries:
       consumer_secret: !Env GOOGLE_CLIENT_SECRET
       authentication_flow: !Find [authentik_flows.flow, [slug, default-source-authentication]]
       user_matching_mode: email_link
+      # Login page shows a full-width primary button reading "Continue with
+      # Google", with no icon, listed before any non-promoted sources. Not an
+      # auto-redirect: username/password stays as fallback.
+      promoted: true
   # Show the Google button on the default login page. `sources` is replaced as a
   # whole, so any source added by hand to this stage must be listed here too.
   - model: authentik_stages_identification.identificationstage
