@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/slektly
-              tag: sha-4ad0536@sha256:dcc136fd0846abc71f10394525b54d131949d003e3647de9e752a0c928ea2026
+              tag: sha-54853c8@sha256:2cab9de52f9827d00e9d4d7d8937af951c40b2301c847d0d82da85db23c9526d
             # No GEDCOM_PATH and nothing mounted: /__slektly/startup.ged answers 204 (slektly#67, decision 5).
             env:
               # Believe Cloudflare's CF-Connecting-IP for the rate limit: every request comes through
@@ -68,7 +68,7 @@ spec:
           api:
             image:
               repository: ghcr.io/torstava/slektly-api
-              tag: sha-4ad0536@sha256:5ac84149cee8dbd6ed72e1316e23f1925a9eae51e316e8238d706eb0b8eac668
+              tag: sha-54853c8@sha256:150815b25b15644425ff26c3350df6ecacb05e9ffe3bb92e0a7977891edbbff8
             env:
               # Scaleway Transactional Email (slektly#154); Personvern names it since slektly#171.
               # The secret below carries the key; set fake to stop delivery without stopping the form.
