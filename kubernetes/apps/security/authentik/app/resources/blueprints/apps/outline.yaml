@@ -33,6 +33,9 @@ entries:
           redirect_uri_type: authorization
           url: https://outline.${SECRET_DOMAIN}/auth/oidc.callback
       # Outline identifies users by username, as set up in the UI
+      grant_types:
+        - authorization_code
+        - refresh_token
       sub_mode: user_username
       issuer_mode: per_provider
       include_claims_in_id_token: true

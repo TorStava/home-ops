@@ -32,6 +32,9 @@ entries:
         - matching_mode: strict
           redirect_uri_type: authorization
           url: https://node-red.${SECRET_DOMAIN}/auth/strategy/callback/
+      grant_types:
+        - authorization_code
+        - refresh_token
       sub_mode: hashed_user_id
       issuer_mode: per_provider
       include_claims_in_id_token: true

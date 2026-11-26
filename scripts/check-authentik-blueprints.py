@@ -8,7 +8,7 @@ resources/blueprints/apps/<slug>.yaml it checks that:
 - there is exactly one provider and one application, and the
   application slug equals the file name;
 - there is exactly one policy binding, and it is to an access group;
-- OAuth2 providers set signing_key;
+- OAuth2 providers set signing_key and list grant_types;
 - every !Env AK_* name exists in the authentik-app-credentials template;
 - the file is listed in the configMapGenerator as app-<slug>.yaml.
 
@@ -162,6 +162,8 @@ def check_app(path: Path, creds: set[str], generator: dict[str, str]) -> tuple[l
         attrs = p.get("attrs") or {}
         if p["model"] == "authentik_providers_oauth2.oauth2provider" and not attrs.get("signing_key"):
             bad("OAuth2 provider must set signing_key (else tokens fall back to HS256)")
+        if p["model"] == "authentik_providers_oauth2.oauth2provider" and not attrs.get("grant_types"):
+            bad("OAuth2 provider must list grant_types (a provider created from a blueprint allows none)")
         if p["model"] == "authentik_providers_proxy.proxyprovider":
             proxies.append((p.get("identifiers") or {}).get("name"))
 
