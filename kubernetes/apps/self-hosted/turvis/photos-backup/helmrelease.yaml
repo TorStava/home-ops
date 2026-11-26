@@ -2,8 +2,10 @@
 # The nightly copy of Turvis's bilder off the cluster (home-ops#842): rclone copy from the Garage bucket turvis-photos to
 # the R2 bucket turvis-photos-backup (EU jurisdiction). Tor's choice (Thu 26 Nov 2026): copy, not sync, so a bild that
 # is deleted in Turvis (or lost with the Garage volume) stays in R2; R2 keeps no versions, and nothing here deletes
-# there. A bild changed under the same key is copied again (size or time differs). To restore, the same command the other
-# way, with a Garage key that can write (the app's, secret turvis-s3).
+# there. --immutable: a bild already in R2 is never replaced either. Turvis never rewrites a key (rentals/<tenant>/<uuid>/
+# <size>.webp, turvis apps/web/src/lib/photos.ts), so a changed object means damage or tampering: the run keeps R2's copy,
+# still copies new bilder, and exits non-zero ("immutable file modified"), which fires KubeJobFailed. To restore, the
+# same command the other way, with a Garage key that can write (the app's, secret turvis-s3).
 # Garage side: a read-only key (secret turvis-garage-backup, setup.sh step 4); the NetworkPolicy lets this release's pods
 # reach the S3 port. A failed run is alerted by KubeJobFailed.
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
@@ -55,6 +57,8 @@ spec:
               - garage:turvis-photos
               - r2:turvis-photos-backup
               - --fast-list
+              # Never replace a bild already in R2 (see the top of this file).
+              - --immutable
               - --stats-one-line
               - --stats=0
               - -v
