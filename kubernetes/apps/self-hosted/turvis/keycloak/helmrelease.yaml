@@ -30,7 +30,7 @@ spec:
             # an optimized build for Postgres, health and metrics on the management port.
             image:
               repository: ghcr.io/torstava/turvis-keycloak
-              tag: sha-82a2e57@sha256:b9722f8157f0771fd218fcd39d914789afc5a5b193bf6c95378661e2ad10c63d
+              tag: sha-9c370d7@sha256:701cc1ebba5a65431738d0399a9f93b19d4f982d8a2269ffd699370e0bb3d07d
             # Production mode. --import-realm imports turvis only when it does not exist yet, so the
             # users and settings made in the admin console stay across restarts and new images.
             args: ["start", "--optimized", "--import-realm"]
