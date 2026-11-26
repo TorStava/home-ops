@@ -1,0 +1,26 @@
+---
+# Only Prometheus may call the exporter (the ScrapeConfig scrapes it through the Service).
+# The kubelet's probes come from the node and are always let in. Egress is left open: the
+# exporter has to reach the iLOs.
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/networking.k8s.io/networkpolicy_v1.json
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redfish-exporter
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: redfish-exporter
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - port: 9610
+          protocol: TCP
