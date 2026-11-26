@@ -104,7 +104,8 @@ spec:
 ---
 # Turvis's Keycloak (turvis ADR 0004): the login for app.<turvis domain>, public on auth.<turvis domain>,
 # realm turvis imported once from the image (turvis infra/keycloak: no dev users, no dev secret). Its
-# database is keycloak in the postgres-turvis cluster (above), so it waits for that.
+# database is keycloak in the postgres-turvis cluster (above), so it waits for that; and its mail comes
+# from Secret turvis-mail (ks-storage-mail.yaml), so it waits for that too.
 # One manual step lives in that database: the master realm's frontendUrl = the internal admin host,
 # without which nobody can sign in to the admin console. postgres-turvis has no backups, so after a
 # lost database redo it (kcadm command in home-ops#831's after-merge list) along with the users.
@@ -120,6 +121,8 @@ spec:
       app.kubernetes.io/name: *app
   dependsOn:
     - name: postgres-turvis
+      namespace: *namespace
+    - name: turvis-mail
       namespace: *namespace
   interval: 1h
   retryInterval: 2m
