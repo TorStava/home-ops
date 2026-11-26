@@ -31,7 +31,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/turvis-web
-              tag: sha-82a2e57@sha256:395f92b8ba59171f5c7b46312c3071976ca5be5778b3f62d8c773165b8e594f6
+              tag: sha-ebb3979@sha256:f2d314ed39c11b756174cc61d06aba86013ca4c2e021979ce2bcf08fa6694993
             env: &env
               # Kubernetes sets HOSTNAME to the pod's name, and Next.js listens on HOSTNAME.
               HOSTNAME: 0.0.0.0
@@ -148,7 +148,7 @@ spec:
           wait-for-web:
             image: &schedulerImage
               repository: ghcr.io/torstava/turvis-scheduler
-              tag: sha-82a2e57@sha256:0b962b99d3d6972a32451393845cf373775a86ba6124b2cd5e444854f24de9a2
+              tag: sha-ebb3979@sha256:28e8d93ba50b45d75dd4f29a06e1065cfe9376c3d2fec2d818f26aaa02bc3f30
             command:
               - node
               - -e
