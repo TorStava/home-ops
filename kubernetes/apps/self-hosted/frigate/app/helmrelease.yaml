@@ -36,12 +36,13 @@ spec:
                 cpu: 1000m
                 memory: 2Gi
             # Not privileged: detection runs on the CPU and no device is passed in. s6 needs
-            # these to set up its log dirs and drop to service users; media is on NFS.
+            # these to set up its log dirs, drop to service users and stop them again on
+            # shutdown (KILL); media is on NFS.
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
                 drop: ["ALL"]
-                add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETGID", "SETUID"]
+                add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "KILL", "SETGID", "SETUID"]
               seccompProfile:
                 type: RuntimeDefault
 
@@ -62,6 +63,8 @@ spec:
       ha:
         controller: *app
         type: LoadBalancer
+        # Only the LoadBalancer address, no node ports.
+        allocateLoadBalancerNodePorts: false
         annotations:
           lbipam.cilium.io/ips: 192.168.1.249
         loadBalancerSourceRanges:
