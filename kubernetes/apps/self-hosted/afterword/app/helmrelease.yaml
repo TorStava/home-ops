@@ -36,7 +36,7 @@ spec:
           migrate:
             image: &image
               repository: ghcr.io/torstava/afterword
-              tag: sha-7b74081@sha256:1827024d4f2db7c66e299187fd9858cb15df97f94edd97081d64f3674e03dd22
+              tag: sha-1be6843@sha256:3ef3438f3d2e985f46b83cb0ef32d087ff60dbd3be694b052f9a3cd56bffce58
             command: ["node", "migrate.mjs"]
             envFrom:
               - secretRef:
