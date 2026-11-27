@@ -38,4 +38,5 @@ spec:
   postBuild:
     substitute:
       APP: *app
+      GATUS_SUBDOMAIN: firefly
       VOLSYNC_CAPACITY: 5Gi

@@ -103,4 +103,5 @@ spec:
   postBuild:
     substitute:
       APP: *app
+      GATUS_SUBDOMAIN: tubearchivist
       VOLSYNC_CAPACITY: 30Gi
