@@ -17,7 +17,7 @@ spec:
   postBuild:
     substitute:
       APP: *app
-      GATUS_STATUS: 403  # S3 API on /, no auth and no health path
+      GATUS_STATUS: "403"  # S3 API on /, no auth and no health path
   prune: true
   sourceRef:
     kind: GitRepository
