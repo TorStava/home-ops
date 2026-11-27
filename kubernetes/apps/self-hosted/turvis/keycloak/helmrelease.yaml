@@ -30,7 +30,7 @@ spec:
             # an optimized build for Postgres, health and metrics on the management port.
             image:
               repository: ghcr.io/torstava/turvis-keycloak
-              tag: sha-5149010@sha256:7488ffa979892d1bcf0e85b97ff9ede1e57703d3c70c12912b6fc9fcd1813aa1
+              tag: sha-901130e@sha256:f5942882b444af590c4a96df96930509a375b41bae33f92776ed5923716dcd33
             # Production mode. --import-realm imports turvis only when it does not exist yet, so the
             # users and settings made in the admin console stay across restarts and new images.
             args: ["start", "--optimized", "--import-realm"]
@@ -76,6 +76,13 @@ spec:
                 valueFrom:
                   secretKeyRef:
                     name: turvis-admin-client
+                    key: client-secret
+              # turvis-platform (turvis #235): the scheduler's service account (manage-realm) for the companies'
+              # organizations. The entrypoint makes the client on the existing realm when it does not work yet.
+              TURVIS_PLATFORM_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-platform-client
                     key: client-secret
               # The realm's mail (password reset, email verification): Scaleway TEM from Secret
               # turvis-mail (step 5), implicit TLS on 465. These fill the realm at import; the password
