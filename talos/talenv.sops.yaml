@@ -1,0 +1,18 @@
+DOCKERHUB_USERNAME: ENC[AES256_GCM,data:f7jrtXhtjboNcGApCxx1W0VUHmle4d7NJlh0nBVSmg==,iv:h9NzLFdGx/5e+jXAvYMIC3LRcwIRbAWRxWO1SLek5RQ=,tag:4WGcuekdOI71D6A8FCv7eg==,type:str]
+DOCKERHUB_TOKEN: ENC[AES256_GCM,data:xWoaxmHrLJLLWeiQESTf03p0/5BIQgwxRqg6nwwMSoo4puP+Rk8=,iv:LtjtNCXseQcHJZ0sO/vDfcFwnY8+zLiftyNnnBuChu8=,tag:gUV558GdPBwb2RgYj9cF9Q==,type:str]
+sops:
+  age:
+    - enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA1K3FrL1ZqSU9tTzdQMWJy
+        bUpQSkhJWERld1RPLzNPaU1ZbnU1dDRlSmxVCndvTTlIRFJHaEJaZ2NQOXJEa0Fx
+        VFY5UlF4bnY2WVFkanRlNjRjaUsvekEKLS0tIHZGTWxWdG9tU3FCOU1DWU9vKzB6
+        NTRjcDBlQldCS1BzTjdKSG51aTZyRW8K7IMI4c7lWCciFssUgLFKCw+rfVcjiRH3
+        Fqhx4k8q/ZIRQOrjyimEwOYahp4qp2rkqPyg5GLh1ZjaHXR0hmZNFQ==
+        -----END AGE ENCRYPTED FILE-----
+      recipient: age1nyhlajy2nkv6fy064v5d80ekyuhnr5y23f9xznltraspavejmuzs0kzmac
+  lastmodified: "2026-11-27T22:21:17Z"
+  mac: ENC[AES256_GCM,data:oP9gYVI3zhy0BEjTmbyg+JbNBgbxUhmbaO1ebc9GZxM7pwHsZvvddNOxLRt2SH4WLt9eFiPLZGIgJNtHkKKlbjhqLPbQEMLw5pk2bU+L3BCC+rrmr5MUXyiSKjdmhBKAO6seDT86uCnfVrNQuq3Ntw1pmp9yXSFXzH34TAbh5u0=,iv:h3qxuJRoIZ6ebaVoFN72f/DAtFaQVccVXcocWYJsUfA=,tag:YdGbnFljJlqzLAFRB5L4YA==,type:str]
+  mac_only_encrypted: true
+  unencrypted_suffix: _unencrypted
+  version: 3.13.3
