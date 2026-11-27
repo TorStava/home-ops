@@ -202,15 +202,10 @@ cameras:
   #       Main: office_window_cam_main
   #       Sub: office_window_cam_sub
 
+# Login required on 8971 (the UI behind the gateway). No proxy header_map: nothing in front of
+# Frigate authenticates users, so a forwarded user header would be trusted from anyone.
 auth:
-  enabled: false
-
-proxy:
-  header_map:
-    user: remote-user
-  # With auth.enabled: false, anonymous users default to 'viewer' role in 0.17.
-  # Grant admin for LAN-only deployment so the UI shows all controls.
-  default_role: admin
+  enabled: true
 
 tls:
   enabled: false

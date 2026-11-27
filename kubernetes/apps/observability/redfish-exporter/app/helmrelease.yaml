@@ -27,8 +27,8 @@ spec:
           reloader.stakater.com/auto: "true"
         replicas: 1
         strategy: RollingUpdate
-        # hostNetwork binds :9610 on the node, so old and new pods can't overlap.
-        # (Not Recreate: SSA rejects the type change while rollingUpdate is set.)
+        # One pod at a time (kept from the hostNetwork days, when two pods could not share
+        # :9610). Not Recreate: SSA rejects the type change while rollingUpdate is set.
         rollingUpdate:
           surge: "0%"
           unavailable: 1
@@ -74,10 +74,9 @@ spec:
               requests:
                 cpu: 50m
                 memory: 64Mi
+    # Pod network, not hostNetwork: both iLOs answer from pods, and the exporter is then only
+    # reachable through the Service, which networkpolicy.yaml limits to Prometheus.
     defaultPodOptions:
-      # iLO/BMC is often on a management VLAN reachable from the node, not the pod overlay (Cilium).
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

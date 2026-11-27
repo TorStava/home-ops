@@ -2,8 +2,9 @@
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/monitoring.coreos.com/scrapeconfig_v1alpha1.json
 # Multi-target pattern: /redfish?target=<iLO> per
 # https://github.com/jenningsloy318/redfish_exporter#prometheus-configuration
-# Both iLOs use the same read-only "redfish-exporter" account (the "default" entry
-# in config.yml). Addresses are Kea reservations on pfSense.
+# Both iLOs use the same read-only "redfish-exporter" account. The exporter's config
+# (externalsecret.yaml) has one entry per target here and no default: add a target in
+# both places. Addresses are Kea reservations on pfSense.
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:

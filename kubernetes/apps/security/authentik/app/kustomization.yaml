@@ -28,6 +28,7 @@ configMapGenerator:
       - app-pgadmin.yaml=./resources/blueprints/apps/pgadmin.yaml
       - app-tandoor.yaml=./resources/blueprints/apps/tandoor.yaml
       - app-vikunja.yaml=./resources/blueprints/apps/vikunja.yaml
+      - login-security.yaml=./resources/blueprints/login-security.yaml
       - outposts.yaml=./resources/blueprints/outposts.yaml
       - social-login.yaml=./resources/blueprints/social-login.yaml
   - name: authentik-blueprint-sync

@@ -30,7 +30,8 @@ spec:
               FOLDER: /config
               LABEL: gatus.io/enabled
               NAMESPACE: ALL
-              RESOURCE: both
+              # Endpoint configs are ConfigMaps only (components/gatus); the sidecar may not read Secrets.
+              RESOURCE: configmap
               UNIQUE_FILENAMES: true
               METHOD: WATCH
             restartPolicy: Always
@@ -69,8 +70,9 @@ spec:
               requests:
                 cpu: 100m
     defaultPodOptions:
-      # app-template v5 defaults this to false; this app uses the k8s API
-      automountServiceAccountToken: true
+      # Gatus itself is internet-facing and needs no API access, so the pod gets no token.
+      # Only the init-config sidecar mounts one (persistence.sa-token below).
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -95,13 +97,15 @@ spec:
           - name: external
             namespace: kube-system
             sectionName: https
+    # The sidecar watches labelled ConfigMaps in every namespace, so a namespaced Role is not
+    # enough. ConfigMaps only: no Secrets.
     rbac:
       roles:
         gatus:
           type: ClusterRole
           rules:
             - apiGroups: [""]
-              resources: ["configmaps", "secrets"]
+              resources: ["configmaps"]
               verbs: ["get", "watch", "list"]
       bindings:
         gatus:
@@ -113,6 +117,31 @@ spec:
     serviceAccount:
       gatus: {}
     persistence:
+      # The same token volume Kubernetes would automount, but in the sidecar only.
+      sa-token:
+        type: custom
+        volumeSpec:
+          projected:
+            defaultMode: 0444
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3607
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        fieldPath: metadata.namespace
+        advancedMounts:
+          gatus:
+            init-config:
+              - path: /var/run/secrets/kubernetes.io/serviceaccount
+                readOnly: true
       config:
         existingClaim: ${APP}
       config-file:
