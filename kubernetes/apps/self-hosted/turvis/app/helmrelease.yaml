@@ -31,7 +31,7 @@ spec:
           app:
             image:
               repository: ghcr.io/torstava/turvis-web
-              tag: sha-9c370d7@sha256:6b9746dca24b5286fc7bac571a167d13cb75d2cf88f2b6fb84def4980c52bdcd
+              tag: sha-901130e@sha256:8541196e64906d91bdc6aa96ea4a569fa28e6623a9285a1aacc4956c280440e5
             env: &env
               # Kubernetes sets HOSTNAME to the pod's name, and Next.js listens on HOSTNAME.
               HOSTNAME: 0.0.0.0
@@ -58,7 +58,7 @@ spec:
               APP_URL: &appUrl https://app.${SECRET_DOMAIN_TURVIS}
               # https only: the app refuses a plain-http issuer unless OIDC_ALLOW_HTTP_PRIVATE is set,
               # and that is never set here.
-              OIDC_ISSUER: https://auth.${SECRET_DOMAIN_TURVIS}/realms/turvis
+              OIDC_ISSUER: &oidcIssuer https://auth.${SECRET_DOMAIN_TURVIS}/realms/turvis
               OIDC_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
@@ -71,7 +71,7 @@ spec:
                     key: client-secret
               # Accounts (turvis ADR 0004, #24): Keycloak's admin API inside the cluster (the public host
               # passes only /realms/turvis/), as the service account turvis-admin.
-              OIDC_ADMIN_URL: http://turvis-keycloak.self-hosted.svc.cluster.local:8080
+              OIDC_ADMIN_URL: &oidcAdminUrl http://turvis-keycloak.self-hosted.svc.cluster.local:8080
               OIDC_ADMIN_CLIENT_ID:
                 valueFrom:
                   secretKeyRef:
@@ -147,9 +147,10 @@ spec:
               readOnlyRootFilesystem: true
               capabilities: { drop: ["ALL"] }
 
-      # The scheduler (turvis ADR 0011): the payment reminder, the e-post queue sweep and the bilde sweep,
-      # every SCHEDULER_INTERVAL_MINUTES (5), as turvis_app. Exactly one: Recreate, never two during a
-      # rollout. It gets no owner password and no OIDC settings. No probe: it has no port.
+      # The scheduler (turvis ADR 0011): the payment reminder, the e-post queue sweep, the bilde sweep and each
+      # company's Keycloak organization (#235), every SCHEDULER_INTERVAL_MINUTES (5), as turvis_app. Exactly
+      # one: Recreate, never two during a rollout. It gets no owner password and of the OIDC settings only
+      # the turvis-platform ones. No probe: it has no port.
       scheduler:
         strategy: Recreate
         annotations:
@@ -161,7 +162,7 @@ spec:
           wait-for-web:
             image: &schedulerImage
               repository: ghcr.io/torstava/turvis-scheduler
-              tag: sha-9c370d7@sha256:affb04c41b0c16eef0098ba043f615081cda89f016f9c77637bb42e757de2bb7
+              tag: sha-901130e@sha256:8ada8f373cdcbcd0afb2110cbe87c1e40fa16fbdca118ce19434694aa88666c5
             command:
               - node
               - -e
@@ -193,6 +194,15 @@ spec:
               APP_URL: *appUrl
               SMTP_URL: *smtpUrl
               EMAIL_FROM: *emailFrom
+              # Organizations (#235): Keycloak's admin API inside the cluster as turvis-platform, whose secret
+              # only the scheduler gets (never web). OIDC_ISSUER only names the realm here.
+              OIDC_ISSUER: *oidcIssuer
+              OIDC_ADMIN_URL: *oidcAdminUrl
+              OIDC_PLATFORM_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: turvis-platform-client
+                    key: client-secret
               LOG_KEEP_DAYS: *keepDays
               LOG_MAX_MB: *maxMb
             # The bilde sweep lists and removes files in the bucket.
