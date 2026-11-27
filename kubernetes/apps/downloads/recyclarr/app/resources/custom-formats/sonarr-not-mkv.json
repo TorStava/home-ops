@@ -1,0 +1,16 @@
+{
+  "trash_id": "b3477471b4ca7d819c2f9fea2c353f90",
+  "name": "Not MKV",
+  "includeCustomFormatWhenRenaming": false,
+  "specifications": [
+    {
+      "name": "mp4 m4v avi wmv",
+      "implementation": "ReleaseTitleSpecification",
+      "negate": false,
+      "required": true,
+      "fields": {
+        "value": "\\b(mp4|m4v|avi|wmv)\\b"
+      }
+    }
+  ]
+}

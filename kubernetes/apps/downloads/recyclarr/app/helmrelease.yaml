@@ -65,6 +65,15 @@ spec:
           - path: /config/recyclarr.yml
             subPath: recyclarr.yml
             readOnly: true
+          - path: /config/settings.yml
+            subPath: settings.yml
+            readOnly: true
+          - path: /config/custom-formats/radarr/not-mkv.json
+            subPath: radarr-not-mkv.json
+            readOnly: true
+          - path: /config/custom-formats/sonarr/not-mkv.json
+            subPath: sonarr-not-mkv.json
+            readOnly: true
       tmpfs:
         type: emptyDir
         globalMounts:

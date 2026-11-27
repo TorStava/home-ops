@@ -10,9 +10,31 @@ sonarr:
     quality_definition:
       type: series
     quality_profiles:
+      # Frozen: existing series stay here, no upgrades.
       - trash_id: 9d142234e45d6143785ac55f5a9e8dc9  # WEB-1080p (Alternative)
+        name: WEB-1080p (Alternative)
+        upgrade:
+          allowed: false
         reset_unmatched_scores:
           enabled: true
+      # New downloads: same guide profile, HEVC preferred, MKV preferred.
+      - trash_id: 9d142234e45d6143785ac55f5a9e8dc9  # WEB-1080p (Alternative)
+        name: HD HEVC
+        upgrade:
+          allowed: true
+        reset_unmatched_scores:
+          enabled: true
+    custom_formats:
+      - trash_ids:
+          - 47435ece6b99a0b477caf360e79ba0bb  # x265 (HD)
+        assign_scores_to:
+          - name: HD HEVC
+            score: 2000
+      - trash_ids:
+          - b3477471b4ca7d819c2f9fea2c353f90  # Not MKV (local)
+        assign_scores_to:
+          - name: HD HEVC
+            score: -1000
     custom_format_groups:
       add:
         - trash_id: d920fd959d220306888f40b6f38e1578  # [Optional] Season Packs
@@ -35,9 +57,31 @@ radarr:
     quality_definition:
       type: movie
     quality_profiles:
+      # Frozen: existing movies stay here, no upgrades.
       - trash_id: d1d67249d3890e49bc12e275d989a7e9  # HD Bluray + WEB
+        name: HD Bluray + WEB
+        upgrade:
+          allowed: false
         reset_unmatched_scores:
           enabled: true
+      # New downloads: same guide profile, HEVC preferred, MKV preferred.
+      - trash_id: d1d67249d3890e49bc12e275d989a7e9  # HD Bluray + WEB
+        name: HD HEVC
+        upgrade:
+          allowed: true
+        reset_unmatched_scores:
+          enabled: true
+    custom_formats:
+      - trash_ids:
+          - dc98083864ea246d05a42df0d05f81cc  # x265 (HD)
+        assign_scores_to:
+          - name: HD HEVC
+            score: 2000
+      - trash_ids:
+          - b3477471b4ca7d819c2f9fea2c353f90  # Not MKV (local)
+        assign_scores_to:
+          - name: HD HEVC
+            score: -1000
     media_naming:
       folder: default
       movie:
@@ -56,6 +100,12 @@ radarr:
       - trash_id: fd161a61e3ab826d3a22d53f935696dd  # Remux + WEB 2160p
         reset_unmatched_scores:
           enabled: true
+    custom_formats:
+      - trash_ids:
+          - b3477471b4ca7d819c2f9fea2c353f90  # Not MKV (local)
+        assign_scores_to:
+          - name: Remux + WEB 2160p
+            score: -1000
     media_naming:
       folder: default
       movie:
