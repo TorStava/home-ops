@@ -9,5 +9,8 @@ configMapGenerator:
   - name: recyclarr-configmap
     files:
       - recyclarr.yml=./resources/recyclarr.yaml
+      - settings.yml=./resources/settings.yaml
+      - radarr-not-mkv.json=./resources/custom-formats/radarr-not-mkv.json
+      - sonarr-not-mkv.json=./resources/custom-formats/sonarr-not-mkv.json
 generatorOptions:
   disableNameSuffixHash: true
