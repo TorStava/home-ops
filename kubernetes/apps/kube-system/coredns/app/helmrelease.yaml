@@ -53,6 +53,12 @@ spec:
             parameters: "@kubernetes"
           # - name: forward
           #   parameters: . /etc/resolv.conf
+          # Pods reach internal names through autopath, which resolves them with this block's own plugin chain
+          # and so skips the zone block below: pin them to pihole here too (no fallback).
+          - name: forward
+            parameters: ${SECRET_DOMAIN} dns://192.168.1.2
+            configBlock: |-
+              policy sequential
           - name: forward
             parameters: . dns://192.168.1.2 dns://192.168.1.1 dns://1.1.1.1  # pihole;fw;cloudflare
             configBlock: |-
@@ -67,6 +73,34 @@ spec:
           - name: loadbalance
           - name: prometheus
             parameters: 0.0.0.0:9153
+          - name: log
+            configBlock: |-
+              class error
+      # Internal names: only pihole knows them (pihole-external-dns writes them from the HTTPRoutes).
+      # The router and Cloudflare answer NXDOMAIN, so there is no fallback here: a pihole blip gives
+      # SERVFAIL (retried by the client) instead of an NXDOMAIN that gets cached.
+      - zones:
+          - zone: ${SECRET_DOMAIN}
+            scheme: dns://
+            use_tcp: true
+        port: 53
+        plugins:
+          - name: errors
+          - name: forward
+            parameters: . dns://192.168.1.2  # pihole only
+            configBlock: |-
+              policy sequential
+              health_check 5s
+          # pihole answers internal names with TTL 0, which cache floors to 5s by default: a 30s floor keeps
+          # the last good answer fresh longer, and serve_stale then covers a longer outage.
+          # Denials are kept short so a new route shows up quickly.
+          - name: cache
+            configBlock: |-
+              success 9984 3600 30
+              denial 9984 5 5
+              prefetch 20
+              serve_stale 24h
+          - name: loop
           - name: log
             configBlock: |-
               class error
