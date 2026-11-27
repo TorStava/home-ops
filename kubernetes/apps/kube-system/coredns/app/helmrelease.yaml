@@ -91,8 +91,8 @@ spec:
             configBlock: |-
               policy sequential
               health_check 5s
-          # pihole answers internal names with TTL 0, which cache floors to 5s by default: a 30s floor keeps
-          # the last good answer fresh longer, and serve_stale then covers a longer outage.
+          # pihole answers internal names with TTL 0, which cache floors to 5s by default: the 30s floor means
+          # fewer refreshes to pihole. serve_stale counts from expiry, so the floor adds little to its window.
           # Denials are kept short so a new route shows up quickly.
           - name: cache
             configBlock: |-
@@ -101,6 +101,8 @@ spec:
               prefetch 20
               serve_stale 24h
           - name: loop
+          - name: prometheus
+            parameters: 0.0.0.0:9153
           - name: log
             configBlock: |-
               class error
