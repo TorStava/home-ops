@@ -1,0 +1,10 @@
+---
+# Authenticated Docker Hub pulls (raises the pull limit from 100 per IP to 200 per account per 6 h).
+# Talos v1.13 takes registry auth as its own document, keyed by the hostname of the endpoint
+# (registry-1.docker.io is what docker.io resolves to), not by machine.registries.
+# Username and token come from talos/talenv.sops.yaml (sops + age), substituted by talhelper.
+apiVersion: v1alpha1
+kind: RegistryAuthConfig
+name: registry-1.docker.io
+username: ${DOCKERHUB_USERNAME}
+password: ${DOCKERHUB_TOKEN}
