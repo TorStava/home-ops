@@ -206,8 +206,6 @@ cameras:
 # Frigate authenticates users, so a forwarded user header would be trusted from anyone.
 auth:
   enabled: true
-  # Temporary: prints a new admin password in the log at start. Removed again right after it is read.
-  reset_admin_password: true
 
 tls:
   enabled: false
