@@ -144,30 +144,9 @@ spec:
           gethomepage.dev/name: n8n
           gethomepage.dev/icon: n8n.png
           gethomepage.dev/app: *app
-      # External exposure is limited to the instance-level MCP server
-      # (Settings > Instance-level MCP) so claude.ai can connect. The UI,
-      # /rest, /api and webhooks stay internal-only: same hostname resolves
-      # to the internal gateway on LAN (pihole) and to the Cloudflare tunnel
-      # publicly (cloudflare-dns only publishes external-gateway routes).
-      # Unmatched paths 404 at the gateway. The OAuth consent page needs the
-      # UI, so connecting a new MCP client must be done from the LAN.
-      # pihole-external-dns must skip this route, or LAN DNS gets a second
-      # CNAME to external.<domain> and the UI 404s on the LAN.
-      mcp:
-        annotations:
-          pihole.external-dns/ignore: 'true'
-        hostnames: ["{{ .Release.Name }}.${SECRET_DOMAIN}"]
-        parentRefs:
-          - name: external
-            namespace: kube-system
-            sectionName: https
-        rules:
-          - matches:
-              - path: {type: PathPrefix, value: /mcp-server}
-              - path: {type: PathPrefix, value: /mcp-oauth}
-              - path: {type: PathPrefix, value: /.well-known/oauth-authorization-server}
-              - path: {type: PathPrefix, value: /.well-known/oauth-protected-resource}
-            backendRefs: [{}]
+      # n8n is internal-only: there is no external route, so the UI, /rest,
+      # /api, webhooks and the instance-level MCP server are reachable from
+      # the LAN only (the hostname resolves via pihole to the internal gateway).
 
     persistence:
       data:
