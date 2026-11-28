@@ -32,7 +32,7 @@ spec:
           app:
             image:
               repository: docker.io/dxflrs/garage
-              tag: v2.2.0@sha256:45a61ce3f7c9c24fc23d9ed2b09b27ed560ab87b34605d175d5c588f539c24e4
+              tag: v2.6.0@sha256:4b5a318fc9fe2fbec5d3af590eeafe05d83492e6411266fa0b9e215c20264013
             envFrom:
               - secretRef:
                   name: turvis-garage
